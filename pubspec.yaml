@@ -1,0 +1,68 @@
+name: lombiaventura
+description: App educativa infantil de lombricomposta
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI y Animaciones
+  cupertino_icons: ^1.0.8
+  lottie: ^3.1.2               # Animaciones de Lola
+  flutter_animate: ^4.5.0      # Animaciones fáciles
+  
+  # Almacenamiento Local (Modo Offline)
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # Juegos
+  flame: ^1.20.0               # Motor de juegos 2D
+  
+  # Cámara y Galería
+  image_picker: ^1.1.2         # Fotos para diario
+  
+  # Voz (Chat IA y Diario)
+  speech_to_text: ^7.0.0       # Dictado por voz
+  flutter_tts: ^4.2.0          # Lola habla
+  
+  # Conectividad y API
+  http: ^1.2.2                 # Llamadas a API de IA
+  connectivity_plus: ^6.1.0    # Verificar conexión
+  
+  # Utilidades
+  path_provider: ^2.1.4        # Rutas del sistema
+  share_plus: ^10.1.2          # Compartir avances
+  screenshot: ^3.0.0           # Capturar imagen para compartir
+  flutter_local_notifications: ^18.0.0  # Recordatorios
+  intl: ^0.19.0                # Formato de fechas
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # Fuentes infantiles (opcional por ahora, las añadiremos después)
+  # fonts:
+  #   - family: Fredoka
+  #     fonts:
+  #       - asset: assets/fonts/Fredoka-Regular.ttf
+  #       - asset: assets/fonts/Fredoka-Bold.ttf
+  #         weight: 700
+  #   - family: Nunito
+  #     fonts:
+  #       - asset: assets/fonts/Nunito-Regular.ttf
+  #       - asset: assets/fonts/Nunito-Bold.ttf
+  #         weight: 700
+  
+  # Assets
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/audio/
+    - assets/data/
