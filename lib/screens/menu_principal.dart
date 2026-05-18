@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import 'chat_ia.dart';
+import 'diario/mi_composta.dart';
 
 class MenuPrincipal extends StatelessWidget {
   const MenuPrincipal({super.key});
@@ -24,7 +25,12 @@ class MenuPrincipal extends StatelessWidget {
             _buildMenuButton('Juegos', Icons.games, AppTheme.azulCielo, () {}),
             _buildMenuButton('Cuestionarios', Icons.quiz, AppTheme.verde, () {}),
             _buildMenuButton('Historias', Icons.book, AppTheme.cafe, () {}),
-            _buildMenuButton('Mi Composta 📸', Icons.camera_alt, AppTheme.amarillo, () {}),
+            _buildMenuButton('Mi Composta 📸', Icons.camera_alt, AppTheme.amarillo, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MiCompostaScreen()),
+              );
+            }),
             _buildMenuButton('Pregúntale\na Lola 🤖', Icons.chat, AppTheme.azulCielo, () {
               Navigator.push(
                 context,
