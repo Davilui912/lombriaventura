@@ -14,6 +14,7 @@ void main() async {
   await Hive.openBox('diario');
   await Hive.openBox('configuracion');
   await Hive.openBox('chat_historial');
+  await Hive.openBox('actividad');
   
   runApp(const LombiAventuraApp());
 }
