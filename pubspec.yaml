@@ -36,7 +36,7 @@ dependencies:
   path_provider: ^2.1.4        # Rutas del sistema
   share_plus: ^10.1.2          # Compartir avances
   screenshot: ^3.0.0           # Capturar imagen para compartir
-  flutter_local_notifications: ^18.0.0  # Recordatorios
+  #flutter_local_notifications: ^18.0.0  # Recordatorios
   intl: ^0.19.0                # Formato de fechas
   google_fonts: ^8.1.0
   google_generative_ai: ^0.4.7
