@@ -2,8 +2,15 @@ class EntradaDiario {
   final String id;
   final DateTime fecha;
   final String? nota;
-  final List<String> fotosRutas; // Rutas locales de las fotos
-  final String estado; // 😊 Excelente, 😐 Regular, 😟 Necesita ayuda
+  final List<String> fotosRutas;
+  final String estado; // 😊 😐 😟
+
+  // NUEVOS CAMPOS
+  final int? humedad; // 1-10 (qué tan húmeda está)
+  final double? temperatura; // °C
+  final String? tipoResiduo; // "Frutas", "Verduras", "Café", "Mixto"
+  final double? produccionComposta; // gramos
+  final double? produccionLixiviado; // mililitros
 
   EntradaDiario({
     required this.id,
@@ -11,9 +18,13 @@ class EntradaDiario {
     this.nota,
     this.fotosRutas = const [],
     this.estado = '😊',
+    this.humedad,
+    this.temperatura,
+    this.tipoResiduo,
+    this.produccionComposta,
+    this.produccionLixiviado,
   });
 
-  // Convertir a Map para guardar en Hive
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -21,10 +32,14 @@ class EntradaDiario {
       'nota': nota,
       'fotosRutas': fotosRutas,
       'estado': estado,
+      'humedad': humedad,
+      'temperatura': temperatura,
+      'tipoResiduo': tipoResiduo,
+      'produccionComposta': produccionComposta,
+      'produccionLixiviado': produccionLixiviado,
     };
   }
 
-  // Crear desde Map (al leer de Hive)
   factory EntradaDiario.fromMap(Map<String, dynamic> map) {
     return EntradaDiario(
       id: map['id'],
@@ -32,6 +47,11 @@ class EntradaDiario {
       nota: map['nota'],
       fotosRutas: List<String>.from(map['fotosRutas'] ?? []),
       estado: map['estado'] ?? '😊',
+      humedad: map['humedad'],
+      temperatura: map['temperatura'],
+      tipoResiduo: map['tipoResiduo'],
+      produccionComposta: map['produccionComposta'],
+      produccionLixiviado: map['produccionLixiviado'],
     );
   }
 }

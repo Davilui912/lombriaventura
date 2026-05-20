@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
+import '../../services/monedas_service.dart';
 
 class AlimentaLolaScreen extends StatefulWidget {
   const AlimentaLolaScreen({super.key});
@@ -101,32 +102,39 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
   }
 
   void _tocarComida() {
-    if (!_jugando || _comidaActual == null) return;
+      if (!_jugando || _comidaActual == null) return;
 
-    if (_comidaCorrecta) {
-      // ¡Comida buena! Lola come feliz
-      setState(() {
-        _puntuacion += (_comidaActual?['puntos'] ?? 10) as int;
-        _mensaje = '¡Ñam ñam! ${_comidaActual?['emoji']} ¡Gracias! 😋';
-      });
-      if (_puntuacion >= 30) {
-        LogrosService().desbloquearInsignia('alimentador');
+      if (_comidaCorrecta) {
+        // ¡Comida buena! Lola come feliz
+        setState(() {
+          _puntuacion += (_comidaActual?['puntos'] ?? 10) as int;
+          _mensaje = '¡Ñam ñam! ${_comidaActual?['emoji']} ¡Gracias! 😋';
+        });
+        
+        // Dar monedas al llegar a 20 puntos
+        if (_puntuacion >= 20) {
+          MonedasService().ganarPorActividad('juego');
         }
-      _generarComida();
-    } else {
-      // ¡Comida mala! Lola se enferma
-      setState(() {
-        _vidas--;
-        _mensaje = '¡NOOO! ${_comidaActual?['emoji']} es MALO para Lola 😢';
-        if (_vidas <= 0) {
-          _terminarJuego();
-          return;
+        
+        // Desbloquear insignia al llegar a 30 puntos
+        if (_puntuacion >= 30) {
+          LogrosService().desbloquearInsignia('alimentador');
         }
-      });
-      _generarComida();
+        
+        _generarComida();
+      } else {
+        // ¡Comida mala! Lola se enferma
+        setState(() {
+          _vidas--;
+          _mensaje = '¡NOOO! ${_comidaActual?['emoji']} es MALO para Lola 😢';
+          if (_vidas <= 0) {
+            _terminarJuego();
+            return;
+          }
+        });
+        _generarComida();
+      }
     }
-  }
-
   void _terminarJuego() {
     _timer?.cancel();
     _timerComida?.cancel();

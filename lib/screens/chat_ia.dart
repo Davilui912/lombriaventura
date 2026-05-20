@@ -3,6 +3,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../services/ia_service.dart';
 import '../config/theme.dart';
+import '../../services/monedas_service.dart';
 
 class ChatIAScreen extends StatefulWidget {
   const ChatIAScreen({super.key});
@@ -68,6 +69,8 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
 
     // Obtener respuesta de Lola
     final respuesta = await _iaService.preguntar(texto);
+    MonedasService().ganarPorActividad('chat');
+
 
     // Actualizar mensaje con la respuesta
     setState(() {

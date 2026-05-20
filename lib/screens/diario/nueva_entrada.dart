@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
+import '../../services/monedas_service.dart';
 import '../../services/diario_service.dart';
 
 class NuevaEntradaScreen extends StatefulWidget {
@@ -13,15 +14,33 @@ class NuevaEntradaScreen extends StatefulWidget {
 class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   final DiarioService _diarioService = DiarioService();
   final TextEditingController _notaController = TextEditingController();
+  final TextEditingController _tempController = TextEditingController();
+  final TextEditingController _compostaController = TextEditingController();
+  final TextEditingController _lixiviadoController = TextEditingController();
+  
   List<String> _fotosTomadas = [];
   String _estadoSeleccionado = '😊';
+  int _humedad = 5;
+  String _tipoResiduo = 'Mixto';
   bool _guardando = false;
+  bool _mostrarAvanzado = false;
 
   final List<Map<String, String>> _estados = [
     {'emoji': '😊', 'label': '¡Excelente!'},
     {'emoji': '😐', 'label': 'Regular'},
     {'emoji': '😟', 'label': 'Necesita ayuda'},
   ];
+
+  final List<String> _tiposResiduo = ['Frutas', 'Verduras', 'Cáscaras', 'Café', 'Mixto'];
+
+  @override
+  void dispose() {
+    _notaController.dispose();
+    _tempController.dispose();
+    _compostaController.dispose();
+    _lixiviadoController.dispose();
+    super.dispose();
+  }
 
   Future<void> _tomarFoto() async {
     if (_fotosTomadas.length >= 3) {
@@ -42,10 +61,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Tomar foto',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              const Text('Tomar foto', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: AppTheme.verde),
@@ -53,9 +69,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   final ruta = await _diarioService.tomarFoto();
-                  if (ruta != null) {
-                    setState(() => _fotosTomadas.add(ruta));
-                  }
+                  if (ruta != null) setState(() => _fotosTomadas.add(ruta));
                 },
               ),
               ListTile(
@@ -64,9 +78,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   final ruta = await _diarioService.seleccionarDeGaleria();
-                  if (ruta != null) {
-                    setState(() => _fotosTomadas.add(ruta));
-                  }
+                  if (ruta != null) setState(() => _fotosTomadas.add(ruta));
                 },
               ),
             ],
@@ -83,48 +95,38 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
       fotosRutas: _fotosTomadas,
       nota: _notaController.text.isNotEmpty ? _notaController.text : null,
       estado: _estadoSeleccionado,
+      humedad: _humedad,
+      temperatura: _tempController.text.isNotEmpty ? double.tryParse(_tempController.text) : null,
+      tipoResiduo: _tipoResiduo,
+      produccionComposta: _compostaController.text.isNotEmpty ? double.tryParse(_compostaController.text) : null,
+      produccionLixiviado: _lixiviadoController.text.isNotEmpty ? double.tryParse(_lixiviadoController.text) : null,
     );
-
-    if (mounted) {
-      Navigator.pop(context, true); // true = se guardó algo
-    }
-  }
-
-  @override
-  void dispose() {
-    _notaController.dispose();
-    super.dispose();
+    await MonedasService().ganarPorActividad('diario');
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('📝 Nueva entrada'),
-      ),
+      appBar: AppBar(title: const Text('📝 Nueva entrada')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Sección de fotos
-            const Text(
-              '📸 Fotos de tu composta',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe),
-            ),
+            // Fotos
+            const Text('📸 Fotos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
             const SizedBox(height: 10),
             Row(
               children: [
-                // Botón para tomar foto
                 GestureDetector(
                   onTap: _tomarFoto,
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 100, height: 100,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF5F9EE),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: AppTheme.verde, width: 2, strokeAlign: BorderSide.strokeAlignInside),
+                      border: Border.all(color: AppTheme.verde, width: 2),
                     ),
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,92 +139,62 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Fotos tomadas
                 Expanded(
                   child: SizedBox(
                     height: 100,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: _fotosTomadas.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: Image.file(
-                                  File(_fotosTomadas[index]),
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.file(File(_fotosTomadas[index]), width: 100, height: 100, fit: BoxFit.cover),
+                            ),
+                            Positioned(
+                              top: 2, right: 2,
+                              child: GestureDetector(
+                                onTap: () => setState(() => _fotosTomadas.removeAt(index)),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 16),
                                 ),
                               ),
-                              Positioned(
-                                top: 2,
-                                right: 2,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() => _fotosTomadas.removeAt(index));
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
-            // Estado de la composta
-            const Text(
-              '🌱 ¿Cómo va tu composta?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe),
-            ),
+            // Estado
+            const Text('🌱 ¿Cómo va?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _estados.map((estado) {
-                final seleccionado = _estadoSeleccionado == estado['emoji'];
+                final sel = _estadoSeleccionado == estado['emoji'];
                 return GestureDetector(
-                  onTap: () {
-                    setState(() => _estadoSeleccionado = estado['emoji']!);
-                  },
+                  onTap: () => setState(() => _estadoSeleccionado = estado['emoji']!),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: seleccionado ? AppTheme.verde.withValues(alpha: 0.2) : Colors.white,
+                      color: sel ? AppTheme.verde.withValues(alpha: 0.2) : Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: seleccionado ? AppTheme.verde : Colors.grey[300]!,
-                        width: 2,
-                      ),
+                      border: Border.all(color: sel ? AppTheme.verde : Colors.grey[300]!, width: 2),
                     ),
                     child: Column(
                       children: [
-                        Text(estado['emoji']!, style: const TextStyle(fontSize: 35)),
-                        const SizedBox(height: 4),
-                        Text(
-                          estado['label']!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: seleccionado ? AppTheme.verde : Colors.grey[600],
-                            fontWeight: seleccionado ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
+                        Text(estado['emoji']!, style: const TextStyle(fontSize: 30)),
+                        Text(estado['label']!, style: TextStyle(fontSize: 11, color: sel ? AppTheme.verde : Colors.grey[600])),
                       ],
                     ),
                   ),
@@ -230,31 +202,164 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
               }).toList(),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
             // Nota
-            const Text(
-              '📝 Nota (opcional)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe),
-            ),
+            const Text('📝 Nota', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
             const SizedBox(height: 10),
             TextField(
               controller: _notaController,
-              maxLines: 3,
+              maxLines: 2,
               decoration: InputDecoration(
                 hintText: 'Ej: Hoy les di cáscaras de plátano...',
                 hintStyle: TextStyle(color: Colors.grey[400]),
-                filled: true,
-                fillColor: const Color(0xFFF5F5F5),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
+                filled: true, fillColor: const Color(0xFFF5F5F5),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.all(16),
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 15),
+
+            // Botón avanzado
+            GestureDetector(
+              onTap: () => setState(() => _mostrarAvanzado = !_mostrarAvanzado),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.verde.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.verde.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(_mostrarAvanzado ? Icons.expand_less : Icons.expand_more, color: AppTheme.verde),
+                    const SizedBox(width: 6),
+                    Text(
+                      _mostrarAvanzado ? 'Ocultar detalles' : 'Agregar más detalles 🌱',
+                      style: const TextStyle(color: AppTheme.verde, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Campos avanzados
+            if (_mostrarAvanzado) ...[
+              const SizedBox(height: 15),
+
+              // Humedad
+              const Text('💧 Humedad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Text('Seco', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  Expanded(
+                    child: Slider(
+                      value: _humedad.toDouble(),
+                      min: 1, max: 10, divisions: 9,
+                      activeColor: AppTheme.verde,
+                      label: '$_humedad/10',
+                      onChanged: (val) => setState(() => _humedad = val.round()),
+                    ),
+                  ),
+                  const Text('Empapado', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+              Center(
+                child: Text(
+                  _humedad <= 3 ? '🟡 Muy seco' : _humedad <= 6 ? '🟢 Ideal' : _humedad <= 8 ? '🟡 Húmedo' : '🔴 Muy mojado',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Temperatura
+              const Text('🌡️ Temperatura (°C)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _tempController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Ej: 22.5',
+                  suffixText: '°C',
+                  filled: true, fillColor: const Color(0xFFF5F5F5),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Tipo de residuo
+              const Text('🍎 Tipo de residuo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                children: _tiposResiduo.map((tipo) {
+                  final sel = _tipoResiduo == tipo;
+                  return ChoiceChip(
+                    label: Text(tipo),
+                    selected: sel,
+                    selectedColor: AppTheme.verde.withValues(alpha: 0.3),
+                    onSelected: (_) => setState(() => _tipoResiduo = tipo),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Producción
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('🪱 Composta (g)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _compostaController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Gramos',
+                            suffixText: 'g',
+                            filled: true, fillColor: const Color(0xFFF5F5F5),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('💧 Lixiviado (ml)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _lixiviadoController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Mililitros',
+                            suffixText: 'ml',
+                            filled: true, fillColor: const Color(0xFFF5F5F5),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 30),
 
             // Botón guardar
             SizedBox(
@@ -263,15 +368,12 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                 onPressed: _guardando ? null : _guardarEntrada,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.verde,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 ),
                 child: _guardando
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(color: Colors.white),
-                      )
-                    : const Text('💾 Guardar entrada', style: TextStyle(fontSize: 18)),
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white))
+                    : const Text('💾 Guardar entrada', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ),
           ],

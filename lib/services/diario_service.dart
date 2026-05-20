@@ -60,10 +60,16 @@ class DiarioService {
   }
 
   // Guardar nueva entrada
+  // Busca el método guardarEntrada y cámbialo por esto:
   Future<void> guardarEntrada({
     required List<String> fotosRutas,
     String? nota,
     String estado = '😊',
+    int? humedad,
+    double? temperatura,
+    String? tipoResiduo,
+    double? produccionComposta,
+    double? produccionLixiviado,
   }) async {
     final box = Hive.box(_boxName);
     final entrada = EntradaDiario(
@@ -72,6 +78,11 @@ class DiarioService {
       nota: nota,
       fotosRutas: fotosRutas,
       estado: estado,
+      humedad: humedad,
+      temperatura: temperatura,
+      tipoResiduo: tipoResiduo,
+      produccionComposta: produccionComposta,
+      produccionLixiviado: produccionLixiviado,
     );
     await box.put(entrada.id, entrada.toMap());
   }
