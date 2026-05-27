@@ -1,122 +1,128 @@
-import 'dart:math';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class IAService {
-  // MODO SIMULACIÓN: Cambia a false cuando tengas una API real
-  static const bool _modoSimulacion = true;
+  // ⚠️ PEGA AQUÍ TU NUEVA API KEY
+  static const String _apiKey = 'AIzaSyBib7qzmsaB-SfTTOS6H-yKer4HHwnZNtI';
 
+  // Historial de conversación
   final List<Map<String, dynamic>> _historial = [];
+  int _contadorPreguntas = 0;
+  String _fechaHoy = '';
 
-  // Base de conocimientos de Lola
-  static final Map<String, List<String>> _respuestasPredefinidas = {
-    'lombrices': [
-      '¡Las lombrices somos increíbles! 🪱 Vivimos en la tierra, comemos restos de comida y hacemos el mejor fertilizante del mundo: ¡el humus!',
-      'Somos pequeñas pero poderosas. Ayudamos a que las plantas crezcan fuertes y sanas. ¡Somos las mejores amigas de tu jardín! 🌱',
-      '¿Sabías que respiramos por la piel? Por eso necesitamos vivir en lugares húmedos. ¡El agua es nuestra aliada! 💧',
-    ],
-    'comen': [
-      '¡Nos encantan las cáscaras de frutas y verduras! 🍎🥕 También el café molido, cáscaras de huevo trituradas y hojas secas. ¡Pero nada de carne ni lácteos!',
-      'Somos vegetarianas. Comemos restos de cocina como cáscaras, pero no nos des cítricos en exceso ni cebolla. ¡Ayudamos a reciclar! ♻️',
-    ],
-    'composta': [
-      'La lombricomposta es como una granja de lombrices donde convertimos tus residuos en tierra mágica para las plantas. 🌱✨',
-      '¡Es súper fácil! Necesitas un contenedor, lombrices, tierra y restos de comida. Nosotras hacemos el trabajo pesado. 🪱',
-      'Hacer composta ayuda al planeta. Reduces basura y obtienes el mejor abono natural. ¡Tus plantas te lo agradecerán! 🌍',
-    ],
-    'residuos': [
-      'Puedes usar: cáscaras de frutas 🍌, verduras 🥕, café ☕, hojas secas 🍂, y cáscaras de huevo trituradas 🥚. ¡Nada de plástico o metal!',
-      'Los residuos orgánicos son nuestro buffet favorito. Recuerda cortarlos en trocitos pequeños para que podamos comerlos más fácil. ✂️',
-    ],
-    'reciclar': [
-      'Reciclar es darle una segunda vida a las cosas. ¡Con la lombricomposta reciclas tus residuos de cocina y ayudas al planeta! 🌍♻️',
-      'Cuando reciclas con nosotras, conviertes basura en tesoro. ¡El humus que producimos es oro negro para las plantas! 🌱✨',
-    ],
-    'plantas': [
-      'Las plantas aman nuestro humus. Crece más rápido, más fuerte y más sano. ¡Es como un súper alimento para ellas! 🌻',
-      'Con lombricomposta, tus plantas tendrán flores más bonitas y frutos más sabrosos. ¡La naturaleza es sabia! 🌸',
-    ],
-    'humus': [
-      'El humus es el tesoro que producimos las lombrices. Es un abono natural que huele a tierra fresca y hace felices a las plantas. 🪱✨',
-      'Cosechar humus es muy gratificante. Después de 2-3 meses, tendrás el mejor fertilizante del mundo. ¡Gratis y ecológico! 🌱',
-    ],
-  };
+  // Prompt de sistema con la personalidad de Lola
+  static const String _instruccionesLola = '''
+Eres Lola, una lombriz de composta muy alegre, divertida y amigable 🪱.
+Tu misión es enseñar a niños y niñas de 9 a 12 años sobre ecología, reciclaje y cómo hacer composta.
 
-  // Respuestas para cuando no encuentra tema
-  static final List<String> _respuestasFueraTema = [
-    '¡Uy! Eso no es de mi especialidad. Mejor pregúntame sobre lombrices, composta o cómo cuidar las plantitas. 🌱',
-    '¡Vaya! De eso no sé mucho. Pero si quieres saber de compostaje, ¡soy una experta! 🪱',
-    'Hmm, déjame pensar... ¡Mejor hablemos de cómo hacer composta juntos! ¿Te parece? ♻️',
-  ];
-
-  // Saludos
-  static final Map<String, String> _saludos = {
-    'hola': '¡Hola, peque! 🪱 Soy Lola, tu amiga lombriz. ¿Quieres aprender sobre compostaje hoy?',
-    'buenos días': '¡Buenos días, amiguito o amiguita! ☀️ ¿Listo para cuidar el planeta conmigo?',
-    'buenas tardes': '¡Buenas tardes! 🌤️ ¿Vamos a aprender algo divertido sobre lombrices?',
-    'gracias': '¡De nada, peque! Me encanta enseñarte. ¿Alguna otra pregunta? 🌟',
-    'adiós': '¡Hasta luego, Eco Héroe! Vuelve pronto a cuidar el planeta conmigo. 🪱💚',
-  };
+REGLAS OBLIGATORIAS:
+1. Responde SIEMPRE en español.
+2. Usa un tono cariñoso, palabras sencillas y explicaciones cortas (máximo 4 oraciones).
+3. Usa emojis de naturaleza: 🪱🌱🍎♻️🌍
+4. Dirígete de forma inclusiva: "amiguito o amiguita", "peques".
+5. Si la pregunta NO es sobre lombrices, compostaje, plantas, reciclaje o ecología, responde:
+   "¡Uy! Eso no es de mi especialidad. Mejor pregúntame sobre lombrices, composta o cómo cuidar las plantitas. 🌱"
+6. Si te preguntan algo inapropiado, responde:
+   "Prefiero no hablar de eso. ¡Hablemos de la composta mejor! 🪱"
+''';
 
   List<Map<String, dynamic>> obtenerHistorial() {
     return List.from(_historial);
   }
 
   int preguntasRestantes() {
-    if (_modoSimulacion) return 999; // Ilimitado en modo simulación
+    _verificarNuevoDia();
     const limite = 15;
-    return (limite - _historial.length).clamp(0, limite);
+    return (limite - _contadorPreguntas).clamp(0, limite);
   }
 
-  String _buscarRespuestaLocal(String pregunta) {
-    final preguntaLower = pregunta.toLowerCase().trim();
-
-    // 1. Verificar saludos
-    for (var entrada in _saludos.entries) {
-      if (preguntaLower.contains(entrada.key)) {
-        return entrada.value;
-      }
+  void _verificarNuevoDia() {
+    final hoy = DateTime.now().toIso8601String().split('T')[0];
+    if (_fechaHoy != hoy) {
+      _fechaHoy = hoy;
+      _contadorPreguntas = 0;
     }
-
-    // 2. Buscar en la base de conocimientos
-    for (var tema in _respuestasPredefinidas.entries) {
-      if (preguntaLower.contains(tema.key)) {
-        final respuestas = tema.value;
-        return respuestas[Random().nextInt(respuestas.length)];
-      }
-    }
-
-    // 3. Si la pregunta es muy corta (probablemente sin sentido)
-    if (preguntaLower.length < 3) {
-      return 'No entendí muy bien, peque. ¿Puedes hacer una pregunta más larga? 🪱';
-    }
-
-    // 4. Respuesta fuera de tema
-    return _respuestasFueraTema[Random().nextInt(_respuestasFueraTema.length)];
   }
 
   Future<String> preguntar(String textoDelNino) async {
-    if (_modoSimulacion) {
-      // Simular un pequeño delay para que parezca real
-      await Future.delayed(const Duration(milliseconds: 800));
+    _verificarNuevoDia();
+
+    // Verificar límite diario
+    if (_contadorPreguntas >= 15) {
+      return '¡Guau! Ya hiciste muchas preguntas hoy. ¡Qué curioso eres! Regresa mañana y seguimos aprendiendo juntos. 🌟';
+    }
+
+    try {
+      // 1. Crear el modelo con instrucciones de sistema
+      final model = GenerativeModel(
+        model: 'gemini-2.0-flash',
+        apiKey: _apiKey,
+        systemInstruction: Content.system(_instruccionesLola),
+        generationConfig: GenerationConfig(
+          temperature: 0.7,
+          maxOutputTokens: 150,
+          topP: 0.8,
+        ),
+      );
+
+      // 2. Construir historial para el chat
+      final List<Content> chatHistory = [];
       
-      final respuesta = _buscarRespuestaLocal(textoDelNino);
-      
+      // Solo incluir últimos 5 intercambios para contexto
+      final historialRelevante = _historial.take(10).toList();
+      for (var mensaje in historialRelevante.reversed) {
+        chatHistory.add(Content.text(mensaje['pregunta']));
+        if (mensaje['respuesta'] != null && mensaje['respuesta'].toString().isNotEmpty) {
+          chatHistory.add(Content.model([TextPart(mensaje['respuesta'])]));
+        }
+      }
+
+      // 3. Iniciar chat con historial
+      final chat = model.startChat(history: chatHistory);
+
+      // 4. Enviar pregunta
+      final response = await chat.sendMessage(Content.text(textoDelNino));
+      final String respuestaLola = response.text ?? '¡Uy! Me quedé sin palabras, peque. 🪱';
+
+      // 5. Incrementar contador
+      _contadorPreguntas++;
+
+      // 6. Guardar en historial
       _historial.insert(0, {
         'pregunta': textoDelNino,
-        'respuesta': respuesta,
+        'respuesta': respuestaLola,
         'fecha': DateTime.now().toIso8601String(),
       });
 
-      if (_historial.length > 30) _historial.removeLast();
+      // Mantener solo últimos 30 mensajes
+      if (_historial.length > 30) {
+        _historial.removeLast();
+      }
 
-      return respuesta;
+      print('✅ Lola respondió: $respuestaLola');
+      return respuestaLola;
+
+    } catch (e) {
+      print('❌ ERROR GEMINI: $e');
+      
+      // Si falla la API, usar respuesta de respaldo
+      return _obtenerRespuestaRespaldo(textoDelNino);
     }
-
-    // Aquí iría la conexión a API real cuando la tengas
-    return 'Modo API no configurado. Activa el modo simulación.';
   }
 
-  /// Método para recargar conocimiento (útil en futuro)
-  void agregarConocimiento(String tema, List<String> respuestas) {
-    _respuestasPredefinidas[tema] = respuestas;
+  // Respuestas de respaldo por si falla la API
+  String _obtenerRespuestaRespaldo(String pregunta) {
+    final preguntaLower = pregunta.toLowerCase();
+    
+    if (preguntaLower.contains('comen') || preguntaLower.contains('comida')) {
+      return '¡Nos encantan las cáscaras de frutas y verduras! 🍎🥕 También el café molido y cáscaras de huevo. ¡Pero nada de carne ni lácteos! 🪱';
+    } else if (preguntaLower.contains('composta') || preguntaLower.contains('hacer')) {
+      return '¡Es muy fácil! Necesitas un contenedor, lombrices, tierra y restos de comida. ¡Nosotras hacemos el trabajo! 🌱';
+    } else if (preguntaLower.contains('humedad') || preguntaLower.contains('agua')) {
+      return 'La composta debe estar húmeda como una esponja exprimida. Si está seca, rocía un poco de agua. 💧';
+    } else if (preguntaLower.contains('hola')) {
+      return '¡Hola, peque! 🪱 Soy Lola, tu amiga lombriz. ¿Quieres aprender sobre compostaje hoy?';
+    } else {
+      return '¡Qué buena pregunta! 🪱 Aunque mi lombri-cerebro está un poco lento ahora. ¿Me preguntas de nuevo? 🌱';
+    }
   }
 }

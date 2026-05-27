@@ -16,6 +16,7 @@ import 'historial_monedas.dart';
 import 'max_crecimiento.dart';
 import '../services/recordatorios_service.dart';
 import 'recordatorios.dart';
+import 'avisos.dart';
 
 class MenuPrincipal extends StatefulWidget {
   const MenuPrincipal({super.key});
@@ -449,6 +450,8 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                       () => _irAPantalla(const NuevaEntradaScreen())),
                   _buildOpcion('💬 Pregúntale a Lola', 'Chat educativo', Icons.chat,
                       () => _irAPantalla(const ChatIAScreen())),
+                  _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber,
+                     () => _irAPantalla(const AvisosScreen())),
                 ],
               ),
 

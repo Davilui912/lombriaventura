@@ -29,25 +29,42 @@ class MonedasService {
 
   // Obtener historial de transacciones
   List<Map<String, dynamic>> obtenerHistorial() {
-    final box = Hive.box(_boxName);
-    final historial = box.get('historial', defaultValue: <Map>[]);
-    return List<Map<String, dynamic>>.from(historial);
-  }
+      final box = Hive.box(_boxName);
+      final historialRaw = box.get('historial', defaultValue: <Map>[]);
+      List<Map<String, dynamic>> historial = [];
+      
+      for (var item in historialRaw) {
+        historial.add(Map<String, dynamic>.from(item));
+      }
+      
+      return historial;
+    }
 
   // Registrar transacción
   Future<void> _registrarTransaccion(String concepto, int cantidad, String tipo) async {
-    final box = Hive.box(_boxName);
-    final historial = obtenerHistorial();
-    historial.insert(0, {
-      'concepto': concepto,
-      'cantidad': cantidad,
-      'tipo': tipo, // 'ganancia' o 'gasto'
-      'fecha': DateTime.now().toIso8601String(),
-    });
-    // Mantener solo últimas 50
-    if (historial.length > 50) historial.removeLast();
-    await box.put('historial', historial);
-  }
+      final box = Hive.box(_boxName);
+      
+      // Obtener historial existente
+      final historialRaw = box.get('historial', defaultValue: <Map>[]);
+      final historial = historialRaw
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      
+      // Agregar nueva transacción
+      historial.insert(0, {
+        'concepto': concepto,
+        'cantidad': cantidad,
+        'tipo': tipo,
+        'fecha': DateTime.now().toIso8601String(),
+      });
+      
+      // Mantener solo últimas 50
+      if (historial.length > 50) {
+        historial.removeLast();
+      }
+      
+      await box.put('historial', historial);
+    }
 
   // Ganar monedas por actividad
   Future<void> ganarPorActividad(String actividad) async {
