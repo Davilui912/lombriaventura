@@ -104,9 +104,8 @@ class IaService {
     }
     
     if (preguntaLower.contains('emprendimiento') || preguntaLower.contains('vender') || preguntaLower.contains('dinero')) {
-      return '💰 ¡Sí! Puedes vender humus (composta) a $50-100 MXN por kilo, lixiviado a $30-50 MXN por litro, o vender lombrices a $100-200 MXN por 100. ¡Ayudas al planeta y ganas dinero! 🪱✨';
+  return '💰 ¡Sí! Puedes vender humus (composta) a \$50-100 MXN por kilo, lixiviado a \$30-50 MXN por litro, o vender lombrices a \$100-200 MXN por 100. ¡Ayudas al planeta y ganas dinero! 🪱✨';
     }
-    
     if (preguntaLower.contains('problemas') || preguntaLower.contains('contaminacion') || preguntaLower.contains('basura')) {
       return '⚠️ La basura mezclada en vertederos produce LIXIVIADO TÓXICO que contamina el agua y el suelo. Por eso separamos los residuos orgánicos y hacemos composta. ¡Tú puedes ayudar! 🌍';
     }

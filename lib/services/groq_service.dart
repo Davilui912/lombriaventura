@@ -81,7 +81,8 @@ RESPUESTA DE LOLA:
             {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.7,
-          'max_tokens': 250,
+          'max_tokens': 900,
+          'top_p': 0.95,
         }),
       );
       
