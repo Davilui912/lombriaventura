@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'menu_principal.dart';
+import '../widgets/logo_lombriaventura.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -69,22 +70,10 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Aquí irá la animación de Lola (por ahora un placeholder)
-                  Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: const Icon(
-                      Icons.bug_report,  // Placeholder de Lola
-                      size: 100,
-                      color: Color(0xFF8B5E3C),
-                    ),
-                  ),
+                const LogoLombriaventura(size: 150, mostrarTexto: false),
                   const SizedBox(height: 30),
                   const Text(
-                    'LombiAventura',
+                    'LombriAventura',
                     style: TextStyle(
                       fontFamily: 'Fredoka',
                       fontSize: 42,

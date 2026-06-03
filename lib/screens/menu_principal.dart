@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../services/logros_service.dart';
 import '../services/actividad_service.dart';
-import 'chat_ia.dart';
+import 'chat_ia_screen.dart';      // ✅ Correcto
 import 'diario/mi_composta.dart';
 import 'diario/nueva_entrada.dart';
 import 'juegos/clasifica_residuos.dart';
@@ -10,13 +10,14 @@ import 'juegos/alimenta_lola.dart';
 import 'juegos/memorama.dart';
 import 'tienda/catalogo.dart';
 import 'logros.dart';
-import 'modulo_educativo.dart';
+import 'modulo_educativo.dart';     // ✅ Ahora sí existe
 import 'tienda_accesorios.dart';
 import 'historial_monedas.dart';
 import 'max_crecimiento.dart';
 import '../services/recordatorios_service.dart';
 import 'recordatorios.dart';
 import 'avisos.dart';
+
 
 class MenuPrincipal extends StatefulWidget {
   const MenuPrincipal({super.key});
@@ -94,7 +95,41 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
       MaterialPageRoute(builder: (_) => pantalla),
     );
   }
-
+  Widget _buildMenuButton(String label, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.cafe),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildPersonajes() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -293,12 +328,37 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                 index: 0,
                 opciones: [
                   _buildOpcion('Conoce a las lombrices', 'Aprende sobre Lola y Lalo', Icons.bug_report,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '🪱 Conoce a las lombrices',
                       descripcion: 'Las lombrices son pequeñas pero poderosas aliadas del planeta.',
-                      informacion: 'Las lombrices californianas son las mejores para hacer composta. '
-                          'Son diferentes a las lombrices de jardín porque comen más rápido y se adaptan mejor a los contenedores.\n\n'
-                          'Viven en la tierra, necesitan humedad y oscuridad. Respiran por la piel y comen restos orgánicos.',
+                      informacion: '🐛 ¡Hola! Soy Lola, una lombriz roja californiana. '
+                            'Somos las mejores para hacer composta porque comemos muy rápido.\n\n'
+                            '🌱 ¿CÓMO NACEMOS?\n'
+                            'Nos juntamos en pareja y compartimos una parte de nuestro cuerpo. '
+                            'Ponemos huevitos dentro de capullos ¡Cada 10 días! De cada capullo '
+                            'pueden nacer entre 2 y 5 lombrices bebés. Las bebés tardan 2 o 3 '
+                            'meses en ser adultas (lo sabrás cuando veas un anillo en nuestro cuerpo).\n\n'
+                            '🍎 ¿QUÉ COMEMOS? (¡ATENCIÓN!)\n'
+                            'NO comemos residuos frescos. Tienen que esperar unos días a que '
+                            'se fermenten. Nos encanta: cáscaras de frutas/verduras EN TROZOS '
+                            'PEQUEÑOS, restos de café, hojas secas, cartón mojado, '
+                            'cáscara de huevo triturada.\n\n'
+                            '🚫 ¡NUNCA NOS DES! Carnes, huesos, lácteos, cítricos en exceso, '
+                            'sal, aceites, plásticos. Eso nos enferma o nos puede matar.\n\n'
+                            '🏠 NUESTRO HOGAR PERFECTO\n'
+                            '• Temperatura: 15°C - 25°C (sin frío ni calor extremos)\n'
+                            '• Humedad: como una esponja escurrida (prueba del puño)\n'
+                            '• Un recipiente con drenaje para que salga el lixiviado\n'
+                            '• Malla para que no entren moscas\n\n'
+                            '💧 ¿QUÉ ES EL LIXIVIADO?\n'
+                            'Es el líquido que sale de la composta. ¡Es súper nutritivo! '
+                            'Se mezcla con 10 partes de agua y se echa a las plantas. '
+                            'Cuidado: el lixiviado de la basura común SÍ es tóxico, por eso '
+                            'separamos los residuos.\n\n'
+                            '🌟 ¿SABÍAS QUÉ?\n'
+                            '• No tenemos dientes, por eso corta nuestra comida chiquita\n'
+                            '• Podemos comer la mitad de nuestro peso cada día\n'
+                            '• Ayudamos a reducir la basura que contamina el agua y el suelo',
                       puntosClave: [
                         {'emoji': '🪱', 'titulo': 'Lombriz californiana', 'descripcion': 'La especie ideal para compostaje, come su peso en un día'},
                         {'emoji': '🌍', 'titulo': 'Viven en la tierra', 'descripcion': 'Necesitan humedad y oscuridad para sobrevivir'},
@@ -308,7 +368,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('¿Qué es la lombricomposta?', 'Beneficios y proceso', Icons.recycling,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '♻️ ¿Qué es la lombricomposta?',
                       descripcion: 'La lombricomposta es un abono natural creado por lombrices que transforman residuos orgánicos en el mejor fertilizante para las plantas.',
                       informacion: 'La lombricomposta, también llamada vermicomposta, es el resultado de la descomposición de residuos orgánicos por lombrices californianas. '
@@ -323,7 +383,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('Aprende a hacerla', 'Paso a paso en casa', Icons.construction,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '🛠️ Aprende a hacerla',
                       descripcion: 'Crear tu propia lombricomposta es muy fácil. Solo necesitas seguir estos pasos y tener paciencia.',
                       informacion: 'Puedes hacer lombricomposta de dos formas:\n\n'
@@ -341,7 +401,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('Materiales necesarios', 'Lo que ocupas para empezar', Icons.list_alt,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '📋 Materiales necesarios',
                       descripcion: 'No necesitas muchas cosas para empezar tu lombricomposta. ¡Seguro ya tienes varias en casa!',
                       informacion: 'Los materiales básicos son económicos y fáciles de conseguir. '
@@ -357,7 +417,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('Balance 80/20', 'Nitrógeno y carbono', Icons.balance,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '⚖️ Balance 80/20',
                       descripcion: 'Para una composta saludable necesitas equilibrar materiales verdes (nitrógeno) y materiales secos (carbono).',
                       informacion: 'La regla es 80% material seco (carbono) y 20% material verde (nitrógeno).\n\n'
@@ -373,7 +433,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('Lixiviado', 'El oro líquido de la composta', Icons.water_drop,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '💧 Lixiviado',
                       descripcion: 'El lixiviado es un líquido oscuro que se produce durante la lombricomposta. ¡Es oro líquido para tus plantas!',
                       informacion: 'El lixiviado es el exceso de agua que escurre de la composta cargado de nutrientes.\n\n'
@@ -388,7 +448,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('Cuidados', 'Mantén felices a tus lombrices', Icons.favorite,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '💚 Cuidados',
                       descripcion: 'Las lombrices son seres vivos que necesitan cuidados básicos. ¡No te preocupes, es muy sencillo!',
                       informacion: 'Los 3 cuidados esenciales:\n\n'
@@ -404,7 +464,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                     )),
                   ),
                   _buildOpcion('Emprendimiento', 'Gana dinero ayudando al planeta', Icons.monetization_on,
-                    () => _irAPantalla(const ModuloEducativoScreen(
+                    () => _irAPantalla(ModuloEducativoScreen(
                       titulo: '💰 Emprendimiento',
                       descripcion: '¿Sabías que puedes ganar dinero con tu lombricomposta? ¡Aprende a vender y ayudar al planeta!',
                       informacion: 'Puedes vender:\n\n'
@@ -448,8 +508,17 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                       () => _irAPantalla(const MiCompostaScreen())),
                   _buildOpcion('➕ Nueva entrada', 'Registra tu avance', Icons.add_a_photo,
                       () => _irAPantalla(const NuevaEntradaScreen())),
-                  _buildOpcion('💬 Pregúntale a Lola', 'Chat educativo', Icons.chat,
-                      () => _irAPantalla(const ChatIAScreen())),
+                  _buildMenuButton(
+                    'Pregúntale\na Lola 🤖',
+                    Icons.chat,
+                    AppTheme.azulCielo,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ChatIAScreen()),
+                      );
+                    },
+                  ),
                   _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber,
                      () => _irAPantalla(const AvisosScreen())),
                 ],

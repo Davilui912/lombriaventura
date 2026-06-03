@@ -1,4 +1,4 @@
-name: lombiaventura
+name: lombriaventura
 description: App educativa infantil de lombricomposta
 version: 1.0.0+1
 
@@ -8,7 +8,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
+
   # UI y Animaciones
   cupertino_icons: ^1.0.8
   lottie: ^3.1.2               # Animaciones de Lola
@@ -61,7 +62,7 @@ flutter:
   #     fonts:
   #       - asset: assets/fonts/Nunito-Regular.ttf
   #       - asset: assets/fonts/Nunito-Bold.ttf
-  #         weight: 700
+  #         weight: 700 
   
   # Assets
   assets:
