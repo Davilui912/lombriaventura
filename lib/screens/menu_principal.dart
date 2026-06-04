@@ -541,7 +541,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                 ],
               ),
 
-
+          
 
               // ==================== PROGRESO ====================
               _buildCategoria(

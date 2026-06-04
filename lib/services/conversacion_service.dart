@@ -2,47 +2,66 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/conversacion.dart';
 
 class ConversacionService {
-  // ✅ Usar lateinit pero asegurando que se inicialice antes de usar
-  late final Box<Conversacion> _box;
+  static ConversacionService? _instance;
+  late Box<Conversacion> _box;
+  bool _isInitialized = false;
   
-  // ✅ Constructor que inicializa inmediatamente
-  ConversacionService() {
-    _init();
+  // ✅ Constructor privado (agregar esto)
+  ConversacionService._internal();
+  
+  // ✅ Método para obtener la instancia única
+  static Future<ConversacionService> getInstance() async {
+    if (_instance == null) {
+      _instance = ConversacionService._internal();  // Usar constructor privado
+      await _instance!._init();
+    }
+    return _instance!;
   }
   
+  // Inicialización asíncrona
   Future<void> _init() async {
     _box = await Hive.openBox<Conversacion>('conversaciones');
+    _isInitialized = true;
+    print('✅ ConversacionService inicializado correctamente');
   }
   
-  // ✅ Asegurar que el box esté listo antes de usarlo
-  Future<Box<Conversacion>> get box async {
-    await _init();
-    return _box;
+  // Asegurar que el box esté listo
+  Future<void> _ensureInitialized() async {
+    if (!_isInitialized) {
+      await _init();
+    }
   }
   
-  // ✅ Métodos que esperan a que el box esté listo
+  // Obtener todas las conversaciones
   Future<List<Conversacion>> obtenerTodas() async {
-    final box = await this.box;
-    final conversaciones = box.values.toList();
+    await _ensureInitialized();
+    final conversaciones = _box.values.toList();
     conversaciones.sort((a, b) => b.fecha.compareTo(a.fecha));
     return conversaciones;
   }
   
+  // Guardar conversación
   Future<void> guardarConversacion(Conversacion conversacion) async {
-    final box = await this.box;
-    await box.put(conversacion.id, conversacion);
+    await _ensureInitialized();
+    print('Guardando conversación: ${conversacion.id}');
+    print('Mensajes: ${conversacion.mensajes.length}');
+    await _box.put(conversacion.id, conversacion);
+    print('✅ Guardado exitoso');
   }
   
+  // Eliminar conversación
   Future<void> eliminarConversacion(String id) async {
-    final box = await this.box;
-    await box.delete(id);
+    await _ensureInitialized();
+    await _box.delete(id);
   }
   
+  // Obtener por ID
   Future<Conversacion?> obtenerPorId(String id) async {
-    final box = await this.box;
-    return box.get(id);
+    await _ensureInitialized();
+    return _box.get(id);
   }
   
+  // Generar título automático
   String generarTitulo(String primeraPregunta) {
     final titulo = primeraPregunta.length > 30 
         ? '${primeraPregunta.substring(0, 30)}...' 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'config.dart';
 
 class GroqService {
@@ -29,7 +30,7 @@ class GroqService {
       _preguntasHoy = 0;
       _ultimaFecha = hoy;
     }
-    return _preguntasHoy < 30; // 30 preguntas gratis por día
+    return _preguntasHoy < 30;
   }
   
   void _registrarPregunta() {
@@ -37,6 +38,11 @@ class GroqService {
   }
   
   int get preguntasRestantesHoy => 30 - _preguntasHoy;
+  
+  Future<bool> _tieneInternet() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
   
   Future<String> preguntarALola(String pregunta) async {
     if (pregunta.trim().isEmpty) {
@@ -47,53 +53,66 @@ class GroqService {
       return '🌟 ¡Guau! Ya hiciste 30 preguntas hoy. ¡Qué curioso eres! Regresa mañana. 🪱';
     }
     
+    if (!await _tieneInternet()) {
+      return _respuestaOffline(pregunta);
+    }
+    
     _registrarPregunta();
     
-    final prompt = '''
+    try {
+      final respuesta = await _preguntarGroq(pregunta);
+      if (respuesta.isNotEmpty) {
+        return respuesta;
+      }
+      return _respuestaOffline(pregunta);
+    } catch (e) {
+      print('Error en Groq: $e');
+      return _respuestaOffline(pregunta);
+    }
+  }
+  
+  Future<String> _preguntarGroq(String pregunta) async {
+    final promptSistema = '''
 Eres LOLA, una lombriz roja californiana simpática y sabia.
-Ayudas a niños de 6 a 12 años.
+Ayudas a niños de 6 a 12 años en la app "Lombriaventura".
 
-REGLAS:
-1. Responde SOLO sobre lombrices, lombricomposta, composta, residuos orgánicos, reciclaje, plantas.
+INSTRUCCIONES:
+1. Responde SOLO sobre lombrices, lombricomposta, composta, reciclaje, plantas.
 2. Si la pregunta NO es de estos temas, responde: "🌱 ¡Uy! Esa pregunta no es de mi especialidad. Mejor pregúntame sobre lombrices."
-3. Respuestas ALEGRES, con EMOJIS, máximo 3-4 oraciones.
+3. Respuestas ALEGRES, con EMOJIS, máximo 4 oraciones.
 4. Habla en PRIMERA PERSONA como Lola.
 
-MANUAL OFICIAL (USA SOLO ESTO):
+MANUAL OFICIAL:
 $_manualCompleto
 
-PREGUNTA DEL NIÑO: $pregunta
-
+PREGUNTA: $pregunta
 RESPUESTA DE LOLA:
 ''';
     
-    try {
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': 'llama-3.1-8b-instant', // Modelo gratuito y rápido
-          'messages': [
-            {'role': 'system', 'content': 'Eres Lola la lombriz, experta en compostaje.'},
-            {'role': 'user', 'content': prompt},
-          ],
-          'temperature': 0.7,
-          'max_tokens': 900,
-          'top_p': 0.95,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final respuesta = data['choices'][0]['message']['content'];
-        return respuesta.trim();
-      } else {
-        return _respuestaOffline(pregunta);
-      }
-    } catch (e) {
+    final response = await http.post(
+      Uri.parse(_apiUrl),
+      headers: {
+        'Authorization': 'Bearer $_apiKey',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'model': 'llama-3.1-8b-instant',
+        'messages': [
+          {'role': 'system', 'content': 'Eres Lola la lombriz, experta en compostaje para niños.'},
+          {'role': 'user', 'content': promptSistema},
+        ],
+        'temperature': 0.7,
+        'max_tokens': 800,
+        'top_p': 0.95,
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final respuesta = data['choices'][0]['message']['content'].trim();
+      return respuesta.isNotEmpty ? respuesta : _respuestaOffline(pregunta);
+    } else {
+      print('Error Groq: ${response.statusCode}');
       return _respuestaOffline(pregunta);
     }
   }
@@ -101,19 +120,22 @@ RESPUESTA DE LOLA:
   String _respuestaOffline(String pregunta) {
     final preguntaLower = pregunta.toLowerCase();
     
-    if (preguntaLower.contains('comen')) {
-      return '🍎 ¡Nos encantan las cáscaras de frutas y verduras en trozos pequeños! No comemos nada fresquito, hay que esperar días a que fermente. 🪱';
+    if (preguntaLower.contains('comen') || preguntaLower.contains('aliment')) {
+      return '🍎 ¡Nos encantan las cáscaras de frutas y verduras! Hay que cortarlas en trozos pequeños y esperar días a que se fermenten. 🪱';
     }
-    if (preguntaLower.contains('nacen')) {
-      return '🥚 Ponemos huevitos en capullos cada 10 días. Nacen 2-5 bebés que tardan 2-3 meses en ser adultas. 🪱✨';
-    }
+    
     if (preguntaLower.contains('temperatura')) {
-      return '🌡️ Estamos felices entre 15°C y 25°C. Ni mucho frío ni mucho calor. ❄️🔥';
+      return '🌡️ Estamos felices entre 15°C y 25°C. Si hace mucho frío o calor, podemos enfermarnos. ❄️🔥';
     }
+    
     if (preguntaLower.contains('humedad')) {
       return '💧 La humedad ideal es como una esponja escurrida. Prueba del puño: aprieta y debe quedar como plastilina. 🖐️';
     }
     
-    return '📚 ¡Buena pregunta! Revisa los módulos educativos de Lombriaventura o pregúntame de nuevo. 🌱';
+    if (preguntaLower.contains('lixiviado')) {
+      return '💧 El lixiviado es el líquido de la composta. ¡Es súper nutritivo! Se mezcla con 10 partes de agua. 🌱';
+    }
+    
+    return '📚 ¡Buena pregunta, Eco Héroe! Revisa los módulos educativos de Lombriaventura. 🌱✨';
   }
 }

@@ -12,28 +12,38 @@ class HistorialChatScreen extends StatefulWidget {
 }
 
 class _HistorialChatScreenState extends State<HistorialChatScreen> {
-  final ConversacionService _convService = ConversacionService();
+  late ConversacionService _convService;
   List<Conversacion> _conversaciones = [];
   bool _isLoading = true;
   
   @override
   void initState() {
     super.initState();
-    _cargarConversaciones();
+    _initService();
+  }
+  
+  Future<void> _initService() async {
+    _convService = await ConversacionService.getInstance();
+    await _cargarConversaciones();
   }
   
   Future<void> _cargarConversaciones() async {
     setState(() => _isLoading = true);
-    final conversaciones = await _convService.obtenerTodas();
-    setState(() {
-      _conversaciones = conversaciones;
-      _isLoading = false;
-    });
+    try {
+      final conversaciones = await _convService.obtenerTodas();
+      setState(() {
+        _conversaciones = conversaciones;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando: $e');
+      setState(() => _isLoading = false);
+    }
   }
   
   Future<void> _eliminarConversacion(String id) async {
     await _convService.eliminarConversacion(id);
-    _cargarConversaciones();
+    await _cargarConversaciones();
   }
   
   @override
@@ -42,6 +52,12 @@ class _HistorialChatScreenState extends State<HistorialChatScreen> {
       appBar: AppBar(
         title: const Text('Historial de chats'),
         backgroundColor: AppTheme.verde,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _cargarConversaciones,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

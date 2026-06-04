@@ -22,7 +22,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   final GroqService _iaService = GroqService();
   final FlutterTts _flutterTts = FlutterTts();
   final SpeechToText _speechToText = SpeechToText();
-  final ConversacionService _convService = ConversacionService();
   
   List<Map<String, String>> _mensajes = [];
   bool _isLoading = false;
@@ -32,13 +31,20 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   
   String? _conversacionActualId;
   String _conversacionTitulo = '';
+
+  late ConversacionService _convService;
   
   @override
   void initState() {
     super.initState();
+    _initServices();
     _initTTS();
     _initSpeech();
     _cargarConversacion();
+  }
+
+  Future<void> _initServices() async {
+    _convService = await ConversacionService.getInstance();
   }
   
   // ========== CARGAR CONVERSACIÓN ==========
@@ -70,29 +76,35 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   
   // ✅ Guardar conversación automáticamente
   Future<void> _guardarConversacion() async {
-    if (_mensajes.isEmpty) return;
-    
-    // Solo guardar si hay más de 1 mensaje (bienvenida + alguna pregunta)
-    if (_mensajes.length <= 1) return;
-    
-    final id = _conversacionActualId ?? DateTime.now().millisecondsSinceEpoch.toString();
-    final titulo = _conversacionTitulo.isEmpty && _mensajes.length > 1
-        ? _convService.generarTitulo(_mensajes[1]['content'] ?? 'Nueva conversación')
-        : _conversacionTitulo;
-    
-    final conversacion = Conversacion(
-      id: id,
-      titulo: titulo,
-      fecha: DateTime.now(),
-      mensajes: List.from(_mensajes),
-    );
-    
-    await _convService.guardarConversacion(conversacion);
-    if (_conversacionActualId == null) {
-      _conversacionActualId = id;
-    }
-    if (_conversacionTitulo.isEmpty && _mensajes.length > 1) {
-      _conversacionTitulo = titulo;
+    try {
+      if (_mensajes.isEmpty) return;
+      
+      // Solo guardar si hay más de 1 mensaje (bienvenida + alguna pregunta)
+      if (_mensajes.length <= 1) return;
+      
+      final id = _conversacionActualId ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final titulo = _conversacionTitulo.isEmpty && _mensajes.length > 1
+          ? _convService.generarTitulo(_mensajes[1]['content'] ?? 'Nueva conversación')
+          : _conversacionTitulo;
+      
+      final conversacion = Conversacion(
+        id: id,
+        titulo: titulo,
+        fecha: DateTime.now(),
+        mensajes: List.from(_mensajes),
+      );
+      
+      await _convService.guardarConversacion(conversacion);
+      
+      if (_conversacionActualId == null) {
+        _conversacionActualId = id;
+      }
+      if (_conversacionTitulo.isEmpty && _mensajes.length > 1) {
+        _conversacionTitulo = titulo;
+      }
+    } catch (e) {
+      print('Error guardando conversación: $e');
+      // No mostrar error al usuario, solo registrar
     }
   }
   
@@ -125,7 +137,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     final pregunta = preguntaTexto ?? _controller.text.trim();
     if (pregunta.isEmpty) return;
     
-    // Agregar mensaje del usuario
     setState(() {
       _mensajes.add({'role': 'user', 'content': pregunta});
       _controller.clear();
@@ -133,31 +144,41 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     });
     _scrollToBottom();
     
+    String respuesta = '';
     try {
-      final respuesta = await _iaService.preguntarALola(pregunta);
-      
+      respuesta = await _iaService.preguntarALola(pregunta);
+    } catch (e) {
+      print('Error al obtener respuesta: $e');
+      respuesta = '';
+    }
+    
+    // Mostrar respuesta de Lola (si hay)
+    if (respuesta.isNotEmpty) {
       setState(() {
         _mensajes.add({'role': 'lola', 'content': respuesta});
-        _isLoading = false;
       });
-      _scrollToBottom();
-      
-      // ✅ Guardar conversación después de cada interacción
-      await _guardarConversacion();
-      
-      if (_vozAutomatica) {
-        await _leerRespuesta(respuesta);
-      }
-    } catch (e) {
+    } else {
       setState(() {
         _mensajes.add({
           'role': 'lola',
-          'content': '¡Uy! Tuve un problema. ¿Puedes intentar de nuevo? 🪱'
+          'content': 'Lo siento, no pude procesar tu pregunta. ¿Puedes intentar de nuevo? 🪱'
         });
-        _isLoading = false;
       });
-      _scrollToBottom();
-      await _guardarConversacion();
+    }
+    
+    setState(() {
+      _isLoading = false;
+    });
+    _scrollToBottom();
+    
+    // Guardar conversación (sin bloquear)
+    _guardarConversacion().catchError((e) {
+      print('Error guardando: $e');
+    });
+    
+    // Leer respuesta si corresponde
+    if (_vozAutomatica && respuesta.isNotEmpty) {
+      await _leerRespuesta(respuesta);
     }
   }
   

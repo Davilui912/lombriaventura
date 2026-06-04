@@ -3,18 +3,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'config/theme.dart';
 import 'screens/splash_screen.dart';
 import 'models/conversacion.dart';
-import 'services/conversacion_service.dart';
+// No es necesario importar conversacion_service aquí
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar Hive
   await Hive.initFlutter();
-  
-  // Registrar el adaptador de conversación
   Hive.registerAdapter(ConversacionAdapter());
-
-  // ==== ABRIR TODAS LAS CAJAS QUE NECESITAS ====
+  
   await Hive.openBox('logros');
   await Hive.openBox('diario');
   await Hive.openBox('configuracion');
@@ -23,8 +19,7 @@ void main() async {
   await Hive.openBox('recordatorios');
   await Hive.openBox('monedas');
   
-  // ✅ Abrir la caja de conversaciones (importante: await)
-  await Hive.openBox<Conversacion>('conversaciones');
+  // ✅ NO es necesario abrir 'conversaciones' aquí porque el servicio lo hace solo
 
   runApp(const LombriAventuraApp());
 }
