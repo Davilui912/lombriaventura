@@ -9,36 +9,34 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   # UI y Animaciones
   cupertino_icons: ^1.0.8
-  lottie: ^3.1.2               # Animaciones de Lola
-  flutter_animate: ^4.5.0      # Animaciones fáciles
+  lottie: ^3.1.2
+  flutter_animate: ^4.5.0
   
-  # Almacenamiento Local (Modo Offline)
+  # Almacenamiento Local
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   
   # Juegos
-  flame: ^1.20.0               # Motor de juegos 2D
+  flame: ^1.20.0
   
   # Cámara y Galería
-  image_picker: ^1.1.2         # Fotos para diario
+  image_picker: ^1.1.2
   
   # Voz (Chat IA y Diario)
-  speech_to_text: ^7.0.0       # Dictado por voz
-  flutter_tts: ^4.2.0          # Lola habla
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.0
   
   # Conectividad y API
-  http: ^1.6.0                 # Llamadas a API de IA
-  connectivity_plus: ^6.1.0    # Verificar conexión
+  http: ^1.6.0
+  connectivity_plus: ^6.1.0
   
   # Utilidades
-  path_provider: ^2.1.4        # Rutas del sistema
-  share_plus: ^10.1.2          # Compartir avances
-  screenshot: ^3.0.0           # Capturar imagen para compartir
-  #flutter_local_notifications: ^18.0.0  # Recordatorios
-  intl: ^0.19.0                # Formato de fechas
+  path_provider: ^2.1.4
+  share_plus: ^10.1.2
+  screenshot: ^3.0.0
+  intl: ^0.19.0
   google_fonts: ^8.1.0
   google_generative_ai: ^0.4.7
   uuid: ^4.5.3
@@ -49,26 +47,22 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/logo_lombriaventura.png"
+  adaptive_icon_background: "#7AC943"
+  adaptive_icon_foreground: "assets/images/logo_lombriaventura.png"
 
 flutter:
   uses-material-design: true
   
-  # Fuentes infantiles (opcional por ahora, las añadiremos después)
-  # fonts:
-  #   - family: Fredoka
-  #     fonts:
-  #       - asset: assets/fonts/Fredoka-Regular.ttf
-  #       - asset: assets/fonts/Fredoka-Bold.ttf
-  #         weight: 700
-  #   - family: Nunito
-  #     fonts:
-  #       - asset: assets/fonts/Nunito-Regular.ttf
-  #       - asset: assets/fonts/Nunito-Bold.ttf
-  #         weight: 700 
-  
-  # Assets
   assets:
     - assets/images/
+    - assets/images/personajes/
+    - assets/images/accesorios/
     - assets/animations/
     - assets/audio/
     - assets/data/

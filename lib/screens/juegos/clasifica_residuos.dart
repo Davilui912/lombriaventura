@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
+import '../../services/monedas_service.dart';
 
 class ClasificaResiduosScreen extends StatefulWidget {
   const ClasificaResiduosScreen({super.key});
@@ -15,6 +16,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
   int _ronda = 0;
   bool _juegoTerminado = false;
   String _mensaje = 'Arrastra cada residuo al contenedor correcto';
+  bool _monedasOtorgadas = false;
   
   // Lista de residuos para clasificar
   final List<Map<String, dynamic>> _residuos = [
@@ -44,10 +46,30 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
       if (_ronda > 3) {
         _juegoTerminado = true;
         _mensaje = _aciertos >= 6 ? '¡Eres un Eco Héroe! 🌟' : '¡Sigue practicando! 💪';
+        
+        // ✅ Dar monedas al terminar el juego (si no se dieron antes)
+        if (!_monedasOtorgadas && _aciertos >= 6) {
+          _otorgarMonedas();
+        }
       } else {
         _mensaje = 'Ronda $_ronda: ¡Clasifica los residuos! ♻️';
       }
     });
+  }
+  
+  Future<void> _otorgarMonedas() async {
+    _monedasOtorgadas = true;
+    final monedasService = MonedasService();
+    await monedasService.init();
+    await monedasService.agregarMonedas(15);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Ganaste 15 monedas! 🪙'),
+          backgroundColor: AppTheme.verde,
+        ),
+      );
+    }
   }
 
   void _verificarRespuesta(Map<String, dynamic> residuo, bool contenedorComposta) {
@@ -56,7 +78,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
         _aciertos++;
         if (_aciertos >= 3) {
             LogrosService().desbloquearInsignia('clasificador');
-            }
+        }
         _mensaje = '✅ ¡Correcto! ${residuo['emoji']} va ${contenedorComposta ? "en la composta" : "en la basura"}';
         _residuosPendientes.remove(residuo);
       });
@@ -219,13 +241,14 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
   }
 
   Widget _buildPantallaFinal() {
+    final ganaste = _aciertos >= 6;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_aciertos >= 6 ? '🏆' : '🌱', style: const TextStyle(fontSize: 80)),
+            Text(ganaste ? '🏆' : '🌱', style: const TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text(
               _mensaje,
@@ -243,6 +266,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
                   _errores = 0;
                   _ronda = 0;
                   _juegoTerminado = false;
+                  _monedasOtorgadas = false;
                   _iniciarRonda();
                 });
               },

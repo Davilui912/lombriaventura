@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import '../services/groq_service.dart';
 import '../services/conversacion_service.dart';
+import '../services/accesorios_service.dart';
+import '../widgets/personaje_con_accesorios.dart';
 import '../models/conversacion.dart';
-import 'historial_chat_screen.dart'; // Lo crearemos después
-import 'dart:math';
+import 'historial_chat_screen.dart';
 
 class ChatIAScreen extends StatefulWidget {
-  final String? conversacionId; // Para cargar conversación existente
+  final String? conversacionId;
   const ChatIAScreen({super.key, this.conversacionId});
 
   @override
@@ -33,22 +35,40 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   String _conversacionTitulo = '';
 
   late ConversacionService _convService;
+  String _personaje = 'Lola';
+  Map<String, String?> _accesoriosEquipados = {};
   
   @override
   void initState() {
     super.initState();
+    _cargarPersonaje();
     _initServices();
+    _cargarAccesorios();
     _initTTS();
     _initSpeech();
     _cargarConversacion();
+  }
+
+  Future<void> _cargarPersonaje() async {
+    final box = await Hive.openBox('configuracion');
+    final personaje = box.get('personaje', defaultValue: 'Lola');
+    setState(() {
+      _personaje = personaje;
+    });
   }
 
   Future<void> _initServices() async {
     _convService = await ConversacionService.getInstance();
   }
   
-  // ========== CARGAR CONVERSACIÓN ==========
-
+  Future<void> _cargarAccesorios() async {
+    final accesoriosService = AccesoriosService();
+    await accesoriosService.init();
+    setState(() {
+      _accesoriosEquipados = accesoriosService.obtenerEquipados(_personaje);
+    });
+  }
+  
   Future<void> _cargarConversacion() async {
     if (widget.conversacionId != null) {
       final conversacion = await _convService.obtenerPorId(widget.conversacionId!);
@@ -68,18 +88,15 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   void _agregarMensajeBienvenida() {
     _mensajes = [{
       'role': 'lola',
-      'content': '¡Hola, Eco Héroe! 🪱 Soy Lola, tu lombriz experta.\n\nPregúntame sobre lombrices, composta y cómo cuidar el planeta. ¡Estoy aquí para ayudarte! 🌱✨\n\n🔊 Puedes activar o desactivar mi voz con el botón de la esquina.',
+      'content': '¡Hola, Eco Héroe! 🪱 Soy $_personaje, tu lombriz experta.\n\nPregúntame sobre lombrices, composta y cómo cuidar el planeta. ¡Estoy aquí para ayudarte! 🌱✨\n\n🔊 Puedes activar o desactivar mi voz con el botón de la esquina.',
     }];
     _conversacionActualId = null;
     _conversacionTitulo = '';
   }
-  
-  // ✅ Guardar conversación automáticamente
+    
   Future<void> _guardarConversacion() async {
     try {
       if (_mensajes.isEmpty) return;
-      
-      // Solo guardar si hay más de 1 mensaje (bienvenida + alguna pregunta)
       if (_mensajes.length <= 1) return;
       
       final id = _conversacionActualId ?? DateTime.now().millisecondsSinceEpoch.toString();
@@ -104,7 +121,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       }
     } catch (e) {
       print('Error guardando conversación: $e');
-      // No mostrar error al usuario, solo registrar
     }
   }
   
@@ -152,7 +168,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       respuesta = '';
     }
     
-    // Mostrar respuesta de Lola (si hay)
     if (respuesta.isNotEmpty) {
       setState(() {
         _mensajes.add({'role': 'lola', 'content': respuesta});
@@ -171,12 +186,10 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     });
     _scrollToBottom();
     
-    // Guardar conversación (sin bloquear)
     _guardarConversacion().catchError((e) {
       print('Error guardando: $e');
     });
     
-    // Leer respuesta si corresponde
     if (_vozAutomatica && respuesta.isNotEmpty) {
       await _leerRespuesta(respuesta);
     }
@@ -218,7 +231,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     }
   }
   
-  // ✅ Nueva conversación
   void _nuevaConversacion() {
     setState(() {
       _mensajes = [];
@@ -228,7 +240,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     });
   }
   
-  // ✅ Ir al historial
   void _verHistorial() async {
     final result = await Navigator.push(
       context,
@@ -240,7 +251,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   }
   
   Future<void> _cargarConversacionPorId(String id) async {
-    final conversacion = await _convService.obtenerPorId(id);  // ✅ Con await
+    final conversacion = await _convService.obtenerPorId(id);
     if (conversacion != null) {
       setState(() {
         _mensajes = List.from(conversacion.mensajes);
@@ -257,44 +268,61 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lola'),
+        title: Row(
+          children: [
+            PersonajeConAccesorios(
+              personaje: _personaje,
+              gorraEquipada: _accesoriosEquipados['gorra'],
+              lentesEquipados: _accesoriosEquipados['lentes'],
+              collarEquipado: _accesoriosEquipados['collar'],
+              sombreroEquipado: _accesoriosEquipados['sombrero'],
+              size: 30,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '$_personaje IA',
+                style: const TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: AppTheme.verde,
         actions: [
-          // ✅ Botón nueva conversación
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-            onPressed: _nuevaConversacion,
-            tooltip: 'Nueva conversación',
-          ),
-          // ✅ Botón historial
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: _verHistorial,
-            tooltip: 'Historial',
-          ),
-          // Botón de voz
-          IconButton(
-            icon: Icon(
-              _vozAutomatica ? Icons.volume_up : Icons.volume_off,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              setState(() => _vozAutomatica = !_vozAutomatica);
-              if (!_vozAutomatica && _isSpeaking) _detenerLectura();
-            },
-          ),
-          // Contador
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '$preguntasRestantes/30',
-              style: const TextStyle(fontSize: 12, color: Colors.white),
+              style: const TextStyle(fontSize: 11, color: Colors.white),
             ),
+          ),
+          IconButton(
+            icon: Icon(_vozAutomatica ? Icons.volume_up : Icons.volume_off, color: Colors.white, size: 22),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              setState(() => _vozAutomatica = !_vozAutomatica);
+              if (!_vozAutomatica && _isSpeaking) _detenerLectura();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 22),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: _nuevaConversacion,
+            tooltip: 'Nueva conversación',
+          ),
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white, size: 22),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: _verHistorial,
+            tooltip: 'Historial',
           ),
         ],
       ),
@@ -380,10 +408,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(
-                          _isSpeaking ? Icons.stop : Icons.volume_up,
-                          size: 18,
-                        ),
+                        icon: Icon(_isSpeaking ? Icons.stop : Icons.volume_up, size: 18),
                         color: AppTheme.verde,
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
@@ -440,10 +465,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              _isListening ? Icons.mic : Icons.mic_none,
-              color: _isListening ? Colors.red : AppTheme.cafe,
-            ),
+            icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : AppTheme.cafe),
             onPressed: _escucharPregunta,
           ),
           Expanded(

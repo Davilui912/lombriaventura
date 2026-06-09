@@ -1,129 +1,90 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MonedasService {
-  static const String _boxName = 'monedas';
-
-  // Obtener saldo actual
+  late Box _box;
+  late Box _historialBox;
+  
+  Future<void> init() async {
+    _box = await Hive.openBox('monedas');
+    _historialBox = await Hive.openBox('historial_monedas');
+  }
+  
+  // Obtener monedas actuales
+  int obtenerMonedas() {
+    return _box.get('total', defaultValue: 0);
+  }
+  
+  // Obtener saldo (alias de obtenerMonedas)
   int obtenerSaldo() {
-    final box = Hive.box(_boxName);
-    return box.get('saldo', defaultValue: 0);
+    return obtenerMonedas();
   }
-
-  // Agregar monedas
+  
+  // Agregar monedas (genérico)
   Future<void> agregarMonedas(int cantidad) async {
-    final box = Hive.box(_boxName);
-    final actual = obtenerSaldo();
-    await box.put('saldo', actual + cantidad);
+    final actual = obtenerMonedas();
+    await _box.put('total', actual + cantidad);
   }
-
-  // Gastar monedas (verifica que tenga suficiente)
-  bool gastarMonedas(int cantidad) {
-    final box = Hive.box(_boxName);
-    final actual = obtenerSaldo();
-    if (actual >= cantidad) {
-      box.put('saldo', actual - cantidad);
-      return true;
-    }
-    return false; // No tiene suficiente
-  }
-
-  // Obtener historial de transacciones
-  List<Map<String, dynamic>> obtenerHistorial() {
-      final box = Hive.box(_boxName);
-      final historialRaw = box.get('historial', defaultValue: <Map>[]);
-      List<Map<String, dynamic>> historial = [];
-      
-      for (var item in historialRaw) {
-        historial.add(Map<String, dynamic>.from(item));
-      }
-      
-      return historial;
-    }
-
-  // Registrar transacción
-  Future<void> _registrarTransaccion(String concepto, int cantidad, String tipo) async {
-      final box = Hive.box(_boxName);
-      
-      // Obtener historial existente
-      final historialRaw = box.get('historial', defaultValue: <Map>[]);
-      final historial = historialRaw
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-      
-      // Agregar nueva transacción
-      historial.insert(0, {
-        'concepto': concepto,
-        'cantidad': cantidad,
-        'tipo': tipo,
-        'fecha': DateTime.now().toIso8601String(),
-      });
-      
-      // Mantener solo últimas 50
-      if (historial.length > 50) {
-        historial.removeLast();
-      }
-      
-      await box.put('historial', historial);
-    }
-
-  // Ganar monedas por actividad
+  
+  // Ganar monedas por actividad (juego, diario, etc.)
   Future<void> ganarPorActividad(String actividad) async {
     int cantidad = 0;
+    String descripcion = '';
+    
     switch (actividad) {
-      case 'diario':
-        cantidad = 10;
-        break;
       case 'juego':
+        cantidad = 10;
+        descripcion = '🎮 Ganaste un juego';
+        break;
+      case 'diario':
         cantidad = 5;
+        descripcion = '📝 Registraste en tu diario';
         break;
-      case 'chat':
-        cantidad = 3;
+      case 'cuestionario':
+        cantidad = 15;
+        descripcion = '📚 Completaste un cuestionario';
         break;
-      case 'modulo':
-        cantidad = 8;
-        break;
-      case 'foto':
-        cantidad = 5;
+      case 'reto':
+        cantidad = 20;
+        descripcion = '🎯 Completaste un reto';
         break;
       default:
-        cantidad = 2;
+        cantidad = 1;
+        descripcion = '✨ Actividad completada';
     }
-    await agregarMonedas(cantidad);
-    await _registrarTransaccion('Actividad: $actividad', cantidad, 'ganancia');
+    
+    final actual = obtenerMonedas();
+    await _box.put('total', actual + cantidad);
+    
+    // Guardar en historial
+    await _guardarEnHistorial(cantidad, descripcion);
   }
-
-  // Accesorios disponibles
-  List<Map<String, dynamic>> obtenerAccesorios() {
-    return [
-      {'id': 'sombrero', 'nombre': 'Sombrero verde', 'emoji': '👒', 'precio': 20, 'personaje': 'Lola', 'comprado': _tieneAccesorio('sombrero')},
-      {'id': 'lentes', 'nombre': 'Lentes cool', 'emoji': '😎', 'precio': 25, 'personaje': 'Lalo', 'comprado': _tieneAccesorio('lentes')},
-      {'id': 'capa', 'nombre': 'Capa de Eco Héroe', 'emoji': '🦸', 'precio': 50, 'personaje': 'Lola', 'comprado': _tieneAccesorio('capa')},
-      {'id': 'corona', 'nombre': 'Corona de flores', 'emoji': '👑', 'precio': 30, 'personaje': 'Lalo', 'comprado': _tieneAccesorio('corona')},
-      {'id': 'botas', 'nombre': 'Botas de lluvia', 'emoji': '👢', 'precio': 15, 'personaje': 'Lola', 'comprado': _tieneAccesorio('botas')},
-      {'id': 'mochila', 'nombre': 'Mochila ecológica', 'emoji': '🎒', 'precio': 35, 'personaje': 'Lalo', 'comprado': _tieneAccesorio('mochila')},
-    ];
-  }
-
-  bool _tieneAccesorio(String id) {
-    final box = Hive.box(_boxName);
-    return box.get('acc_$id', defaultValue: false);
-  }
-
-  Future<bool> comprarAccesorio(String id, int precio) async {
-    if (gastarMonedas(precio)) {
-      final box = Hive.box(_boxName);
-      await box.put('acc_$id', true);
-      await _registrarTransaccion('Compra: $id', precio, 'gasto');
+  
+  // Gastar monedas
+  Future<bool> gastarMonedas(int cantidad) async {
+    final actual = obtenerMonedas();
+    if (actual >= cantidad) {
+      await _box.put('total', actual - cantidad);
+      await _guardarEnHistorial(-cantidad, '🛍️ Compra en tienda');
       return true;
     }
     return false;
   }
-
-  List<String> obtenerAccesoriosComprados(String personaje) {
-    final accesorios = obtenerAccesorios();
-    return accesorios
-        .where((a) => a['personaje'] == personaje && a['comprado'] == true)
-        .map((a) => a['emoji'] as String)
-        .toList();
+  
+  // Guardar transacción en historial
+  Future<void> _guardarEnHistorial(int cantidad, String descripcion) async {
+    final historial = obtenerHistorial();
+    final nuevaTransaccion = {
+      'fecha': DateTime.now().toIso8601String(),
+      'cantidad': cantidad,
+      'descripcion': descripcion,
+    };
+    historial.insert(0, nuevaTransaccion); // Más reciente primero
+    await _historialBox.put('transacciones', historial);
+  }
+  
+  // Obtener historial de transacciones
+  List<Map<String, dynamic>> obtenerHistorial() {
+    final historial = _historialBox.get('transacciones', defaultValue: <Map<String, dynamic>>[]);
+    return List<Map<String, dynamic>>.from(historial);
   }
 }

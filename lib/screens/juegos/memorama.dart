@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
+import '../../services/monedas_service.dart';
 
 class MemoramaScreen extends StatefulWidget {
   const MemoramaScreen({super.key});
@@ -30,6 +31,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   int _intentos = 0;
   bool _bloqueado = false;
   bool _juegoTerminado = false;
+  bool _monedasOtorgadas = false;
 
   @override
   void initState() {
@@ -68,7 +70,23 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
       _intentos = 0;
       _bloqueado = false;
       _juegoTerminado = false;
+      _monedasOtorgadas = false;
     });
+  }
+
+  Future<void> _otorgarMonedas() async {
+    _monedasOtorgadas = true;
+    final monedasService = MonedasService();
+    await monedasService.init();
+    await monedasService.agregarMonedas(25);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Completaste el memorama! Ganaste 25 monedas 🪙'),
+          backgroundColor: AppTheme.verde,
+        ),
+      );
+    }
   }
 
   void _voltearCarta(int index) {
@@ -106,7 +124,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     final sonPareja = carta1['parejaId'] == carta2['parejaId'] && 
                       carta1['tipo'] != carta2['tipo'];
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    Future.delayed(const Duration(milliseconds: 800), () async {
       if (!mounted) return;
 
       setState(() {
@@ -118,10 +136,11 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
           if (_paresEncontrados >= 4) {
             LogrosService().desbloquearInsignia('memorion');
-            }
+          }
 
           if (_paresEncontrados == _parejasBase.length) {
             _juegoTerminado = true;
+            _otorgarMonedas();
           }
         } else {
           // Voltear de nuevo

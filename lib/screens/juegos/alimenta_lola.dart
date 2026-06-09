@@ -20,6 +20,7 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
   Timer? _timer;
   Timer? _timerComida;
   int _tiempoRestante = 30;
+  bool _monedasOtorgadas = false;
 
   // Posición de Lola
   double _lolaX = 0.5;
@@ -53,6 +54,7 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
       _juegoTerminado = false;
       _tiempoRestante = 30;
       _mensaje = '¡Alimenta a Lola con comida buena! 🪱';
+      _monedasOtorgadas = false;
     });
     _generarComida();
     _iniciarTimer();
@@ -101,40 +103,56 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
     }
   }
 
-  void _tocarComida() {
-      if (!_jugando || _comidaActual == null) return;
-
-      if (_comidaCorrecta) {
-        // ¡Comida buena! Lola come feliz
-        setState(() {
-          _puntuacion += (_comidaActual?['puntos'] ?? 10) as int;
-          _mensaje = '¡Ñam ñam! ${_comidaActual?['emoji']} ¡Gracias! 😋';
-        });
-        
-        // Dar monedas al llegar a 20 puntos
-        if (_puntuacion >= 20) {
-          MonedasService().ganarPorActividad('juego');
-        }
-        
-        // Desbloquear insignia al llegar a 30 puntos
-        if (_puntuacion >= 30) {
-          LogrosService().desbloquearInsignia('alimentador');
-        }
-        
-        _generarComida();
-      } else {
-        // ¡Comida mala! Lola se enferma
-        setState(() {
-          _vidas--;
-          _mensaje = '¡NOOO! ${_comidaActual?['emoji']} es MALO para Lola 😢';
-          if (_vidas <= 0) {
-            _terminarJuego();
-            return;
-          }
-        });
-        _generarComida();
-      }
+  Future<void> _otorgarMonedas() async {
+    _monedasOtorgadas = true;
+    final monedasService = MonedasService();
+    await monedasService.init();
+    await monedasService.agregarMonedas(20);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Completaste el juego! Ganaste 20 monedas 🪙'),
+          backgroundColor: AppTheme.verde,
+        ),
+      );
     }
+  }
+
+  void _tocarComida() async {
+    if (!_jugando || _comidaActual == null) return;
+
+    if (_comidaCorrecta) {
+      // ¡Comida buena! Lola come feliz
+      setState(() {
+        _puntuacion += (_comidaActual?['puntos'] ?? 10) as int;
+        _mensaje = '¡Ñam ñam! ${_comidaActual?['emoji']} ¡Gracias! 😋';
+        
+        // Verificar si ganó monedas por llegar a 30 puntos
+        if (_puntuacion >= 30 && !_monedasOtorgadas) {
+          _otorgarMonedas();
+        }
+      });
+      
+      // Desbloquear insignia al llegar a 30 puntos
+      if (_puntuacion >= 30) {
+        LogrosService().desbloquearInsignia('alimentador');
+      }
+      
+      _generarComida();
+    } else {
+      // ¡Comida mala! Lola se enferma
+      setState(() {
+        _vidas--;
+        _mensaje = '¡NOOO! ${_comidaActual?['emoji']} es MALO para Lola 😢';
+        if (_vidas <= 0) {
+          _terminarJuego();
+          return;
+        }
+      });
+      _generarComida();
+    }
+  }
+  
   void _terminarJuego() {
     _timer?.cancel();
     _timerComida?.cancel();

@@ -7,7 +7,7 @@ class EntradaDiario {
 
   // NUEVOS CAMPOS
   final int? humedad; // 1-10 (qué tan húmeda está)
-  final double? temperatura; // °C
+  final String? temperatura; // ❄️ Frío / 🌤️ Buen clima / ☀️ Caliente (CAMBIADO)
   final String? tipoResiduo; // "Frutas", "Verduras", "Café", "Mixto"
   final double? produccionComposta; // gramos
   final double? produccionLixiviado; // mililitros

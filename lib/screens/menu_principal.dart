@@ -2,22 +2,28 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../services/logros_service.dart';
 import '../services/actividad_service.dart';
-import 'chat_ia_screen.dart';      // ✅ Correcto
+import '../services/monedas_service.dart';
+import '../services/accesorios_service.dart';
+import '../widgets/personaje_con_accesorios.dart';
+import 'chat_ia_screen.dart';
 import 'diario/mi_composta.dart';
 import 'diario/nueva_entrada.dart';
 import 'juegos/clasifica_residuos.dart';
 import 'juegos/alimenta_lola.dart';
+import 'tienda/ventas_lombrices.dart';
+import 'tienda/ventas_atomizador.dart';
+import 'tienda/ventas_historial.dart';
+import 'tienda/capacitacion.dart';
 import 'juegos/memorama.dart';
 import 'tienda/catalogo.dart';
 import 'logros.dart';
-import 'modulo_educativo.dart';     // ✅ Ahora sí existe
-import 'tienda_accesorios.dart';
+import 'modulo_educativo.dart';
+import 'tienda/tienda_accesorios.dart';
 import 'historial_monedas.dart';
 import 'max_crecimiento.dart';
 import '../services/recordatorios_service.dart';
 import 'recordatorios.dart';
 import 'avisos.dart';
-
 
 class MenuPrincipal extends StatefulWidget {
   const MenuPrincipal({super.key});
@@ -29,65 +35,92 @@ class MenuPrincipal extends StatefulWidget {
 class _MenuPrincipalState extends State<MenuPrincipal> {
   final LogrosService _logrosService = LogrosService();
   final ActividadService _actividadService = ActividadService();
+  final MonedasService _monedasService = MonedasService();
+  final AccesoriosService _accesoriosService = AccesoriosService();
+  
   int _categoriaAbierta = -1;
   int _estrellas = 0;
+  int _monedas = 0;
+  
+  // Accesorios equipados
+  String? _gorraEquipada;
+  String? _lentesEquipados;
+  String? _collarEquipado;
+  String? _sombreroEquipado;
 
   @override
   void initState() {
     super.initState();
+    _cargarDatos();
     _actividadService.registrarActividad();
     _estrellas = _logrosService.obtenerEstrellas();
     _verificarRecordatorios();
   }
-void _verificarRecordatorios() {
-  final service = RecordatoriosService();
-  if (service.hayPendientes()) {
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final pendientes = service.obtenerPendientes();
-      if (pendientes.isNotEmpty) {
-        _mostrarAlertaRecordatorio(pendientes.first);
-      }
+
+  Future<void> _cargarDatos() async {
+    await _monedasService.init();
+    await _accesoriosService.init();
+    
+    final monedas = _monedasService.obtenerMonedas();
+    final equipados = _accesoriosService.obtenerEquipados('Lola');
+    
+    setState(() {
+      _monedas = monedas;
+      _gorraEquipada = equipados['gorra'];
+      _lentesEquipados = equipados['lentes'];
+      _collarEquipado = equipados['collar'];
+      _sombreroEquipado = equipados['sombrero'];
     });
   }
-}
 
-void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Text(rec['icono'], style: const TextStyle(fontSize: 30)),
-          const SizedBox(width: 10),
-          Expanded(child: Text(rec['titulo'], style: const TextStyle(fontSize: 18))),
+  void _verificarRecordatorios() {
+    final service = RecordatoriosService();
+    if (service.hayPendientes()) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        final pendientes = service.obtenerPendientes();
+        if (pendientes.isNotEmpty) {
+          _mostrarAlertaRecordatorio(pendientes.first);
+        }
+      });
+    }
+  }
+
+  void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Text(rec['icono'], style: const TextStyle(fontSize: 30)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(rec['titulo'], style: const TextStyle(fontSize: 18))),
+          ],
+        ),
+        content: Text(rec['mensaje'], style: const TextStyle(fontSize: 15)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              RecordatoriosService().marcarVisto(rec['id']);
+              Navigator.pop(ctx);
+            },
+            child: const Text('✅ ¡Hecho!'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RecordatoriosScreen()),
+              );
+            },
+            child: const Text('Ver todos 📋'),
+          ),
         ],
       ),
-      content: Text(rec['mensaje'], style: const TextStyle(fontSize: 15)),
-      actions: [
-        TextButton(
-          onPressed: () {
-            RecordatoriosService().marcarVisto(rec['id']);
-            Navigator.pop(ctx);
-          },
-          child: const Text('✅ ¡Hecho!'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(ctx);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const RecordatoriosScreen()),
-            );
-          },
-          child: const Text('Ver todos 📋'),
-        ),
-      ],
-    ),
-  );
-}
-  // ============ MÉTODOS AUXILIARES ============
+    );
+  }
 
   void _irAPantalla(Widget pantalla) {
     Navigator.push(
@@ -95,41 +128,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
       MaterialPageRoute(builder: (_) => pantalla),
     );
   }
-  Widget _buildMenuButton(String label, IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.cafe),
-          ],
-        ),
-      ),
-    );
-  }
+
   Widget _buildPersonajes() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -143,16 +142,41 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildMiniPersonaje('🪱', 'Lola'),
-          _buildMiniPersonaje('🪱', 'Lalo'),
-          _buildMiniPersonaje('🪣', 'Don\nCompostín'),
-          _buildMiniPersonaje('🌳', 'Max\nManzanero'),
+          _buildPersonajeConAccesorios('Lola', 60),
+          _buildPersonajeConAccesorios('Lalo', 60),
+          _buildMiniPersonajeEmoji('🪣', 'Don\nCompostín'),
+          _buildMiniPersonajeEmoji('🌳', 'Max\nManzanero'),
         ],
       ),
     );
   }
 
-  Widget _buildMiniPersonaje(String emoji, String nombre) {
+  Widget _buildPersonajeConAccesorios(String nombre, double size) {
+    return Column(
+      children: [
+        SizedBox(
+          width: size,
+          height: size,
+          child: PersonajeConAccesorios(
+            personaje: nombre,
+            gorraEquipada: _gorraEquipada,
+            lentesEquipados: _lentesEquipados,
+            collarEquipado: _collarEquipado,
+            sombreroEquipado: _sombreroEquipado,
+            size: size,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          nombre,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.cafe),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniPersonajeEmoji(String emoji, String nombre) {
     return Column(
       children: [
         Container(
@@ -224,7 +248,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
             ),
             if (abierta)
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: Column(children: opciones),
               ),
           ],
@@ -272,7 +296,41 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
     );
   }
 
-  // ============ BUILD PRINCIPAL ============
+  Widget _buildMenuButton(String label, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.cafe),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -281,17 +339,27 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
         title: const Text('¡Hola, Eco Héroe! 🪱'),
         actions: [
           Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+                const SizedBox(width: 4),
+                Text('$_estrellas', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('⭐', style: TextStyle(fontSize: 20)),
+                const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
                 const SizedBox(width: 4),
-                Text('$_estrellas', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('$_monedas', style: const TextStyle(fontSize: 16)),
               ],
             ),
           ),
         ],
+        backgroundColor: AppTheme.verde,
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
@@ -318,10 +386,7 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
           child: Column(
             children: [
               _buildPersonajes(),
-
               const SizedBox(height: 16),
-
-              // ==================== APRENDIZAJE ====================
               _buildCategoria(
                 titulo: '📚 Aprendizaje',
                 color: AppTheme.verde,
@@ -482,49 +547,32 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                   ),
                 ],
               ),
+            _buildCategoria(
+              titulo: '📸 Mi Composta',
+              color: AppTheme.amarillo,
+              index: 2,
+              opciones: [
+                _buildOpcion('📓 Mi diario', 'Registra tu avance', Icons.edit_note,
+                    () => _irAPantalla(const NuevaEntradaScreen())),
+                _buildOpcion('📷 Ver diario', 'Línea de tiempo y fotos', Icons.photo_library,
+                    () => _irAPantalla(const MiCompostaScreen())),
 
-              // ==================== JUEGOS ====================
-              _buildCategoria(
-                titulo: '🎮 Juegos',
-                color: AppTheme.azulCielo,
-                index: 1,
-                opciones: [
-                  _buildOpcion('♻️ Clasifica residuos', 'Arrastra al contenedor correcto', Icons.recycling,
-                      () => _irAPantalla(const ClasificaResiduosScreen())),
-                  _buildOpcion('🪱 Alimenta a Lola', 'Dale comida buena', Icons.restaurant,
-                      () => _irAPantalla(const AlimentaLolaScreen())),
-                  _buildOpcion('🧠 Memorama', 'Encuentra las parejas', Icons.memory,
-                      () => _irAPantalla(const MemoramaScreen())),
-                ],
-              ),
-
-              // ==================== MI COMPOSTA ====================
-              _buildCategoria(
-                titulo: '📸 Mi Composta',
-                color: AppTheme.amarillo,
-                index: 2,
-                opciones: [
-                  _buildOpcion('📷 Ver diario', 'Línea de tiempo y fotos', Icons.photo_library,
-                      () => _irAPantalla(const MiCompostaScreen())),
-                  _buildOpcion('➕ Nueva entrada', 'Registra tu avance', Icons.add_a_photo,
-                      () => _irAPantalla(const NuevaEntradaScreen())),
-                  _buildMenuButton(
-                    'Pregúntale\na Lola 🤖',
-                    Icons.chat,
-                    AppTheme.azulCielo,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ChatIAScreen()),
-                      );
-                    },
-                  ),
-                  _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber,
-                     () => _irAPantalla(const AvisosScreen())),
-                ],
-              ),
-
-              // ==================== TIENDA ====================
+                
+                // ========== NUEVOS JUEGOS DENTRO DE MI COMPOSTA ==========
+                _buildOpcion('🎮 Clasifica residuos', 'Juega y aprende', Icons.recycling,
+                    () => _irAPantalla(const ClasificaResiduosScreen())),
+                _buildOpcion('🎮 Alimenta a Lola', 'Cuida a tu lombriz', Icons.restaurant,
+                    () => _irAPantalla(const AlimentaLolaScreen())),
+                _buildOpcion('🎮 Memorama ecológico', 'Encuentra las parejas', Icons.memory,
+                    () => _irAPantalla(const MemoramaScreen())),
+                // ==========================================================
+                
+                _buildMenuButton('Pregúntale a Lola 🤖', Icons.chat, AppTheme.azulCielo,
+                    () => _irAPantalla(const ChatIAScreen())),
+                _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber,
+                    () => _irAPantalla(const AvisosScreen())),
+              ],
+            ),
               _buildCategoria(
                 titulo: '🛒 Tienda',
                 color: AppTheme.cafe,
@@ -532,18 +580,12 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                 opciones: [
                   _buildOpcion('🪱 Kit de composta', 'Compra tu kit básico', Icons.shopping_cart,
                       () => _irAPantalla(const TiendaScreen())),
-                  _buildOpcion('📦 Mis productos', 'Ver carrito', Icons.inventory_2, () {}),
-                                //==================== Mis productos ===================
                   _buildOpcion('🛍️ Accesorios', 'Compra para Lola y Lalo', Icons.store,
                       () => _irAPantalla(const TiendaAccesoriosScreen())),
-                  _buildOpcion('📜 Historial', 'Tus monedas ganadas', Icons.receipt_long,
+                  _buildOpcion('📜 Mis monedas', 'Tus monedas ganadas', Icons.monetization_on,
                       () => _irAPantalla(const HistorialMonedasScreen())),
                 ],
               ),
-
-          
-
-              // ==================== PROGRESO ====================
               _buildCategoria(
                 titulo: '⭐ Progreso',
                 color: AppTheme.verde,
@@ -551,17 +593,31 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                 opciones: [
                   _buildOpcion('🏆 Mis logros', 'Insignias y medallas', Icons.emoji_events,
                       () => _irAPantalla(const LogrosScreen())),
-                  _buildOpcion('📜 Certificados', 'Tus reconocimientos', Icons.workspace_premium, () {}),
-                  _buildOpcion('👥 Invitar amigos', 'Comparte la app', Icons.group_add, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('¡Próximamente! 🚧')),
-                    );
-                  }),
-                   _buildOpcion('⏰ Recordatorios', 'Alertas y cuidados', Icons.notifications_active,
+                  _buildOpcion('📜 Historial', 'Ver tu progreso', Icons.history, () {
+                      // Aquí puedes navegar a una pantalla de historial
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Próximamente 🚧')),
+                      );
+                    }),
+                  _buildOpcion('⏰ Recordatorios', 'Alertas y cuidados', Icons.notifications_active,
                       () => _irAPantalla(const RecordatoriosScreen())),
                 ],
               ),
-              // Indicador de Max
+              _buildCategoria(
+                titulo: '💼 Mi negocio real',
+                color: Colors.orange,
+                index: 5,  // Ajusta el índice según tu código
+                opciones: [
+                    _buildOpcion('🪱 Vender lombrices', 'Precio: \$2 c/u', Icons.sell,
+                        () => _irAPantalla(const VentasLombricesScreen())),
+                    _buildOpcion('💧 Atomizador lixiviado', 'Precio: \$25', Icons.water_drop,
+                        () => _irAPantalla(const VentasAtomizadorScreen())),
+                    _buildOpcion('📊 Registro de ventas', 'Historial de ingresos', Icons.receipt,
+                        () => _irAPantalla(const VentasHistorialScreen())),
+                    _buildOpcion('🎓 Capacitación', 'Capacita a otros niños', Icons.school,
+                        () => _irAPantalla(const CapacitacionScreen())),
+                ],
+              ),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -581,7 +637,6 @@ void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
             ],
           ),

@@ -59,14 +59,13 @@ class DiarioService {
     return archivoGuardado.path;
   }
 
-  // Guardar nueva entrada
-  // Busca el método guardarEntrada y cámbialo por esto:
+  // Guardar nueva entrada (temperatura ahora es String)
   Future<void> guardarEntrada({
     required List<String> fotosRutas,
     String? nota,
     String estado = '😊',
     int? humedad,
-    double? temperatura,
+    String? temperatura, // ← CAMBIADO a String
     String? tipoResiduo,
     double? produccionComposta,
     double? produccionLixiviado,

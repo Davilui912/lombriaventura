@@ -14,7 +14,11 @@ class NuevaEntradaScreen extends StatefulWidget {
 class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   final DiarioService _diarioService = DiarioService();
   final TextEditingController _notaController = TextEditingController();
-  final TextEditingController _tempController = TextEditingController();
+  
+  // ✅ Temperatura ahora es String con opciones
+  String? _temperaturaSeleccionada;
+  final List<String> _opcionesTemperatura = ['❄️ Frío', '🌤️ Buen clima', '☀️ Caliente'];
+  
   final TextEditingController _compostaController = TextEditingController();
   final TextEditingController _lixiviadoController = TextEditingController();
   
@@ -36,7 +40,6 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   @override
   void dispose() {
     _notaController.dispose();
-    _tempController.dispose();
     _compostaController.dispose();
     _lixiviadoController.dispose();
     super.dispose();
@@ -96,13 +99,14 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
       nota: _notaController.text.isNotEmpty ? _notaController.text : null,
       estado: _estadoSeleccionado,
       humedad: _humedad,
-      temperatura: _tempController.text.isNotEmpty ? double.tryParse(_tempController.text) : null,
+      temperatura: _temperaturaSeleccionada, // ← AHORA ES String
       tipoResiduo: _tipoResiduo,
       produccionComposta: _compostaController.text.isNotEmpty ? double.tryParse(_compostaController.text) : null,
       produccionLixiviado: _lixiviadoController.text.isNotEmpty ? double.tryParse(_lixiviadoController.text) : null,
     );
     await MonedasService().ganarPorActividad('diario');
     if (mounted) Navigator.pop(context, true);
+
   }
 
   @override
@@ -276,19 +280,37 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
               const SizedBox(height: 12),
 
-              // Temperatura
-              const Text('🌡️ Temperatura (°C)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+              // ✅ Temperatura (NUEVA VERSIÓN con opciones)
+              const Text('🌡️ Temperatura', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
               const SizedBox(height: 6),
-              TextField(
-                controller: _tempController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'Ej: 22.5',
-                  suffixText: '°C',
-                  filled: true, fillColor: const Color(0xFFF5F5F5),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _opcionesTemperatura.map((opcion) {
+                  final isSelected = _temperaturaSeleccionada == opcion;
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      _temperaturaSeleccionada = isSelected ? null : opcion;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppTheme.verde : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: isSelected ? AppTheme.verde : Colors.grey[300]!,
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        opcion,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black87,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
 
               const SizedBox(height: 12),
