@@ -136,6 +136,6 @@ RESPUESTA DE LOLA:
       return '💧 El lixiviado es el líquido de la composta. ¡Es súper nutritivo! Se mezcla con 10 partes de agua. 🌱';
     }
     
-    return '📚 ¡Buena pregunta, Eco Héroe! Revisa los módulos educativos de Lombriaventura. 🌱✨';
+    return '📚 ¡Buena pregunta, Lombikid! Revisa los módulos educativos de Lombriaventura. 🌱✨';
   }
 }

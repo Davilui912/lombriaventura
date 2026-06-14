@@ -45,7 +45,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
       _ronda++;
       if (_ronda > 3) {
         _juegoTerminado = true;
-        _mensaje = _aciertos >= 6 ? '¡Eres un Eco Héroe! 🌟' : '¡Sigue practicando! 💪';
+        _mensaje = _aciertos >= 6 ? '¡Eres un Lombikid! 🌟' : '¡Sigue practicando! 💪';
         
         // ✅ Dar monedas al terminar el juego (si no se dieron antes)
         if (!_monedasOtorgadas && _aciertos >= 6) {

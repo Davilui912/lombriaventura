@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'config/theme.dart';
-import 'screens/selector_personaje.dart';  // ← Agregar
-import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
 import 'models/conversacion.dart';
 
 void main() async {
@@ -18,6 +17,9 @@ void main() async {
   await Hive.openBox('actividad');
   await Hive.openBox('recordatorios');
   await Hive.openBox('monedas');
+  await Hive.openBox('accesorios');
+  await Hive.openBox('capacitaciones');
+  await Hive.openBox('usuarios');  // ← NUEVO
 
   runApp(const LombriaventuraApp());
 }
@@ -31,7 +33,7 @@ class LombriaventuraApp extends StatelessWidget {
       title: 'Lombriaventura',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SelectorPersonaje(),  // ← Cambiar a selector
+      home: const LoginScreen(),  // ← Login con email/contraseña
     );
   }
 }

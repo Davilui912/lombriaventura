@@ -30,7 +30,7 @@ class _RecordatoriosScreenState extends State<RecordatoriosScreen> {
     _cargar();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('✅ ¡Buen trabajo, Eco Héroe!'),
+        content: Text('✅ ¡Buen trabajo, Lombikid!'),
         backgroundColor: AppTheme.verde,
         duration: Duration(seconds: 1),
       ),

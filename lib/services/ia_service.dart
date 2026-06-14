@@ -111,6 +111,6 @@ class IaService {
     }
     
     // Respuesta por defecto
-    return '📚 ¡Buena pregunta, Eco Héroe! 🪱 Te recomiendo revisar los módulos educativos de Lombriaventura. Ahí encontrarás información sobre lombrices, composta y cómo cuidar el planeta. ¿Qué más te gustaría saber? 🌱✨';
+    return '📚 ¡Buena pregunta, Lombikid! 🪱 Te recomiendo revisar los módulos educativos de Lombriaventura. Ahí encontrarás información sobre lombrices, composta y cómo cuidar el planeta. ¿Qué más te gustaría saber? 🌱✨';
   }
 }

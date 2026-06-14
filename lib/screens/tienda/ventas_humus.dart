@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/monedas_service.dart';
 
-class VentasLombricesScreen extends StatefulWidget {
-  const VentasLombricesScreen({super.key});
+class VentasHumusScreen extends StatefulWidget {
+  const VentasHumusScreen({super.key});
 
   @override
-  State<VentasLombricesScreen> createState() => _VentasLombricesScreenState();
+  State<VentasHumusScreen> createState() => _VentasHumusScreenState();
 }
 
-class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
+class _VentasHumusScreenState extends State<VentasHumusScreen> {
   final MonedasService _monedasService = MonedasService();
   int _cantidad = 1;
   int _monedas = 0;
@@ -28,13 +28,13 @@ class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
   }
 
   Future<void> _vender() async {
-    final precioTotal = (_cantidad * 2.5).round(); // Convertir a entero
+    final precioTotal = _cantidad * 10; // $10 por kilo de humus
     await _monedasService.agregarMonedas(precioTotal);
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('¡Vendiste $_cantidad lombriz(es)! Ganaste $precioTotal monedas 🪙'),
+          content: Text('¡Vendiste ${_cantidad}kg de humus! Ganaste $precioTotal monedas 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -46,21 +46,21 @@ class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vender lombrices'),
+        title: const Text('Vender humus'),
         backgroundColor: Colors.orange,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Icon(Icons.bug_report, size: 80, color: Colors.orange),
+            const Icon(Icons.agriculture, size: 80, color: Colors.orange),
             const SizedBox(height: 20),
             const Text(
-              'Precio: \$2.50 por lombriz',
+              'Precio: \$10 por kilo',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-            const Text('Cantidad a vender:', style: TextStyle(fontSize: 18)),
+            const Text('Cantidad a vender (kg):', style: TextStyle(fontSize: 18)),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -92,7 +92,7 @@ class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Total: \$${(_cantidad * 2.5).toStringAsFixed(2)} MXN',
+              'Total: \$${_cantidad * 10} MXN',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
             ),
             const SizedBox(height: 30),
