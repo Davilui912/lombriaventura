@@ -88,7 +88,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   void _agregarMensajeBienvenida() {
     _mensajes = [{
       'role': 'lola',
-      'content': '¡Hola, Lombikid! 🪱 Soy $_personaje, tu lombriz experta.\n\nPregúntame sobre lombrices, composta y cómo cuidar el planeta. ¡Estoy aquí para ayudarte! 🌱✨\n\n🔊 Puedes activar o desactivar mi voz con el botón de la esquina.',
+      'content': '¡Hola, Lombikid! 🪱 Soy la lombriz sabia.\n\nPregúntame sobre lombrices, composta y cómo cuidar el planeta. ¡Estoy aquí para ayudarte! 🌱✨\n\n🔊 Puedes activar o desactivar mi voz con el botón de la esquina.',
     }];
     _conversacionActualId = null;
     _conversacionTitulo = '';
@@ -268,26 +268,21 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     
     return Scaffold(
       appBar: AppBar(
+        titleSpacing: 0, // Elimina los márgenes internos por defecto del AppBar
         title: Row(
           children: [
-            PersonajeConAccesorios(
-              personaje: _personaje,
-              gorraEquipada: _accesoriosEquipados['gorra'],
-              lentesEquipados: _accesoriosEquipados['lentes'],
-              collarEquipado: _accesoriosEquipados['collar'],
-              sombreroEquipado: _accesoriosEquipados['sombrero'],
-              size: 30,
-            ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                '$_personaje IA',
+                'Lombriz_IA',
                 style: const TextStyle(fontSize: 16),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
+
+
         backgroundColor: AppTheme.verde,
         actions: [
           Container(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
-import '../models/usuario.dart';
 import 'login_screen.dart';
 
 class RegistroScreen extends StatefulWidget {
@@ -18,14 +17,57 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final TextEditingController _confirmarController = TextEditingController();
   final TextEditingController _edadController = TextEditingController();
   final TextEditingController _ciudadController = TextEditingController();
+  final TextEditingController _respuestaSeguridadController = TextEditingController();
+  
+  String? _genero;
+  String? _preguntaSeguridad;
   
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmar = true;
   String? _errorMessage;
 
+  final List<String> _preguntasSeguridad = [
+    '¿Cómo se llamaba tu primera mascota?',
+    '¿Cuál es el nombre de tu mejor amigo?',
+    '¿Qué color te gusta más?',
+    '¿Cuál es tu comida favorita?',
+    '¿Cómo se llama tu escuela?',
+  ];
+
+  Widget _buildGeneroCard(String nombre, IconData icon, bool seleccionado) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _genero = nombre),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: seleccionado ? AppTheme.verde : Colors.grey[200],
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: seleccionado ? Colors.white : AppTheme.verde, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  nombre,
+                  style: TextStyle(
+                    color: seleccionado ? Colors.white : Colors.black87,
+                    fontSize: 16,
+                    fontWeight: seleccionado ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _registrarUsuario() async {
-    // Validaciones
     if (_nombreController.text.trim().isEmpty) {
       setState(() => _errorMessage = 'Ingresa tu nombre');
       return;
@@ -54,50 +96,84 @@ class _RegistroScreenState extends State<RegistroScreen> {
       setState(() => _errorMessage = 'Ingresa tu ciudad');
       return;
     }
+    if (_genero == null) {
+      setState(() => _errorMessage = 'Elige Lola o Lalo');
+      return;
+    }
+    if (_preguntaSeguridad == null) {
+      setState(() => _errorMessage = 'Elige una pregunta de seguridad');
+      return;
+    }
+    if (_respuestaSeguridadController.text.trim().isEmpty) {
+      setState(() => _errorMessage = 'Ingresa la respuesta de seguridad');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final box = await Hive.openBox('usuarios');
-    final usuarios = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
-    
-    // Verificar si el correo ya existe
-    final existe = usuarios.any((u) => u['email'] == _emailController.text.trim());
-    if (existe) {
+    try {
+      final box = await Hive.openBox('usuarios');
+      final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
+      
+      // Convertir usuarios existentes
+      final List<Map<String, dynamic>> usuarios = [];
+      for (var item in usuariosRaw) {
+        if (item is Map) {
+          final map = <String, dynamic>{};
+          item.forEach((key, value) {
+            map[key.toString()] = value;
+          });
+          usuarios.add(map);
+        }
+      }
+      
+      final existe = usuarios.any((u) => u['email'] == _emailController.text.trim());
+      if (existe) {
+        setState(() {
+          _errorMessage = 'Este correo ya está registrado';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final nuevoUsuario = {
+        'nombre': _nombreController.text.trim(),
+        'email': _emailController.text.trim(),
+        'password': _passwordController.text.trim(),
+        'edad': int.tryParse(_edadController.text.trim()) ?? 0,
+        'ciudad': _ciudadController.text.trim(),
+        'genero': _genero,
+        'preguntaSeguridad': _preguntaSeguridad,
+        'respuestaSeguridad': _respuestaSeguridadController.text.trim().toLowerCase(),
+        'fechaRegistro': DateTime.now().toIso8601String(),
+      };
+      
+      usuarios.add(nuevoUsuario);
+      await box.put('lista', usuarios);
+      await box.put('usuario_actual', _emailController.text.trim());
+      await box.put('usuario_nombre', _nombreController.text.trim());
+      await box.put('usuario_edad', _edadController.text.trim());
+      await box.put('usuario_ciudad', _ciudadController.text.trim());
+      await box.put('usuario_genero', _genero);
+      await box.put('usuario_fecha_registro', DateTime.now().toIso8601String());
+
+      setState(() => _isLoading = false);
+      
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Este correo ya está registrado';
+        _errorMessage = 'Error al registrar: $e';
         _isLoading = false;
       });
-      return;
     }
-
-    // Crear nuevo usuario
-    final nuevoUsuario = {
-      'nombre': _nombreController.text.trim(),
-      'email': _emailController.text.trim(),
-      'password': _passwordController.text.trim(),
-      'edad': int.tryParse(_edadController.text.trim()) ?? 0,
-      'ciudad': _ciudadController.text.trim(),
-      'fechaRegistro': DateTime.now().toIso8601String(),
-    };
-    
-    usuarios.add(nuevoUsuario);
-    await box.put('lista', usuarios);
-
-    // Iniciar sesión automáticamente
-    await box.put('usuario_actual', _emailController.text.trim());
-    await box.put('usuario_nombre', _nombreController.text.trim());
-    await box.put('usuario_edad', _edadController.text.trim());
-    await box.put('usuario_ciudad', _ciudadController.text.trim());
-
-    setState(() => _isLoading = false);
-    
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
   }
 
   @override
@@ -108,7 +184,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
         backgroundColor: AppTheme.verde,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -159,7 +235,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               controller: _passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                labelText: 'Contraseña',
+                labelText: 'Contraseña (mínimo 4 caracteres)',
                 prefixIcon: const Icon(Icons.lock, color: AppTheme.verde),
                 suffixIcon: IconButton(
                   icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
@@ -202,6 +278,61 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 labelText: 'Ciudad',
                 prefixIcon: const Icon(Icons.location_city, color: AppTheme.verde),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            const Text('🪱 Elige tu acompañante', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _buildGeneroCard('Lola', Icons.female, _genero == 'Lola'),
+                const SizedBox(width: 16),
+                _buildGeneroCard('Lalo', Icons.male, _genero == 'Lalo'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            const Text('🔐 Pregunta de seguridad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: DropdownButtonFormField<String>(
+                value: _preguntaSeguridad,
+                hint: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('Selecciona una pregunta'),
+                ),
+                isExpanded: true,
+                items: _preguntasSeguridad.map((pregunta) {
+                  return DropdownMenuItem(
+                    value: pregunta,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(pregunta, overflow: TextOverflow.ellipsis),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) => setState(() => _preguntaSeguridad = value),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            TextField(
+              controller: _respuestaSeguridadController,
+              decoration: InputDecoration(
+                labelText: 'Respuesta',
+                prefixIcon: const Icon(Icons.security, color: AppTheme.verde),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                helperText: 'Esta respuesta te ayudará a recuperar tu contraseña',
               ),
             ),
             const SizedBox(height: 24),

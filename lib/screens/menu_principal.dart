@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import '../services/logros_service.dart';
 import '../services/actividad_service.dart';
@@ -16,11 +17,13 @@ import 'tienda/ventas_historial.dart';
 import 'tienda/ventas_humus.dart';
 import 'tienda/capacitacion.dart';
 import 'juegos/memorama.dart';
-import 'tienda/catalogo.dart';
+// import 'tienda/catalogo.dart';  // 🟡 COMENTADO - Tienda (pendiente para futuro)
+// import 'tienda/tienda_accesorios.dart';  // 🟡 COMENTADO - Tienda accesorios (pendiente)
+// import 'historial_monedas.dart';  // 🟡 COMENTADO - Historial monedas (pendiente)
 import 'logros.dart';
 import 'modulo_educativo.dart';
-import 'tienda/tienda_accesorios.dart';
-import 'historial_monedas.dart';
+// import 'tienda/tienda_accesorios.dart';  // 🟡 COMENTADO - Tienda accesorios (pendiente)
+// import 'historial_monedas.dart';  // 🟡 COMENTADO - Historial monedas (pendiente)
 import '../services/recordatorios_service.dart';
 import 'recordatorios.dart';
 import 'avisos.dart';
@@ -37,44 +40,47 @@ class MenuPrincipal extends StatefulWidget {
 class _MenuPrincipalState extends State<MenuPrincipal> {
   final LogrosService _logrosService = LogrosService();
   final ActividadService _actividadService = ActividadService();
-  final MonedasService _monedasService = MonedasService();
-  final AccesoriosService _accesoriosService = AccesoriosService();
+  // final MonedasService _monedasService = MonedasService();  // 🟡 COMENTADO - Monedas (pendiente)
+  // final AccesoriosService _accesoriosService = AccesoriosService();  // 🟡 COMENTADO - Accesorios (pendiente)
   
   int _categoriaAbierta = -1;
-  int _estrellas = 0;
-  int _monedas = 0;
-  int _contadorToques = 0; // Para administrador oculto
+  int _contadorToques = 0;
+  // int _estrellas = 0;  // 🟡 COMENTADO - Estrellas (pendiente)
+  // int _monedas = 0;  // 🟡 COMENTADO - Monedas (pendiente)
   
-  // Accesorios equipados
-  String? _gorraEquipada;
-  String? _lentesEquipados;
-  String? _collarEquipado;
-  String? _sombreroEquipado;
+  // // Accesorios equipados (pendiente para futuro)
+  // String? _gorraEquipada;
+  // String? _lentesEquipados;
+  // String? _collarEquipado;
+  // String? _sombreroEquipado;
 
   @override
   void initState() {
     super.initState();
-    _cargarDatos();
+    // _cargarDatos();  // 🟡 COMENTADO - Pendiente para cuando se active tienda
     _actividadService.registrarActividad();
-    _estrellas = _logrosService.obtenerEstrellas();
+    // _estrellas = _logrosService.obtenerEstrellas();  // 🟡 COMENTADO - Estrellas (pendiente)
     _verificarRecordatorios();
   }
 
-  Future<void> _cargarDatos() async {
-    await _monedasService.init();
-    await _accesoriosService.init();
-    
-    final monedas = _monedasService.obtenerMonedas();
-    final equipados = _accesoriosService.obtenerEquipados('Lola');
-    
-    setState(() {
-      _monedas = monedas;
-      _gorraEquipada = equipados['gorra'];
-      _lentesEquipados = equipados['lentes'];
-      _collarEquipado = equipados['collar'];
-      _sombreroEquipado = equipados['sombrero'];
-    });
-  }
+  // 🟡 COMENTADO - Pendiente para cuando se active tienda
+  // Future<void> _cargarDatos() async {
+  //   await _monedasService.init();
+  //   await _accesoriosService.init();
+  //   
+  //   final monedas = _monedasService.obtenerMonedas();
+  //   final configBox = await Hive.openBox('configuracion');
+  //   final genero = configBox.get('usuario_genero', defaultValue: 'Lola');
+  //   final equipados = _accesoriosService.obtenerEquipados(genero);
+  //   
+  //   setState(() {
+  //     _monedas = monedas;
+  //     _gorraEquipada = equipados['gorra'];
+  //     _lentesEquipados = equipados['lentes'];
+  //     _collarEquipado = equipados['collar'];
+  //     _sombreroEquipado = equipados['sombrero'];
+  //   });
+  // }
 
   void _verificarRecordatorios() {
     final service = RecordatoriosService();
@@ -144,16 +150,54 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     });
   }
 
-  // ✅ Área táctil para abrir panel admin (al tocar el título)
+    // ✅ Área táctil para abrir panel admin (al tocar el título)
   Widget _buildTituloAdmin() {
-    return GestureDetector(
-      onTap: _abrirPanelAdmin,
-      child: const Text(
-        '¡Hola, Lombikid! 🪱',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      return GestureDetector(
+        onTap: _abrirPanelAdmin,
+        // He añadido alignment para asegurar que el texto y la imagen grande
+        // queden centrados verticalmente entre sí.
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center, // Centrado vertical
+          children: [
+            const Text(
+              '¡Hola, Lombikid!',
+              // He subido un poco el tamaño de letra (de 20 a 22) 
+              // para que no se vea tan pequeña al lado de la imagen grande.
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 12), // Un poco más de espacio ahora que es más grande
+            
+            // --- AQUÍ ESTÁ TU LOMBRIZ MÁS GRANDE ---
+            Image.asset(
+              'assets/images/logo_lombriaventura.png', 
+              height: 50, // <-- Cambia este número para ajustar el tamaño
+              fit: BoxFit.contain,
+              
+              errorBuilder: (context, error, stackTrace) {
+                // Si la imagen falla, el emoji también sube de tamaño para no verse ridículo
+                return const Text('🪱', style: TextStyle(fontSize: 40)); 
+            },
+          ),
+        ],
       ),
     );
   }
+
+  // 🟡 COMENTADO - Personajes (pendiente para cuando se active)
+  // Widget _buildPersonajes() {
+  //   return Container(...);
+  // }
+
+  // 🟡 COMENTADO - Personaje con accesorios (pendiente)
+  // Widget _buildPersonajeConAccesorios(String nombre, double size) {
+  //   return Column(...);
+  // }
+
+  // 🟡 COMENTADO - Mini personaje emoji (pendiente)
+  // Widget _buildMiniPersonajeEmoji(String emoji, String nombre) {
+  //   return Column(...);
+  // }
 
   Widget _buildCategoria({
     required String titulo,
@@ -291,33 +335,33 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _buildTituloAdmin(), // ✅ Título con acceso oculto a Admin
+        title: _buildTituloAdmin(),
         actions: [
-          // Ícono de perfil
+          // 🟡 COMENTADO - Monedas y estrellas (pendiente para futuro)
+          // Padding(
+          //   padding: const EdgeInsets.only(right: 8),
+          //   child: Row(
+          //     children: [
+          //       const Icon(Icons.star, color: Colors.amber, size: 20),
+          //       const SizedBox(width: 4),
+          //       Text('$_estrellas', style: const TextStyle(fontSize: 16)),
+          //     ],
+          //   ),
+          // ),
+          // Padding(
+          //   padding: const EdgeInsets.only(right: 12),
+          //   child: Row(
+          //     children: [
+          //       const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
+          //       const SizedBox(width: 4),
+          //       Text('$_monedas', style: const TextStyle(fontSize: 16)),
+          //     ],
+          //   ),
+          // ),
           IconButton(
             icon: const Icon(Icons.person, color: Colors.white),
             onPressed: () => _irAPantalla(const PerfilScreen()),
             tooltip: 'Mi perfil',
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Row(
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 20),
-                const SizedBox(width: 4),
-                Text('$_estrellas', style: const TextStyle(fontSize: 16)),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Row(
-              children: [
-                const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
-                const SizedBox(width: 4),
-                Text('$_monedas', style: const TextStyle(fontSize: 16)),
-              ],
-            ),
           ),
         ],
         backgroundColor: AppTheme.verde,
@@ -326,6 +370,10 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 🟡 COMENTADO - Personajes (pendiente para cuando se active)
+            // _buildPersonajes(),
+            // const SizedBox(height: 16),
+            
             // ==================== APRENDIZAJE ====================
             _buildCategoria(
               titulo: '📚 Aprendizaje',
@@ -488,26 +536,11 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               ],
             ),
             
-            // ==================== JUEGOS ====================
-            _buildCategoria(
-              titulo: '🎮 Juegos',
-              color: AppTheme.azulCielo,
-              index: 1,
-              opciones: [
-                _buildOpcion('♻️ Clasifica residuos', 'Arrastra al contenedor correcto', Icons.recycling,
-                    () => _irAPantalla(const ClasificaResiduosScreen())),
-                _buildOpcion('🪱 Alimenta a Lola', 'Dale comida buena', Icons.restaurant,
-                    () => _irAPantalla(const AlimentaLolaScreen())),
-                _buildOpcion('🧠 Memorama', 'Encuentra las parejas', Icons.memory,
-                    () => _irAPantalla(const MemoramaScreen())),
-              ],
-            ),
-            
             // ==================== MI COMPOSTA ====================
             _buildCategoria(
               titulo: '📸 Mi Composta',
               color: AppTheme.amarillo,
-              index: 2,
+              index: 1,
               opciones: [
                 _buildOpcion('📷 Ver diario', 'Línea de tiempo y fotos', Icons.photo_library,
                     () => _irAPantalla(const MiCompostaScreen())),
@@ -526,34 +559,35 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               ],
             ),
             
-            // ==================== TIENDA ====================
-            _buildCategoria(
-              titulo: '🛒 Tienda',
-              color: AppTheme.cafe,
-              index: 3,
-              opciones: [
-                _buildOpcion('🪱 Kit de composta', 'Compra tu kit básico', Icons.shopping_cart,
-                    () => _irAPantalla(const TiendaScreen())),
-                _buildOpcion('🛍️ Accesorios', 'Compra para Lola y Lalo', Icons.store,
-                    () => _irAPantalla(const TiendaAccesoriosScreen())),
-                _buildOpcion('📜 Mis monedas', 'Tus monedas ganadas', Icons.monetization_on,
-                    () => _irAPantalla(const HistorialMonedasScreen())),
-              ],
-            ),
+            // 🟡 COMENTADO - TIENDA (pendiente para futuro)
+            // _buildCategoria(
+            //   titulo: '🛒 Tienda',
+            //   color: AppTheme.cafe,
+            //   index: 2,
+            //   opciones: [
+            //     _buildOpcion('🪱 Kit de composta', 'Compra tu kit básico', Icons.shopping_cart,
+            //         () => _irAPantalla(const TiendaScreen())),
+            //     _buildOpcion('🛍️ Accesorios', 'Compra para Lola y Lalo', Icons.store,
+            //         () => _irAPantalla(const TiendaAccesoriosScreen())),
+            //     _buildOpcion('📜 Mis monedas', 'Tus monedas ganadas', Icons.monetization_on,
+            //         () => _irAPantalla(const HistorialMonedasScreen())),
+            //   ],
+            // ),
             
             // ==================== PROGRESO ====================
             _buildCategoria(
               titulo: '⭐ Progreso',
               color: AppTheme.verde,
-              index: 4,
+              index: 2,  // 🟡 Índice ajustado (antes era 4, ahora 2)
               opciones: [
                 _buildOpcion('🏆 Mis logros', 'Insignias y medallas', Icons.emoji_events,
                     () => _irAPantalla(const LogrosScreen())),
-                _buildOpcion('📜 Historial', 'Ver tu progreso', Icons.history, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Próximamente 🚧')),
-                    );
-                  }),
+                // 🟡 COMENTADO - Historial (no implementado)
+                // _buildOpcion('📜 Historial', 'Ver tu progreso', Icons.history, () {
+                //     ScaffoldMessenger.of(context).showSnackBar(
+                //       const SnackBar(content: Text('Próximamente 🚧')),
+                //     );
+                //   }),
                 _buildOpcion('⏰ Recordatorios', 'Alertas y cuidados', Icons.notifications_active,
                     () => _irAPantalla(const RecordatoriosScreen())),
               ],
@@ -563,7 +597,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
             _buildCategoria(
               titulo: '💼 Mi negocio real',
               color: Colors.orange,
-              index: 5,
+              index: 3,  // 🟡 Índice ajustado (antes era 5, ahora 3)
               opciones: [
                 _buildOpcion('🪱 Vender lombrices', 'Precio: \$2.50 c/u', Icons.sell,
                     () => _irAPantalla(const VentasLombricesScreen())),

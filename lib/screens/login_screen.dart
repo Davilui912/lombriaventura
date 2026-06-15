@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
-import '../models/usuario.dart';
 import 'menu_principal.dart';
+import 'recuperar_password_screen.dart';
 import 'registro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+   // _crearUsuarioPruebaSiNoExiste();
     _verificarSesion();
   }
 
@@ -30,7 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final emailActual = box.get('usuario_actual');
     
     if (emailActual != null) {
-      // Hay una sesión activa
       _irAlMenu();
     }
   }
@@ -50,28 +50,60 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    final box = await Hive.openBox('usuarios');
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    
-    // Buscar usuario por email
-    final usuarios = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
-    final usuarioEncontrado = usuarios.firstWhere(
-      (u) => u['email'] == email && u['password'] == password,
-      orElse: () => null,
-    );
-
-    if (usuarioEncontrado != null) {
-      // Guardar sesión actual
-      await box.put('usuario_actual', email);
-      await box.put('usuario_nombre', usuarioEncontrado['nombre']);
-      await box.put('usuario_edad', usuarioEncontrado['edad']);
-      await box.put('usuario_ciudad', usuarioEncontrado['ciudad']);
+    try {
+      final box = await Hive.openBox('usuarios');
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
       
-      _irAlMenu();
-    } else {
+      final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
+      
+      // Convertir correctamente los datos
+      final List<Map<String, dynamic>> usuarios = [];
+      for (var item in usuariosRaw) {
+        if (item is Map) {
+          final map = <String, dynamic>{};
+          item.forEach((key, value) {
+            map[key.toString()] = value;
+          });
+          usuarios.add(map);
+        }
+      }
+      
+      // Buscar usuario - forma correcta sin orElse: null
+      Map<String, dynamic>? usuarioEncontrado;
+      for (var u in usuarios) {
+        if (u['email'] == email && u['password'] == password) {
+          usuarioEncontrado = u;
+          break;
+        }
+      }
+
+      if (usuarioEncontrado != null) {
+        await box.put('usuario_actual', email);
+        await box.put('usuario_nombre', usuarioEncontrado['nombre']);
+        await box.put('usuario_edad', usuarioEncontrado['edad']);
+        await box.put('usuario_ciudad', usuarioEncontrado['ciudad']);
+        await box.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
+        await box.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
+        
+        _irAlMenu();
+      } else {
+        final emailExiste = usuarios.any((u) => u['email'] == email);
+        if (emailExiste) {
+          setState(() {
+            _errorMessage = '❌ Contraseña incorrecta';
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _errorMessage = '❌ Correo no registrado';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Correo o contraseña incorrectos';
+        _errorMessage = 'Error al iniciar sesión: $e';
         _isLoading = false;
       });
     }
@@ -104,28 +136,58 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.bug_report, size: 80, color: Colors.white),
-                const SizedBox(height: 16),
+                
+                // --- SECCIÓN DEL LOGO Y TÍTULO (SÚPER AJUSTADO) ---
+                Image.asset(
+                  'assets/images/logo_lombriaventura.png',
+                  width: 180, // Lo bajé un pelín a 180 para asegurar compatibilidad en pantallas mini
+                  height: 180,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 180,
+                      height: 180,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.bug_report, size: 70, color: AppTheme.verde),
+                    );
+                  },
+                ),
+                
+                // Este espacio es mínimo para que el texto se pegue directo a la base de la circunferencia
+                const SizedBox(height: 2), 
+                
                 const Text(
                   'Lombriaventura',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
-                    fontSize: 32,
+                    fontSize: 24, // Tamaño seguro para todos los celulares
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(offset: Offset(0, 1.5), blurRadius: 3, color: Colors.black26),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 40),
+                
+                const SizedBox(height: 25), // Espacio controlado antes de la tarjeta
+
+                // --- TARJETA DE LOGIN ---
                 Card(
                   elevation: 8,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
                           'Iniciar sesión',
@@ -136,9 +198,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           '¡Bienvenido de vuelta!',
                           style: TextStyle(color: Colors.grey),
                         ),
-                        const SizedBox(height: 24),
-                        if (_errorMessage != null)
+                        
+                        // Mensaje de Error
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.1),
@@ -147,9 +212,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               _errorMessage!,
                               style: const TextStyle(color: Colors.red),
+                              textAlign: TextAlign.center,
                             ),
                           ),
-                        const SizedBox(height: 16),
+                        ],
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Input: Correo
                         TextField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -160,6 +230,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        
+                        // Input: Contraseña
                         TextField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -173,7 +245,28 @@ class _LoginScreenState extends State<LoginScreen> {
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        
+                        // Olvidé mi contraseña
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const RecuperarPasswordScreen()),
+                              );
+                            },
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                            child: const Text(
+                              '¿Olvidaste tu contraseña?', 
+                              style: TextStyle(color: AppTheme.verde, fontSize: 13),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Botón Ingresar
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -182,20 +275,28 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: AppTheme.verde,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
                             ),
                             child: _isLoading
-                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white))
-                                : const Text('Ingresar', style: TextStyle(fontSize: 18, color: Colors.white)),
+                                ? const SizedBox(
+                                    width: 24, 
+                                    height: 24, 
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  )
+                                : const Text('Ingresar', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                           ),
                         ),
+                        
                         const SizedBox(height: 16),
+                        
+                        // Registro
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('¿No tienes cuenta?'),
+                            const Text('¿No tienes cuenta?', style: TextStyle(color: Colors.grey)),
                             TextButton(
                               onPressed: _irARegistro,
-                              child: const Text('Regístrate', style: TextStyle(color: AppTheme.verde)),
+                            child: const Text('Regístrate', style: TextStyle(color: AppTheme.verde, fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
