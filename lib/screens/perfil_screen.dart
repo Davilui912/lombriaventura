@@ -11,10 +11,10 @@ class PerfilScreen extends StatefulWidget {
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
-  String _nombre = '';
+  String _usuario = '';
+  String _nombreCompleto = '';
   String _edad = '';
   String _ciudad = '';
-  String _email = '';
   String _genero = 'Lola';
   String _fechaRegistro = '';
   bool _isLoading = true;
@@ -31,27 +31,19 @@ class _PerfilScreenState extends State<PerfilScreen> {
     try {
       final configBox = await Hive.openBox('configuracion');
       
-      // Leer todos los datos de configuración
-      final nombre = configBox.get('usuario_nombre', defaultValue: 'Lombikid');
-      final edad = configBox.get('usuario_edad', defaultValue: '?');
-      final ciudad = configBox.get('usuario_ciudad', defaultValue: '?');
-      final email = configBox.get('usuario_actual', defaultValue: 'No disponible');
-      final genero = configBox.get('usuario_genero', defaultValue: 'Lola');
-      final fechaRegistro = configBox.get('usuario_fecha_registro', defaultValue: DateTime.now().toIso8601String());
-      
-      print('📖 Leyendo perfil: $nombre, $genero, $email');
-      
       setState(() {
-        _nombre = nombre;
-        _edad = edad;
-        _ciudad = ciudad;
-        _email = email;
-        _genero = genero;
-        _fechaRegistro = fechaRegistro;
+        _usuario = configBox.get('usuario_actual', defaultValue: '');
+        _nombreCompleto = configBox.get('usuario_nombre', defaultValue: 'Lombrikid');
+        _edad = configBox.get('usuario_edad', defaultValue: '?');
+        _ciudad = configBox.get('usuario_ciudad', defaultValue: '?');
+        _genero = configBox.get('usuario_genero', defaultValue: 'Lola');
+        _fechaRegistro = configBox.get('usuario_fecha_registro', defaultValue: DateTime.now().toIso8601String());
         _isLoading = false;
       });
+      
+      debugPrint('✅ Perfil cargado: usuario=$_usuario, nombre=$_nombreCompleto, genero=$_genero');
     } catch (e) {
-      print('❌ Error cargando perfil: $e');
+      debugPrint('❌ Error cargando perfil: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -76,11 +68,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
 
     if (confirm == true) {
-      // Limpiar todos los datos de sesión
       final configBox = await Hive.openBox('configuracion');
-      await configBox.clear();  // ✅ Limpiar todo
+      await configBox.clear();
       
-      print('🗑️ Sesión cerrada, datos limpiados');
+      debugPrint('🗑️ Sesión cerrada, datos limpiados');
       
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -130,7 +121,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  // Avatar
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: generoColor.withValues(alpha: 0.2),
@@ -141,13 +131,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Nombre
                   Text(
-                    _nombre,
+                    _nombreCompleto,
                     style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  // Rango
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
@@ -160,14 +148,25 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  // Datos
+                  
+                  // Nombre de usuario
                   Card(
                     child: ListTile(
-                      leading: const Icon(Icons.email, color: AppTheme.verde),
-                      title: const Text('Correo electrónico'),
-                      subtitle: Text(_email),
+                      leading: const Icon(Icons.badge, color: AppTheme.verde),
+                      title: const Text('Nombre de usuario'),
+                      subtitle: Text(_usuario.isEmpty ? 'Sin definir' : _usuario),
                     ),
                   ),
+                  
+                  // Nombre completo
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.person, color: AppTheme.verde),
+                      title: const Text('Nombre completo'),
+                      subtitle: Text(_nombreCompleto),
+                    ),
+                  ),
+                  
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.cake, color: AppTheme.verde),
@@ -185,7 +184,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.calendar_today, color: AppTheme.verde),
-                      title: const Text('Lombikid desde'),
+                      title: const Text('Lombrikid desde'),
                       subtitle: Text(_formatearFecha(_fechaRegistro)),
                     ),
                   ),

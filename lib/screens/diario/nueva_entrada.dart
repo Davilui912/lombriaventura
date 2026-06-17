@@ -15,7 +15,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   final DiarioService _diarioService = DiarioService();
   final TextEditingController _notaController = TextEditingController();
   
-  // ✅ Temperatura ahora es String con opciones
+  // ✅ Temperatura con opciones
   String? _temperaturaSeleccionada;
   final List<String> _opcionesTemperatura = ['❄️ Frío', '🌤️ Buen clima', '☀️ Caliente'];
   
@@ -99,20 +99,22 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
       nota: _notaController.text.isNotEmpty ? _notaController.text : null,
       estado: _estadoSeleccionado,
       humedad: _humedad,
-      temperatura: _temperaturaSeleccionada, // ← AHORA ES String
+      temperaturaTexto: _temperaturaSeleccionada,
       tipoResiduo: _tipoResiduo,
       produccionComposta: _compostaController.text.isNotEmpty ? double.tryParse(_compostaController.text) : null,
       produccionLixiviado: _lixiviadoController.text.isNotEmpty ? double.tryParse(_lixiviadoController.text) : null,
     );
     await MonedasService().ganarPorActividad('diario');
     if (mounted) Navigator.pop(context, true);
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('📝 Nueva entrada')),
+      appBar: AppBar(
+        title: const Text('📝 Nueva entrada'),
+        backgroundColor: AppTheme.verde,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -280,34 +282,24 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
               const SizedBox(height: 12),
 
-              // ✅ Temperatura (NUEVA VERSIÓN con opciones)
+              // ✅ Temperatura (Frío / Buen clima / Caliente)
               const Text('🌡️ Temperatura', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
               const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                spacing: 8,
                 children: _opcionesTemperatura.map((opcion) {
-                  final isSelected = _temperaturaSeleccionada == opcion;
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      _temperaturaSeleccionada = isSelected ? null : opcion;
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.verde : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: isSelected ? AppTheme.verde : Colors.grey[300]!,
-                          width: 2,
-                        ),
-                      ),
-                      child: Text(
-                        opcion,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
+                  return ChoiceChip(
+                    label: Text(opcion),
+                    selected: _temperaturaSeleccionada == opcion,
+                    onSelected: (selected) {
+                      setState(() {
+                        _temperaturaSeleccionada = selected ? opcion : null;
+                      });
+                    },
+                    selectedColor: AppTheme.verde,
+                    backgroundColor: Colors.grey[200],
+                    labelStyle: TextStyle(
+                      color: _temperaturaSeleccionada == opcion ? Colors.white : Colors.black,
                     ),
                   );
                 }).toList(),
@@ -333,22 +325,23 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
               const SizedBox(height: 12),
 
-              // Producción
+              // Producción (puños y cucharadas)
               Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('🪱 Composta (g)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+                        const Text('🪱 Composta (puños)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _compostaController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            hintText: 'Gramos',
-                            suffixText: 'g',
-                            filled: true, fillColor: const Color(0xFFF5F5F5),
+                            hintText: 'Ej: 2 puños',
+                            suffixText: 'puños',
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           ),
@@ -361,15 +354,16 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('💧 Lixiviado (ml)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+                        const Text('💧 Lixiviado (cucharadas)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _lixiviadoController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            hintText: 'Mililitros',
-                            suffixText: 'ml',
-                            filled: true, fillColor: const Color(0xFFF5F5F5),
+                            hintText: 'Ej: 3 cucharadas',
+                            suffixText: 'cucharadas',
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           ),

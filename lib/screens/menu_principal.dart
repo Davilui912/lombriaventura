@@ -29,6 +29,8 @@ import 'recordatorios.dart';
 import 'avisos.dart';
 import 'perfil_screen.dart';
 import 'admin_screen.dart';
+import '../services/recordatorios_service.dart';
+import 'retos_screen.dart';
 
 class MenuPrincipal extends StatefulWidget {
   const MenuPrincipal({super.key});
@@ -57,10 +59,13 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   @override
   void initState() {
     super.initState();
+    //_cargarPersonaje();
     // _cargarDatos();  // 🟡 COMENTADO - Pendiente para cuando se active tienda
     _actividadService.registrarActividad();
     // _estrellas = _logrosService.obtenerEstrellas();  // 🟡 COMENTADO - Estrellas (pendiente)
     _verificarRecordatorios();
+
+    _inicializarRecordatorios();
   }
 
   // 🟡 COMENTADO - Pendiente para cuando se active tienda
@@ -82,8 +87,15 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   //   });
   // }
 
-  void _verificarRecordatorios() {
+  Future<void> _inicializarRecordatorios() async {
+    final recordatorioService = RecordatoriosService();
+    await recordatorioService.init();
+    recordatorioService.programarRecordatorioDiario();
+  }
+  
+  void _verificarRecordatorios() async {
     final service = RecordatoriosService();
+    await service.init();  // ✅ Inicializar antes de usar
     if (service.hayPendientes()) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!mounted) return;
@@ -94,6 +106,8 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       });
     }
   }
+
+
 
   void _mostrarAlertaRecordatorio(Map<String, dynamic> rec) {
     showDialog(
@@ -161,7 +175,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
           crossAxisAlignment: CrossAxisAlignment.center, // Centrado vertical
           children: [
             const Text(
-              '¡Hola, Lombikid!',
+              '¡Hola, Lombrikid!',
               // He subido un poco el tamaño de letra (de 20 a 22) 
               // para que no se vea tan pequeña al lado de la imagen grande.
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -298,7 +312,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                             ],
                         ),
                         ),
-                        // ✅ Flecha indicadora
+                        //Flecha indicadora
                         AnimatedRotation(
                         duration: const Duration(milliseconds: 300),
                         turns: abierta ? 0.5 : 0,
@@ -311,7 +325,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                     ],
                     ),
                 ),
-                // ✅ Opciones desplegables con fondo semitransparente
+                //Opciones desplegables con fondo semitransparente
                 if (abierta)
                     Container(
                     decoration: BoxDecoration(
@@ -476,7 +490,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                         () => _irAPantalla(ModuloEducativoScreen(
                             titulo: '🪱 Conoce a las lombrices',
                             descripcion: 'Las lombrices son pequeñas pero poderosas aliadas del planeta.',
-                            informacion: '🐛 ¡Hola! Soy Lola, una lombriz roja californiana. '
+                            informacion: '🐛 ¡Hola! Soy la lombriz sabia, una lombriz roja californiana. '
                                 'Somos las mejores para hacer composta porque comemos muy rápido.\n\n'
                                 '🌱 ¿CÓMO NACEMOS?\n'
                                 'Nos juntamos en pareja y compartimos una parte de nuestro cuerpo. '
@@ -647,7 +661,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                             () => _irAPantalla(const AlimentaLolaScreen())),
                         _buildOpcion('🎮 Memorama ecológico', 'Encuentra las parejas', Icons.memory,
                             () => _irAPantalla(const MemoramaScreen())),
-                        _buildMenuButton('Pregúntale a Lola 🤖', Icons.chat, AppTheme.azulCielo,
+                        _buildMenuButton('Pregúntale a la lombriz sabia 🤖', Icons.chat, AppTheme.azulCielo,
                             () => _irAPantalla(const ChatIAScreen())),
                         _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber,
                             () => _irAPantalla(const AvisosScreen())),
@@ -665,6 +679,8 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                     opciones: [
                         _buildOpcion('🏆 Mis logros', 'Insignias y medallas', Icons.emoji_events,
                             () => _irAPantalla(const LogrosScreen())),
+                        _buildOpcion('🎯 Retos', 'Completa los desafíos', Icons.flag,
+                            () => _irAPantalla(const RetosScreen())),
                         _buildOpcion('⏰ Recordatorios', 'Alertas y cuidados', Icons.notifications_active,
                             () => _irAPantalla(const RecordatoriosScreen())),
                     ],

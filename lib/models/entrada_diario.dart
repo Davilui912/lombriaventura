@@ -11,6 +11,7 @@ class EntradaDiario {
   final String? tipoResiduo; // "Frutas", "Verduras", "Café", "Mixto"
   final double? produccionComposta; // gramos
   final double? produccionLixiviado; // mililitros
+  final String? temperaturaTexto;
 
   EntradaDiario({
     required this.id,
@@ -23,6 +24,7 @@ class EntradaDiario {
     this.tipoResiduo,
     this.produccionComposta,
     this.produccionLixiviado,
+    this.temperaturaTexto,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +39,7 @@ class EntradaDiario {
       'tipoResiduo': tipoResiduo,
       'produccionComposta': produccionComposta,
       'produccionLixiviado': produccionLixiviado,
+      'temperaturaTexto': temperaturaTexto,
     };
   }
 
@@ -52,6 +55,7 @@ class EntradaDiario {
       tipoResiduo: map['tipoResiduo'],
       produccionComposta: map['produccionComposta'],
       produccionLixiviado: map['produccionLixiviado'],
+      temperaturaTexto: map['temperaturaTexto'],
     );
   }
 }

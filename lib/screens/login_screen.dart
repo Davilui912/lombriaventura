@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import 'menu_principal.dart';
-import 'recuperar_password_screen.dart';
 import 'registro_screen.dart';
+import 'recuperar_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -22,22 +22,21 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-   // _crearUsuarioPruebaSiNoExiste();
     _verificarSesion();
   }
 
   Future<void> _verificarSesion() async {
-    final box = await Hive.openBox('usuarios');
-    final emailActual = box.get('usuario_actual');
+    final box = await Hive.openBox('configuracion');
+    final usuarioActual = box.get('usuario_actual');
     
-    if (emailActual != null) {
+    if (usuarioActual != null) {
       _irAlMenu();
     }
   }
 
   Future<void> _iniciarSesion() async {
-    if (_emailController.text.trim().isEmpty) {
-      setState(() => _errorMessage = 'Ingresa tu correo');
+    if (_usernameController.text.trim().isEmpty) {
+      setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
       return;
     }
     if (_passwordController.text.trim().isEmpty) {
@@ -52,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final box = await Hive.openBox('usuarios');
-      final email = _emailController.text.trim();
+      final username = _usernameController.text.trim();
       final password = _passwordController.text.trim();
       
       final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
@@ -70,40 +69,37 @@ class _LoginScreenState extends State<LoginScreen> {
       
       Map<String, dynamic>? usuarioEncontrado;
       for (var u in usuarios) {
-        if (u['email'] == email && u['password'] == password) {
+        if (u['nombre'] == username && u['password'] == password) {
           usuarioEncontrado = u;
           break;
         }
       }
 
       if (usuarioEncontrado != null) {
-        // ✅ Limpiar datos anteriores antes de guardar nuevos
         final configBox = await Hive.openBox('configuracion');
         
-        // Primero limpiar todo
         await configBox.clear();
         
-        // Luego guardar los nuevos datos
-        await configBox.put('usuario_actual', email);
-        await configBox.put('usuario_nombre', usuarioEncontrado['nombre'] ?? 'Lombikid');
+        await configBox.put('usuario_actual', username);
+        await configBox.put('usuario_nombre', usuarioEncontrado['nombre']);
         await configBox.put('usuario_edad', usuarioEncontrado['edad']?.toString() ?? '?');
         await configBox.put('usuario_ciudad', usuarioEncontrado['ciudad'] ?? '?');
         await configBox.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
         await configBox.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
         
-        print('✅ Datos guardados: ${usuarioEncontrado['nombre']}, ${usuarioEncontrado['genero']}, $email');
+        debugPrint('✅ Usuario conectado: $username');
         
         _irAlMenu();
       } else {
-        final emailExiste = usuarios.any((u) => u['email'] == email);
-        if (emailExiste) {
+        final usernameExiste = usuarios.any((u) => u['nombre'] == username);
+        if (usernameExiste) {
           setState(() {
             _errorMessage = '❌ Contraseña incorrecta';
             _isLoading = false;
           });
         } else {
           setState(() {
-            _errorMessage = '❌ Correo no registrado';
+            _errorMessage = '❌ Usuario no registrado';
             _isLoading = false;
           });
         }
@@ -117,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _irAlMenu() {
-    // ✅ Eliminar todo el historial y navegar al menu
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const MenuPrincipal()),
@@ -129,6 +124,13 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const RegistroScreen()),
+    );
+  }
+
+  void _irARecuperarPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RecuperarPasswordScreen()),
     );
   }
 
@@ -149,54 +151,41 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                
-                // --- SECCIÓN DEL LOGO Y TÍTULO (SÚPER AJUSTADO) ---
                 Image.asset(
                   'assets/images/logo_lombriaventura.png',
-                  width: 180, // Lo bajé un pelín a 180 para asegurar compatibilidad en pantallas mini
-                  height: 180,
-                  fit: BoxFit.contain,
+                  width: 120,
+                  height: 120,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      width: 180,
-                      height: 180,
-                      decoration: const BoxDecoration(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.bug_report, size: 70, color: AppTheme.verde),
+                      child: const Icon(Icons.bug_report, size: 60, color: AppTheme.verde),
                     );
                   },
                 ),
-                
-                // Este espacio es mínimo para que el texto se pegue directo a la base de la circunferencia
-                const SizedBox(height: 2), 
-                
+                const SizedBox(height: 8),
                 const Text(
                   'Lombriaventura',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
-                    fontSize: 24, // Tamaño seguro para todos los celulares
+                    fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(offset: Offset(0, 1.5), blurRadius: 3, color: Colors.black26),
-                    ],
+                    letterSpacing: 1.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
-                const SizedBox(height: 25), // Espacio controlado antes de la tarjeta
-
-                // --- TARJETA DE LOGIN ---
+                const SizedBox(height: 30),
                 Card(
                   elevation: 8,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
                           'Iniciar sesión',
@@ -207,12 +196,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           '¡Bienvenido de vuelta!',
                           style: TextStyle(color: Colors.grey),
                         ),
-                        
-                        // Mensaje de Error
-                        if (_errorMessage != null) ...[
-                          const SizedBox(height: 16),
+                        const SizedBox(height: 24),
+                        if (_errorMessage != null)
                           Container(
-                            width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.1),
@@ -221,26 +207,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               _errorMessage!,
                               style: const TextStyle(color: Colors.red),
-                              textAlign: TextAlign.center,
                             ),
                           ),
-                        ],
-                        
-                        const SizedBox(height: 24),
-                        
-                        // Input: Correo
+                        const SizedBox(height: 16),
                         TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _usernameController,
                           decoration: InputDecoration(
-                            labelText: 'Correo electrónico',
-                            prefixIcon: const Icon(Icons.email, color: AppTheme.verde),
+                            labelText: 'Nombre de usuario',
+                            prefixIcon: const Icon(Icons.person, color: AppTheme.verde),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
-                        // Input: Contraseña
                         TextField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -254,28 +232,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
-                        
-                        // Olvidé mi contraseña
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const RecuperarPasswordScreen()),
-                              );
-                            },
-                            style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                            child: const Text(
-                              '¿Olvidaste tu contraseña?', 
-                              style: TextStyle(color: AppTheme.verde, fontSize: 13),
-                            ),
-                          ),
-                        ),
-                        
                         const SizedBox(height: 16),
-                        
-                        // Botón Ingresar
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: _irARecuperarPassword,
+                              child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: AppTheme.verde)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -284,28 +251,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: AppTheme.verde,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              elevation: 2,
                             ),
                             child: _isLoading
-                                ? const SizedBox(
-                                    width: 24, 
-                                    height: 24, 
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                                  )
-                                : const Text('Ingresar', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white))
+                                : const Text('Ingresar', style: TextStyle(fontSize: 18, color: Colors.white)),
                           ),
                         ),
-                        
                         const SizedBox(height: 16),
-                        
-                        // Registro
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('¿No tienes cuenta?', style: TextStyle(color: Colors.grey)),
+                            const Text('¿No tienes cuenta?'),
                             TextButton(
                               onPressed: _irARegistro,
-                            child: const Text('Regístrate', style: TextStyle(color: AppTheme.verde, fontWeight: FontWeight.bold)),
+                              child: const Text('Regístrate', style: TextStyle(color: AppTheme.verde)),
                             ),
                           ],
                         ),

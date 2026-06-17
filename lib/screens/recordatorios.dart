@@ -10,31 +10,32 @@ class RecordatoriosScreen extends StatefulWidget {
 }
 
 class _RecordatoriosScreenState extends State<RecordatoriosScreen> {
-  final RecordatoriosService _service = RecordatoriosService();
-  late List<Map<String, dynamic>> _pendientes;
+  late RecordatoriosService _service;
+  List<Map<String, dynamic>> _pendientes = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _cargar();
+    _inicializarServicio();
   }
 
-  void _cargar() {
+  Future<void> _inicializarServicio() async {
+    _service = RecordatoriosService();
+    await _service.init();  // ✅ Inicializar antes de usar
+    _cargarPendientes();
+  }
+
+  void _cargarPendientes() {
     setState(() {
       _pendientes = _service.obtenerPendientes();
+      _isLoading = false;
     });
   }
 
-  void _marcarVisto(String id) {
-    _service.marcarVisto(id);
-    _cargar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ ¡Buen trabajo, Lombikid!'),
-        backgroundColor: AppTheme.verde,
-        duration: Duration(seconds: 1),
-      ),
-    );
+  Future<void> _marcarVisto(String id) async {
+    await _service.marcarVisto(id);
+    _cargarPendientes();
   }
 
   @override
@@ -42,125 +43,49 @@ class _RecordatoriosScreenState extends State<RecordatoriosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('⏰ Recordatorios'),
-        actions: [
-          if (_pendientes.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_pendientes.length}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-        ],
+        backgroundColor: AppTheme.verde,
       ),
-      body: _pendientes.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('🎉', style: TextStyle(fontSize: 80)),
-                  const SizedBox(height: 20),
-                  const Text(
-                    '¡Todo al día!',
-                    style: TextStyle(fontSize: 26, fontFamily: 'Fredoka', color: AppTheme.verde),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'No tienes recordatorios pendientes.\n¡Eres un gran cuidador! 🌱',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _pendientes.length,
-              itemBuilder: (context, index) {
-                final rec = _pendientes[index];
-                return _buildRecordatorioCard(rec);
-              },
-            ),
-    );
-  }
-
-  Widget _buildRecordatorioCard(Map<String, dynamic> rec) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 50, height: 50,
-                  decoration: BoxDecoration(
-                    color: AppTheme.verde.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Center(
-                    child: Text(rec['icono'], style: const TextStyle(fontSize: 26)),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _pendientes.isEmpty
+              ? const Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Icon(Icons.check_circle_outline, size: 64, color: AppTheme.verde),
+                      SizedBox(height: 16),
                       Text(
-                        rec['titulo'],
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Cada ${rec['frecuenciaDias']} días',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                        '¡No hay recordatorios pendientes!',
+                        style: TextStyle(fontSize: 18, color: AppTheme.verde),
                       ),
                     ],
                   ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _pendientes.length,
+                  itemBuilder: (context, index) {
+                    final item = _pendientes[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: Text(
+                          item['icono'] ?? '📌',
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                        title: Text(
+                          item['titulo'] ?? 'Recordatorio',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(item['mensaje'] ?? ''),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.check_circle, color: AppTheme.verde),
+                          onPressed: () => _marcarVisto(item['id']),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F9EE),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                rec['mensaje'],
-                style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.cafe),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: () => _marcarVisto(rec['id']),
-                icon: const Icon(Icons.check, size: 20),
-                label: const Text('¡Hecho!'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.verde,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

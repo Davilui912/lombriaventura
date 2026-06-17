@@ -11,8 +11,8 @@ class RegistroScreen extends StatefulWidget {
 }
 
 class _RegistroScreenState extends State<RegistroScreen> {
+  final TextEditingController _usuarioController = TextEditingController();
   final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmarController = TextEditingController();
   final TextEditingController _edadController = TextEditingController();
@@ -68,16 +68,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
   }
 
   Future<void> _registrarUsuario() async {
+    // Validaciones
+    if (_usuarioController.text.trim().isEmpty) {
+      setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
+      return;
+    }
     if (_nombreController.text.trim().isEmpty) {
-      setState(() => _errorMessage = 'Ingresa tu nombre');
-      return;
-    }
-    if (_emailController.text.trim().isEmpty) {
-      setState(() => _errorMessage = 'Ingresa tu correo');
-      return;
-    }
-    if (!_emailController.text.contains('@')) {
-      setState(() => _errorMessage = 'Correo inválido');
+      setState(() => _errorMessage = 'Ingresa tu nombre completo');
       return;
     }
     if (_passwordController.text.length < 4) {
@@ -129,18 +126,19 @@ class _RegistroScreenState extends State<RegistroScreen> {
         }
       }
       
-      final existe = usuarios.any((u) => u['email'] == _emailController.text.trim());
+      // Verificar si el nombre de usuario ya existe
+      final existe = usuarios.any((u) => u['usuario'] == _usuarioController.text.trim());
       if (existe) {
         setState(() {
-          _errorMessage = 'Este correo ya está registrado';
+          _errorMessage = '❌ Este nombre de usuario ya está registrado';
           _isLoading = false;
         });
         return;
       }
 
       final nuevoUsuario = {
+        'usuario': _usuarioController.text.trim(),
         'nombre': _nombreController.text.trim(),
-        'email': _emailController.text.trim(),
         'password': _passwordController.text.trim(),
         'edad': int.tryParse(_edadController.text.trim()) ?? 0,
         'ciudad': _ciudadController.text.trim(),
@@ -155,7 +153,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       
       // Guardar datos de sesión
       final configBox = await Hive.openBox('configuracion');
-      await configBox.put('usuario_actual', _emailController.text.trim());
+      await configBox.put('usuario_actual', _usuarioController.text.trim());
       await configBox.put('usuario_nombre', _nombreController.text.trim());
       await configBox.put('usuario_edad', _edadController.text.trim());
       await configBox.put('usuario_ciudad', _ciudadController.text.trim());
@@ -165,7 +163,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
       setState(() => _isLoading = false);
       
       if (mounted) {
-        // ✅ Usar pushAndRemoveUntil para eliminar todo el historial
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -214,27 +211,30 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
             const SizedBox(height: 16),
             
+            // Nombre de usuario
+            TextField(
+              controller: _usuarioController,
+              decoration: InputDecoration(
+                labelText: 'Nombre de usuario',
+                prefixIcon: const Icon(Icons.person, color: AppTheme.verde),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                helperText: 'Este será tu nombre para iniciar sesión',
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Nombre completo
             TextField(
               controller: _nombreController,
               decoration: InputDecoration(
                 labelText: 'Nombre completo',
-                prefixIcon: const Icon(Icons.person, color: AppTheme.verde),
+                prefixIcon: const Icon(Icons.badge, color: AppTheme.verde),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 16),
             
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: 'Correo electrónico',
-                prefixIcon: const Icon(Icons.email, color: AppTheme.verde),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
+            // Contraseña
             TextField(
               controller: _passwordController,
               obscureText: _obscurePassword,
@@ -250,6 +250,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Confirmar contraseña
             TextField(
               controller: _confirmarController,
               obscureText: _obscureConfirmar,
@@ -265,6 +266,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Edad
             TextField(
               controller: _edadController,
               keyboardType: TextInputType.number,
@@ -276,6 +278,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Ciudad
             TextField(
               controller: _ciudadController,
               decoration: InputDecoration(
@@ -286,6 +289,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Género
             const Text('🪱 Elige tu acompañante', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Row(
@@ -297,6 +301,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Pregunta de seguridad
             const Text('🔐 Pregunta de seguridad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Container(
@@ -330,6 +335,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Respuesta de seguridad
             TextField(
               controller: _respuestaSeguridadController,
               decoration: InputDecoration(
@@ -341,6 +347,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 24),
             
+            // Botón registrar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

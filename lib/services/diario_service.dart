@@ -69,6 +69,7 @@ class DiarioService {
     String? tipoResiduo,
     double? produccionComposta,
     double? produccionLixiviado,
+    String? temperaturaTexto,
   }) async {
     final box = Hive.box(_boxName);
     final entrada = EntradaDiario(
@@ -82,6 +83,7 @@ class DiarioService {
       tipoResiduo: tipoResiduo,
       produccionComposta: produccionComposta,
       produccionLixiviado: produccionLixiviado,
+      temperaturaTexto: temperaturaTexto,
     );
     await box.put(entrada.id, entrada.toMap());
   }

@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'config/theme.dart';
 import 'screens/login_screen.dart';
 import 'models/conversacion.dart';
+import 'services/recordatorios_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,9 @@ void main() async {
   await Hive.openBox('accesorios');
   await Hive.openBox('capacitaciones');
   await Hive.openBox('usuarios');  // ← NUEVO
+
+  final recordatorioService = RecordatoriosService();
+  await recordatorioService.init();
 
   runApp(const LombriaventuraApp());
 }
