@@ -31,17 +31,25 @@ class _PerfilScreenState extends State<PerfilScreen> {
     try {
       final configBox = await Hive.openBox('configuracion');
       
+      // Leer todos los datos de configuración
+      final nombre = configBox.get('usuario_nombre', defaultValue: 'Lombikid');
+      final edad = configBox.get('usuario_edad', defaultValue: '?');
+      final ciudad = configBox.get('usuario_ciudad', defaultValue: '?');
+      final email = configBox.get('usuario_actual', defaultValue: 'No disponible');
+      final genero = configBox.get('usuario_genero', defaultValue: 'Lola');
+      final fechaRegistro = configBox.get('usuario_fecha_registro', defaultValue: DateTime.now().toIso8601String());
+      
+      print('📖 Leyendo perfil: $nombre, $genero, $email');
+      
       setState(() {
-        _nombre = configBox.get('usuario_nombre', defaultValue: 'Lombikid');
-        _edad = configBox.get('usuario_edad', defaultValue: '?');
-        _ciudad = configBox.get('usuario_ciudad', defaultValue: '?');
-        _email = configBox.get('usuario_actual', defaultValue: 'No disponible');
-        _genero = configBox.get('usuario_genero', defaultValue: 'Lola');
-        _fechaRegistro = configBox.get('usuario_fecha_registro', defaultValue: DateTime.now().toIso8601String());
+        _nombre = nombre;
+        _edad = edad;
+        _ciudad = ciudad;
+        _email = email;
+        _genero = genero;
+        _fechaRegistro = fechaRegistro;
         _isLoading = false;
       });
-      
-      print('✅ Perfil cargado: $_nombre, $_genero, $_email');
     } catch (e) {
       print('❌ Error cargando perfil: $e');
       setState(() => _isLoading = false);
@@ -68,21 +76,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
 
     if (confirm == true) {
-      // Limpiar todos los datos de sesión en Hive
+      // Limpiar todos los datos de sesión
       final configBox = await Hive.openBox('configuracion');
-      await configBox.delete('usuario_actual');
-      await configBox.delete('usuario_nombre');
-      await configBox.delete('usuario_edad');
-      await configBox.delete('usuario_ciudad');
-      await configBox.delete('usuario_genero');
-      await configBox.delete('usuario_fecha_registro');
+      await configBox.clear();  // ✅ Limpiar todo
       
-      // ✅ REPARADO: Limpia todo el historial de navegación para que no regrese al menú
+      print('🗑️ Sesión cerrada, datos limpiados');
+      
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false, // Al retornar 'false' borramos todas las rutas previas del historial
+          (route) => false,
         );
       }
     }

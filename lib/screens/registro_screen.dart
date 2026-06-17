@@ -118,7 +118,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
       final box = await Hive.openBox('usuarios');
       final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
       
-      // Convertir usuarios existentes
       final List<Map<String, dynamic>> usuarios = [];
       for (var item in usuariosRaw) {
         if (item is Map) {
@@ -153,19 +152,24 @@ class _RegistroScreenState extends State<RegistroScreen> {
       
       usuarios.add(nuevoUsuario);
       await box.put('lista', usuarios);
-      await box.put('usuario_actual', _emailController.text.trim());
-      await box.put('usuario_nombre', _nombreController.text.trim());
-      await box.put('usuario_edad', _edadController.text.trim());
-      await box.put('usuario_ciudad', _ciudadController.text.trim());
-      await box.put('usuario_genero', _genero);
-      await box.put('usuario_fecha_registro', DateTime.now().toIso8601String());
+      
+      // Guardar datos de sesión
+      final configBox = await Hive.openBox('configuracion');
+      await configBox.put('usuario_actual', _emailController.text.trim());
+      await configBox.put('usuario_nombre', _nombreController.text.trim());
+      await configBox.put('usuario_edad', _edadController.text.trim());
+      await configBox.put('usuario_ciudad', _ciudadController.text.trim());
+      await configBox.put('usuario_genero', _genero);
+      await configBox.put('usuario_fecha_registro', DateTime.now().toIso8601String());
 
       setState(() => _isLoading = false);
       
       if (mounted) {
-        Navigator.pushReplacement(
+        // ✅ Usar pushAndRemoveUntil para eliminar todo el historial
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
         );
       }
     } catch (e) {

@@ -8,6 +8,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
+
+  // ✅ Registrar versión de la base de datos
+  final box = await Hive.openBox('configuracion');
+  final versionActual = box.get('db_version', defaultValue: 0);
+  const versionNueva = 1;
+  
+  if (versionActual < versionNueva) {
+    // Si la versión es antigua, borrar datos para evitar errores
+    print('🔄 Actualizando base de datos de la versión $versionActual a $versionNueva');
+    await box.clear();
+    await box.put('db_version', versionNueva);
+    print('✅ Base de datos actualizada');
+  }
+
   Hive.registerAdapter(ConversacionAdapter());
   
   await Hive.openBox('logros');

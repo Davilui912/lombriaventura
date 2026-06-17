@@ -64,5 +64,6 @@ flutter:
     - assets/images/personajes/
     - assets/images/accesorios/
     - assets/animations/
+    - assets/images/icons/
     - assets/audio/
     - assets/data/

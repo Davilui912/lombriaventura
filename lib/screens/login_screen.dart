@@ -57,7 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
       
       final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
       
-      // Convertir correctamente los datos
       final List<Map<String, dynamic>> usuarios = [];
       for (var item in usuariosRaw) {
         if (item is Map) {
@@ -69,7 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
       
-      // Buscar usuario - forma correcta sin orElse: null
       Map<String, dynamic>? usuarioEncontrado;
       for (var u in usuarios) {
         if (u['email'] == email && u['password'] == password) {
@@ -79,12 +77,21 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (usuarioEncontrado != null) {
-        await box.put('usuario_actual', email);
-        await box.put('usuario_nombre', usuarioEncontrado['nombre']);
-        await box.put('usuario_edad', usuarioEncontrado['edad']);
-        await box.put('usuario_ciudad', usuarioEncontrado['ciudad']);
-        await box.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
-        await box.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
+        // ✅ Limpiar datos anteriores antes de guardar nuevos
+        final configBox = await Hive.openBox('configuracion');
+        
+        // Primero limpiar todo
+        await configBox.clear();
+        
+        // Luego guardar los nuevos datos
+        await configBox.put('usuario_actual', email);
+        await configBox.put('usuario_nombre', usuarioEncontrado['nombre'] ?? 'Lombikid');
+        await configBox.put('usuario_edad', usuarioEncontrado['edad']?.toString() ?? '?');
+        await configBox.put('usuario_ciudad', usuarioEncontrado['ciudad'] ?? '?');
+        await configBox.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
+        await configBox.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
+        
+        print('✅ Datos guardados: ${usuarioEncontrado['nombre']}, ${usuarioEncontrado['genero']}, $email');
         
         _irAlMenu();
       } else {
@@ -110,9 +117,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _irAlMenu() {
-    Navigator.pushReplacement(
+    // ✅ Eliminar todo el historial y navegar al menu
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const MenuPrincipal()),
+      (route) => false,
     );
   }
 
