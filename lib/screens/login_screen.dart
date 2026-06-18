@@ -56,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       
       final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
       
+      // ✅ Convertir correctamente los datos
       final List<Map<String, dynamic>> usuarios = [];
       for (var item in usuariosRaw) {
         if (item is Map) {
@@ -67,9 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
       
+      // ✅ Buscar por 'usuario' (no por 'nombre')
       Map<String, dynamic>? usuarioEncontrado;
       for (var u in usuarios) {
-        if (u['nombre'] == username && u['password'] == password) {
+        if (u['usuario'] == username && u['password'] == password) {
           usuarioEncontrado = u;
           break;
         }
@@ -78,10 +80,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (usuarioEncontrado != null) {
         final configBox = await Hive.openBox('configuracion');
         
-        await configBox.clear();
-        
+        // ✅ Guardar datos de sesión
         await configBox.put('usuario_actual', username);
-        await configBox.put('usuario_nombre', usuarioEncontrado['nombre']);
+        await configBox.put('usuario_nombre', usuarioEncontrado['nombre'] ?? username);
         await configBox.put('usuario_edad', usuarioEncontrado['edad']?.toString() ?? '?');
         await configBox.put('usuario_ciudad', usuarioEncontrado['ciudad'] ?? '?');
         await configBox.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
@@ -91,7 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
         
         _irAlMenu();
       } else {
-        final usernameExiste = usuarios.any((u) => u['nombre'] == username);
+        // ✅ Verificar si el usuario existe pero la contraseña es incorrecta
+        final usernameExiste = usuarios.any((u) => u['usuario'] == username);
         if (usernameExiste) {
           setState(() {
             _errorMessage = '❌ Contraseña incorrecta';

@@ -47,13 +47,13 @@ class RecordatoriosService {
 
     for (var recordatorio in _recordatoriosBase) {
       final ultimaVez = _box.get('ultimo_${recordatorio['id']}', defaultValue: '');
-      
+
       if (ultimaVez.isEmpty) {
         pendientes.add(recordatorio);
       } else {
         final ultimaFecha = DateTime.parse(ultimaVez);
         final diferencia = DateTime.now().difference(ultimaFecha).inDays;
-        
+
         if (diferencia >= (recordatorio['frecuenciaDias'] as int)) {
           pendientes.add(recordatorio);
         }
@@ -81,15 +81,12 @@ class RecordatoriosService {
 
   // ✅ Notificación diaria para registrar el diario
   void programarRecordatorioDiario() {
-    // Verificar si ya se registró hoy
     final hoy = DateTime.now().toString().substring(0, 10);
     final ultimoRecordatorio = _box.get('ultimo_recordatorio_diario', defaultValue: '');
-    
+
     if (ultimoRecordatorio != hoy) {
-      // Guardar que hoy ya se mostró
       _box.put('ultimo_recordatorio_diario', hoy);
-      
-      // Agregar a pendientes
+
       final pendientes = _box.get('pendientes', defaultValue: <Map<String, dynamic>>[]);
       pendientes.add({
         'id': 'diario_${DateTime.now().millisecondsSinceEpoch}',
@@ -99,6 +96,33 @@ class RecordatoriosService {
         'fecha': DateTime.now().toIso8601String(),
       });
       _box.put('pendientes', pendientes);
+    }
+  }
+
+  // ✅ Recordatorio mensual para lixiviado (CORREGIDO)
+  void programarRecordatorioLixiviado() {
+    final hoy = DateTime.now();
+    final dia = hoy.day;
+    final mes = hoy.month;
+    final anio = hoy.year;  // ✅ Sin ñ
+
+    if (dia == 1) {
+      final pendientes = obtenerPendientes();
+
+      final yaEnviado = pendientes.any((item) =>
+        item['id'] == 'lixiviado_${mes}_$anio'  // ✅ Interpolación correcta
+      );
+
+      if (!yaEnviado) {
+        pendientes.add({
+          'id': 'lixiviado_${mes}_$anio',  // ✅ Interpolación correcta
+          'titulo': '💧 Registrar lixiviado',
+          'mensaje': '¡Es momento de revisar y registrar tu lixiviado! Recuerda que solo se produce una vez al mes. Abre "Mi diario" y registra cuántas cucharadas obtuviste. 🌱',
+          'icono': '💧',
+          'fecha': DateTime.now().toIso8601String(),
+        });
+        _box.put('pendientes', pendientes);
+      }
     }
   }
 }

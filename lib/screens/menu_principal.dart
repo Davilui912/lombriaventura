@@ -64,7 +64,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     _actividadService.registrarActividad();
     // _estrellas = _logrosService.obtenerEstrellas();  // 🟡 COMENTADO - Estrellas (pendiente)
     _verificarRecordatorios();
-
     _inicializarRecordatorios();
   }
 
@@ -91,6 +90,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     final recordatorioService = RecordatoriosService();
     await recordatorioService.init();
     recordatorioService.programarRecordatorioDiario();
+    recordatorioService.programarRecordatorioLixiviado();
   }
   
   void _verificarRecordatorios() async {
@@ -699,7 +699,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                             () => _irAPantalla(const VentasLombricesScreen())),
                         _buildOpcion('💧 Atomizador lixiviado', 'Precio: \$25', Icons.water_drop,
                             () => _irAPantalla(const VentasAtomizadorScreen())),
-                        _buildOpcion('🌱 Vender humus', 'Precio: \$10/kg', Icons.agriculture,
+                        _buildOpcion('🌱 Vender humus', 'Precio: \$10 por bolsita', Icons.agriculture,
                             () => _irAPantalla(const VentasHumusScreen())),
                         _buildOpcion('📊 Registro de ventas', 'Historial de ingresos', Icons.receipt,
                             () => _irAPantalla(const VentasHistorialScreen())),

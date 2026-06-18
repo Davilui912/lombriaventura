@@ -28,13 +28,19 @@ class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
   }
 
   Future<void> _vender() async {
-    final precioTotal = (_cantidad * 2.5).round(); // Convertir a entero
+    final cantidad = _cantidad;
+    final precioTotal = (cantidad * 2.5).round();
+    
     await _monedasService.agregarMonedas(precioTotal);
+    await _monedasService.agregarVenta(
+      cantidad: precioTotal,
+      descripcion: 'Vendiste $cantidad lombriz(es) 🪱',
+    );
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('¡Vendiste $_cantidad lombriz(es)! Ganaste $precioTotal monedas 🪙'),
+          content: Text('¡Vendiste $cantidad lombriz(es)! Ganaste $precioTotal monedas 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );

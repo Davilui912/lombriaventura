@@ -28,13 +28,19 @@ class _VentasHumusScreenState extends State<VentasHumusScreen> {
   }
 
   Future<void> _vender() async {
-    final precioTotal = _cantidad * 10; // $10 por kilo de humus
+    final cantidad = _cantidad;
+    final precioTotal = cantidad * 10;
+    
     await _monedasService.agregarMonedas(precioTotal);
+    await _monedasService.agregarVenta(
+      cantidad: precioTotal,
+      descripcion: 'Vendiste $cantidad bolsita(s) de humus 🌱',
+    );
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('¡Vendiste ${_cantidad}kg de humus! Ganaste $precioTotal monedas 🪙'),
+          content: Text('¡Vendiste $cantidad bolsita(s) de humus! Ganaste $precioTotal monedas 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -56,11 +62,11 @@ class _VentasHumusScreenState extends State<VentasHumusScreen> {
             const Icon(Icons.agriculture, size: 80, color: Colors.orange),
             const SizedBox(height: 20),
             const Text(
-              'Precio: \$10 por kilo',
+              'Precio: \$10 por bolcita',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-            const Text('Cantidad a vender (kg):', style: TextStyle(fontSize: 18)),
+            const Text('Cantidad a vender:', style: TextStyle(fontSize: 18)),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

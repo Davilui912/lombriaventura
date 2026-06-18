@@ -28,13 +28,19 @@ class _VentasAtomizadorScreenState extends State<VentasAtomizadorScreen> {
   }
 
   Future<void> _vender() async {
-    final precioTotal = _cantidad * 25;
+    final cantidad = _cantidad;
+    final precioTotal = cantidad * 25;
+    
     await _monedasService.agregarMonedas(precioTotal);
+    await _monedasService.agregarVenta(
+      cantidad: precioTotal,
+      descripcion: 'Vendiste $cantidad atomizador(es) 💧',
+    );
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('¡Vendiste $_cantidad atomizador(es)! Ganaste $precioTotal monedas 🪙'),
+          content: Text('¡Vendiste $cantidad atomizador(es)! Ganaste $precioTotal monedas 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );

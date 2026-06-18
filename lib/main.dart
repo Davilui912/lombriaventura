@@ -34,7 +34,8 @@ void main() async {
   await Hive.openBox('monedas');
   await Hive.openBox('accesorios');
   await Hive.openBox('capacitaciones');
-  await Hive.openBox('usuarios');  // ← NUEVO
+  await Hive.openBox('usuarios');
+  await Hive.openBox('historial_ventas');
 
   final recordatorioService = RecordatoriosService();
   await recordatorioService.init();

@@ -15,8 +15,9 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   final DiarioService _diarioService = DiarioService();
   final TextEditingController _notaController = TextEditingController();
   
-  // ✅ Temperatura con opciones
-  String? _temperaturaSeleccionada;
+  // Temperatura
+  int _temperaturaValor = 5;  // 0=Frío, 1=Buen clima, 2=Caliente
+  String _temperaturaSeleccionada = '🌤️ Buen clima';
   final List<String> _opcionesTemperatura = ['❄️ Frío', '🌤️ Buen clima', '☀️ Caliente'];
   
   final TextEditingController _compostaController = TextEditingController();
@@ -36,6 +37,25 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   ];
 
   final List<String> _tiposResiduo = ['Frutas', 'Verduras', 'Cáscaras', 'Café', 'Mixto'];
+
+  bool _mostrarLixiviado = false;
+  bool _lixiviadoRegistrado = false;
+  @override
+    void initState() {
+      super.initState();
+      _verificarDiaLixiviado();
+  }
+
+  void _verificarDiaLixiviado() {
+    final hoy = DateTime.now();
+    // Verificar si es día 1 del mes
+    if (hoy.day == 1) {
+      _mostrarLixiviado = true;
+    } else {
+      _mostrarLixiviado = false;
+    }
+  }
+
 
   @override
   void dispose() {
@@ -282,28 +302,36 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
               const SizedBox(height: 12),
 
-              // ✅ Temperatura (Frío / Buen clima / Caliente)
+              //Temperatura (con estilo similar a humedad)
               const Text('🌡️ Temperatura', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
               const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                children: _opcionesTemperatura.map((opcion) {
-                  return ChoiceChip(
-                    label: Text(opcion),
-                    selected: _temperaturaSeleccionada == opcion,
-                    onSelected: (selected) {
-                      setState(() {
-                        _temperaturaSeleccionada = selected ? opcion : null;
-                      });
-                    },
-                    selectedColor: AppTheme.verde,
-                    backgroundColor: Colors.grey[200],
-                    labelStyle: TextStyle(
-                      color: _temperaturaSeleccionada == opcion ? Colors.white : Colors.black,
+                Row(
+                  children: [
+                    const Text('Frío', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Expanded(
+                      child: Slider(
+                        value: _temperaturaValor.toDouble(),
+                        min: 1,
+                        max: 10,
+                        divisions: 9,
+                        activeColor: AppTheme.verde,
+                        label: '$_temperaturaValor/10',
+                        onChanged: (val) {
+                          setState(() {
+                            _temperaturaValor = val.round();
+                          });
+                        },
+                      ),
                     ),
-                  );
-                }).toList(),
-              ),
+                    const Text('Caliente', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+                Center(
+                  child: Text(
+                    _temperaturaValor <= 3 ? '🟡 Muy frio' : _temperaturaValor <= 6 ? '🟢 Ideal' : _temperaturaValor <= 8 ? '🟡 Caliente' : '🔴 Muy caliente',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
 
               const SizedBox(height: 12),
 
@@ -315,7 +343,10 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                 children: _tiposResiduo.map((tipo) {
                   final sel = _tipoResiduo == tipo;
                   return ChoiceChip(
-                    label: Text(tipo),
+                    label: Text(tipo, style: const TextStyle(
+                      color: Colors.black, // <-- Esto vuelve las letras negras
+                    ),
+                  ),
                     selected: sel,
                     selectedColor: AppTheme.verde.withValues(alpha: 0.3),
                     onSelected: (_) => setState(() => _tipoResiduo = tipo),
@@ -324,10 +355,10 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
               ),
 
               const SizedBox(height: 12),
-
-              // Producción (puños y cucharadas)
+              // Producción (composta siempre visible, lixiviado solo el día 1)
               Row(
                 children: [
+                  // ✅ Composta (siempre visible)
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,30 +380,57 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('💧 Lixiviado (cucharadas)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _lixiviadoController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: 'Ej: 3 cucharadas',
-                            suffixText: 'cucharadas',
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  
+                  // ✅ Lixiviado (SOLO el día 1 del mes)
+                  if (_mostrarLixiviado) ...[
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('💧 Lixiviado (cucharadas)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: _lixiviadoController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: 'Ej: 3 cucharadas',
+                              suffixText: 'cucharadas',
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5F5),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
+
+              // ✅ Mensaje informativo cuando NO es día 1
+              if (!_mostrarLixiviado)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.azulCielo.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: AppTheme.azulCielo),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '💧 El lixiviado se registra el día 1 de cada mes. ¡Recuerda revisarlo!',
+                          style: TextStyle(fontSize: 12, color: AppTheme.azulCielo),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
 
             const SizedBox(height: 30),

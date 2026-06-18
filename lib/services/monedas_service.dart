@@ -1,31 +1,29 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MonedasService {
-  late Box _box;
-  late Box _historialBox;
+  late Box _monedasBox;      // Para monedas
+  late Box _historialBox;    // Para historial de ventas
   
   Future<void> init() async {
-    _box = await Hive.openBox('monedas');
-    _historialBox = await Hive.openBox('historial_monedas');
+    _monedasBox = await Hive.openBox('monedas');
+    _historialBox = await Hive.openBox('historial_ventas');  // ✅ Box separado
   }
   
-  // Obtener monedas actuales
+  // ========== MONEDAS ==========
+  
   int obtenerMonedas() {
-    return _box.get('total', defaultValue: 0);
+    return _monedasBox.get('total', defaultValue: 0);
   }
   
-  // Obtener saldo (alias de obtenerMonedas)
   int obtenerSaldo() {
     return obtenerMonedas();
   }
   
-  // Agregar monedas (genérico)
   Future<void> agregarMonedas(int cantidad) async {
     final actual = obtenerMonedas();
-    await _box.put('total', actual + cantidad);
+    await _monedasBox.put('total', actual + cantidad);
   }
   
-  // Ganar monedas por actividad (juego, diario, etc.)
   Future<void> ganarPorActividad(String actividad) async {
     int cantidad = 0;
     String descripcion = '';
@@ -53,38 +51,76 @@ class MonedasService {
     }
     
     final actual = obtenerMonedas();
-    await _box.put('total', actual + cantidad);
+    await _monedasBox.put('total', actual + cantidad);
     
-    // Guardar en historial
+    // Guardar en historial (monedas ganadas)
     await _guardarEnHistorial(cantidad, descripcion);
   }
   
-  // Gastar monedas
   Future<bool> gastarMonedas(int cantidad) async {
     final actual = obtenerMonedas();
     if (actual >= cantidad) {
-      await _box.put('total', actual - cantidad);
+      await _monedasBox.put('total', actual - cantidad);
       await _guardarEnHistorial(-cantidad, '🛍️ Compra en tienda');
       return true;
     }
     return false;
   }
   
-  // Guardar transacción en historial
+  // ========== HISTORIAL DE VENTAS ==========
+  
+  // ✅ Agregar venta al historial (se mantiene al cerrar sesión)
+  Future<void> agregarVenta({
+    required int cantidad,
+    required String descripcion,
+  }) async {
+    final historial = _historialBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
+    historial.add({
+      'fecha': DateTime.now().toIso8601String(),
+      'cantidad': cantidad,
+      'descripcion': descripcion,
+    });
+    await _historialBox.put('lista', historial);
+  }
+  
+  // ✅ Obtener historial de ventas
+  List<Map<String, dynamic>> obtenerHistorialVentas() {
+    final historial = _historialBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
+    return List<Map<String, dynamic>>.from(historial);
+  }
+  
+  // ========== HISTORIAL DE MONEDAS (ganadas/gastadas) ==========
+  
   Future<void> _guardarEnHistorial(int cantidad, String descripcion) async {
-    final historial = obtenerHistorial();
+    final historial = obtenerHistorialMonedas();
     final nuevaTransaccion = {
       'fecha': DateTime.now().toIso8601String(),
       'cantidad': cantidad,
       'descripcion': descripcion,
     };
-    historial.insert(0, nuevaTransaccion); // Más reciente primero
-    await _historialBox.put('transacciones', historial);
+    historial.insert(0, nuevaTransaccion);
+    await _monedasBox.put('historial_monedas', historial);
   }
   
-  // Obtener historial de transacciones
-  List<Map<String, dynamic>> obtenerHistorial() {
-    final historial = _historialBox.get('transacciones', defaultValue: <Map<String, dynamic>>[]);
+  List<Map<String, dynamic>> obtenerHistorialMonedas() {
+    final historial = _monedasBox.get('historial_monedas', defaultValue: <Map<String, dynamic>>[]);
     return List<Map<String, dynamic>>.from(historial);
+  }
+  
+  // ========== MANTENER COMPATIBILIDAD (para código existente) ==========
+  
+  // ⚠️ Deprecado: usar obtenerHistorialVentas() para ventas
+  // y obtenerHistorialMonedas() para monedas
+  List<Map<String, dynamic>> obtenerHistorial() {
+    // Para mantener compatibilidad, devolvemos el historial de monedas
+    return obtenerHistorialMonedas();
+  }
+  
+  Future<void> agregarTransaccion({
+    required int cantidad,
+    required String descripcion,
+  }) async {
+    // Para mantener compatibilidad, guardamos en monedas
+    await _guardarEnHistorial(cantidad, descripcion);
   }
 }
