@@ -31,7 +31,10 @@ class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
     final cantidad = _cantidad;
     final precioTotal = (cantidad * 2.5).round();
     
+    // Agregar monedas
     await _monedasService.agregarMonedas(precioTotal);
+    
+    // ✅ Guardar en historial de ventas
     await _monedasService.agregarVenta(
       cantidad: precioTotal,
       descripcion: 'Vendiste $cantidad lombriz(es) 🪱',

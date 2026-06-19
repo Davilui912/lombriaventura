@@ -28,10 +28,9 @@ class _VentasHistorialScreenState extends State<VentasHistorialScreen> {
     try {
       await _monedasService.init();
       
-      // Obtener historial de ventas
+      // ✅ Usar obtenerHistorialVentas
       final historialCompleto = _monedasService.obtenerHistorialVentas();
       
-      // Filtrar solo ventas (descripciones que contengan "Vendiste")
       final ventas = historialCompleto.where((item) => 
         (item['descripcion'] as String).contains('Vendiste')
       ).toList();

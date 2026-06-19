@@ -69,9 +69,18 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     if (confirm == true) {
       final configBox = await Hive.openBox('configuracion');
-      await configBox.clear();
       
-      debugPrint('🗑️ Sesión cerrada, datos limpiados');
+      // ✅ Solo borrar las claves de sesión, NO todo el box
+      await configBox.delete('usuario_actual');
+      await configBox.delete('usuario_nombre');
+      await configBox.delete('usuario_edad');
+      await configBox.delete('usuario_ciudad');
+      await configBox.delete('usuario_genero');
+      await configBox.delete('usuario_fecha_registro');
+      
+      // ❌ NO usar configBox.clear() porque borra todo incluyendo historial de ventas
+      
+      debugPrint('🗑️ Sesión cerrada, datos de sesión limpiados');
       
       if (mounted) {
         Navigator.pushAndRemoveUntil(

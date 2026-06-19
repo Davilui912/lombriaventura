@@ -1,12 +1,20 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MonedasService {
-  late Box _monedasBox;      // Para monedas
-  late Box _historialBox;    // Para historial de ventas
+  // 1. Convertimos la clase en un Singleton para que sea única en toda la app
+  static final MonedasService _instancia = MonedasService._interno();
+  factory MonedasService() => _instancia;
+  MonedasService._interno();
+
+  late Box _monedasBox;
+  late Box _historialBox;
+  bool _isInitialized = false; // Evita re-inicializar el box si ya está abierto
   
   Future<void> init() async {
+    if (_isInitialized) return;
     _monedasBox = await Hive.openBox('monedas');
-    _historialBox = await Hive.openBox('historial_ventas');  // ✅ Box separado
+    _historialBox = await Hive.openBox('historial_ventas');
+    _isInitialized = true;
   }
   
   // ========== MONEDAS ==========
@@ -52,75 +60,52 @@ class MonedasService {
     
     final actual = obtenerMonedas();
     await _monedasBox.put('total', actual + cantidad);
-    
-    // Guardar en historial (monedas ganadas)
-    await _guardarEnHistorial(cantidad, descripcion);
   }
   
   Future<bool> gastarMonedas(int cantidad) async {
     final actual = obtenerMonedas();
     if (actual >= cantidad) {
       await _monedasBox.put('total', actual - cantidad);
-      await _guardarEnHistorial(-cantidad, '🛍️ Compra en tienda');
       return true;
     }
     return false;
   }
   
-  // ========== HISTORIAL DE VENTAS ==========
+  // ========== HISTORIAL DE VENTAS (Persistencia Corregida) ==========
   
-  // ✅ Agregar venta al historial (se mantiene al cerrar sesión)
   Future<void> agregarVenta({
     required int cantidad,
     required String descripcion,
   }) async {
-    final historial = _historialBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
+    // 💥 CORRECCIÓN AQUÍ: Obtenemos como List dinámico primero
+    final datosRaw = _historialBox.get('lista', defaultValue: []);
+    
+    // Lo convertimos explícitamente a una lista de mapas limpia que Hive sí pueda guardar
+    final List<Map<String, dynamic>> historial = List<dynamic>.from(datosRaw)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+
     historial.add({
       'fecha': DateTime.now().toIso8601String(),
       'cantidad': cantidad,
       'descripcion': descripcion,
     });
+
+    // Guardamos la nueva lista estructurada
     await _historialBox.put('lista', historial);
+    print('✅ Venta guardada y persistida en disco: $descripcion - $cantidad');
   }
   
-  // ✅ Obtener historial de ventas
   List<Map<String, dynamic>> obtenerHistorialVentas() {
-    final historial = _historialBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
-    return List<Map<String, dynamic>>.from(historial);
+    final datosRaw = _historialBox.get('lista', defaultValue: []);
+    
+    // 💥 CORRECCIÓN AQUÍ: Aseguramos el casteo al leer para evitar errores de tipo en la UI
+    return List<dynamic>.from(datosRaw)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
   }
   
-  // ========== HISTORIAL DE MONEDAS (ganadas/gastadas) ==========
-  
-  Future<void> _guardarEnHistorial(int cantidad, String descripcion) async {
-    final historial = obtenerHistorialMonedas();
-    final nuevaTransaccion = {
-      'fecha': DateTime.now().toIso8601String(),
-      'cantidad': cantidad,
-      'descripcion': descripcion,
-    };
-    historial.insert(0, nuevaTransaccion);
-    await _monedasBox.put('historial_monedas', historial);
-  }
-  
-  List<Map<String, dynamic>> obtenerHistorialMonedas() {
-    final historial = _monedasBox.get('historial_monedas', defaultValue: <Map<String, dynamic>>[]);
-    return List<Map<String, dynamic>>.from(historial);
-  }
-  
-  // ========== MANTENER COMPATIBILIDAD (para código existente) ==========
-  
-  // ⚠️ Deprecado: usar obtenerHistorialVentas() para ventas
-  // y obtenerHistorialMonedas() para monedas
-  List<Map<String, dynamic>> obtenerHistorial() {
-    // Para mantener compatibilidad, devolvemos el historial de monedas
-    return obtenerHistorialMonedas();
-  }
-  
-  Future<void> agregarTransaccion({
-    required int cantidad,
-    required String descripcion,
-  }) async {
-    // Para mantener compatibilidad, guardamos en monedas
-    await _guardarEnHistorial(cantidad, descripcion);
+  Future<void> limpiarHistorialVentas() async {
+    await _historialBox.put('lista', <Map<String, dynamic>>[]);
   }
 }
