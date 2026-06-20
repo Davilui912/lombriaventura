@@ -10,13 +10,30 @@ class RecordatoriosService {
 
   // Tipos de recordatorio
   final List<Map<String, dynamic>> _recordatoriosBase = [
+    // ✅ NOTIFICACIONES DIARIAS (NUEVAS)
     {
-      'id': 'alimentacion',
+      'id': 'alimentar_diario',
       'titulo': '🍎 Alimentar lombrices',
-      'mensaje': '¿Ya les diste de comer a tus lombrices? Recuerda: una vez por semana, en trozos pequeños.',
-      'frecuenciaDias': 7,
+      'mensaje': '¡Es momento de alimentar a tus lombrices! Recuerda darles cáscaras de frutas y verduras en trozos pequeños. 🪱',
+      'frecuenciaDias': 1,
       'icono': '🍎',
     },
+    {
+      'id': 'humedad_diario',
+      'titulo': '💧 Revisar humedad',
+      'mensaje': 'Revisa la humedad de tu composta. Debe sentirse como una esponja exprimida. Si está seca, rocía un poco de agua. 💦',
+      'frecuenciaDias': 1,
+      'icono': '💧',
+    },
+    {
+      'id': 'temperatura_diario',
+      'titulo': '🌡️ Revisar temperatura',
+      'mensaje': 'Revisa la temperatura de tu composta. Debe estar entre 15°C y 25°C. Si hace mucho frío o calor, protégela. 🌤️',
+      'frecuenciaDias': 1,
+      'icono': '🌡️',
+    },
+    
+    // Recordatorios existentes
     {
       'id': 'humedad',
       'titulo': '💧 Revisar humedad',

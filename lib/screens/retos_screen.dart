@@ -54,10 +54,30 @@ class _RetosScreenState extends State<RetosScreen> {
   }
 
   Future<void> _completarReto(Reto reto) async {
+    // Verificar si es día 1 del mes para los retos mensuales
+    final hoy = DateTime.now();
+    final esDia1 = hoy.day == 1;
+
+    if (reto.id == 'reto_humus' || reto.id == 'reto_lixiviado') {
+      if (!esDia1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📅 Este reto solo está disponible el día 1 de cada mes'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+    }
+
     if (reto.id == 'reto_1') {
       _mostrarDialogoLombrices(reto);
     } else if (reto.id == 'reto_2') {
       _mostrarDialogoEcosistema(reto);
+    } else if (reto.id == 'reto_humus') {
+      _mostrarDialogoHumus(reto);
+    } else if (reto.id == 'reto_lixiviado') {
+      _mostrarDialogoLixiviado(reto);
     }
   }
 
@@ -188,6 +208,201 @@ class _RetosScreenState extends State<RetosScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('🎉 ¡Reto completado!'),
+                        backgroundColor: AppTheme.verde,
+                      ),
+                    );
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.verde,
+            ),
+            child: const Text('Completar reto'),
+          ),
+        ],
+      ),
+    );
+  }
+  void _mostrarDialogoHumus(Reto reto) {
+    int punos = 0;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('🌱 ${reto.titulo}'),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.camera_alt, size: 48, color: AppTheme.verde),
+                const SizedBox(height: 16),
+                const Text(
+                  'Toma una foto de tu humus',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '¿Cuántos punos de humus produjiste?',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle, size: 40),
+                      onPressed: () {
+                        setState(() {
+                          if (punos > 0) punos--;
+                        });
+                      },
+                    ),
+                    Container(
+                      width: 60,
+                      height: 60,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppTheme.verde),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$punos',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle, size: 40),
+                      onPressed: () {
+                        setState(() {
+                          punos++;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  punos == 0 ? 'Mide los punos de humus' : '$punos puño(s) de humus',
+                  style: TextStyle(
+                    color: punos > 0 ? AppTheme.verde : Colors.grey,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: punos > 0
+                ? () async {
+                    Navigator.pop(ctx);
+                    await _retosService.completarReto(reto.id);
+                    _cargarRetos();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎉 ¡Reto de humus completado!'),
+                        backgroundColor: AppTheme.verde,
+                      ),
+                    );
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.verde,
+            ),
+            child: const Text('Completar reto'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoLixiviado(Reto reto) {
+    int cucharadas = 0;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('💧 ${reto.titulo}'),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.camera_alt, size: 48, color: AppTheme.verde),
+                const SizedBox(height: 16),
+                const Text(
+                  'Toma una foto de tu lixiviado',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '¿Cuántas cucharadas de lixiviado recolectaste?',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle, size: 40),
+                      onPressed: () {
+                        setState(() {
+                          if (cucharadas > 0) cucharadas--;
+                        });
+                      },
+                    ),
+                    Container(
+                      width: 60,
+                      height: 60,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppTheme.verde),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$cucharadas',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle, size: 40),
+                      onPressed: () {
+                        setState(() {
+                          cucharadas++;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  cucharadas == 0 ? 'Mide las cucharadas de lixiviado' : '$cucharadas cucharada(s) de lixiviado',
+                  style: TextStyle(
+                    color: cucharadas > 0 ? AppTheme.verde : Colors.grey,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: cucharadas > 0
+                ? () async {
+                    Navigator.pop(ctx);
+                    await _retosService.completarReto(reto.id);
+                    _cargarRetos();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎉 ¡Reto de lixiviado completado!'),
                         backgroundColor: AppTheme.verde,
                       ),
                     );

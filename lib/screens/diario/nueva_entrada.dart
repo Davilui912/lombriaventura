@@ -15,47 +15,48 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   final DiarioService _diarioService = DiarioService();
   final TextEditingController _notaController = TextEditingController();
   
-  // Temperatura
-  int _temperaturaValor = 5;  // 0=Frío, 1=Buen clima, 2=Caliente
+  // Temperatura y Humedad
+  int _humedad = 5;
+  int _temperaturaValor = 5;  // 1 al 10 en el Slider
   String _temperaturaSeleccionada = '🌤️ Buen clima';
-  final List<String> _opcionesTemperatura = ['❄️ Frío', '🌤️ Buen clima', '☀️ Caliente'];
   
+  // ✅ Composta y Lixiviado (Declarados solo una vez)
   final TextEditingController _compostaController = TextEditingController();
   final TextEditingController _lixiviadoController = TextEditingController();
+  bool _mostrarComposta = false;
+  bool _mostrarLixiviado = false;
   
-  List<String> _fotosTomadas = [];
-  String _estadoSeleccionado = '😊';
-  int _humedad = 5;
+  // ✅ Tipo de residuo
   String _tipoResiduo = 'Mixto';
-  bool _guardando = false;
-  bool _mostrarAvanzado = false;
-
+  final List<String> _tiposResiduo = ['Frutas', 'Verduras', 'Cáscaras', 'Café', 'Mixto'];
+  
+  // ✅ Estado de ánimo
+  String _estadoSeleccionado = '😊';
   final List<Map<String, String>> _estados = [
     {'emoji': '😊', 'label': '¡Excelente!'},
     {'emoji': '😐', 'label': 'Regular'},
     {'emoji': '😟', 'label': 'Necesita ayuda'},
   ];
+  
+  bool _guardando = false;
 
-  final List<String> _tiposResiduo = ['Frutas', 'Verduras', 'Cáscaras', 'Café', 'Mixto'];
-
-  bool _mostrarLixiviado = false;
-  bool _lixiviadoRegistrado = false;
   @override
-    void initState() {
-      super.initState();
-      _verificarDiaLixiviado();
+  void initState() {
+    super.initState();
+    _verificarDiaMes();
   }
 
-  void _verificarDiaLixiviado() {
+  void _verificarDiaMes() {
     final hoy = DateTime.now();
-    // Verificar si es día 1 del mes
+    // ✅ Composta y Lixiviado solo el día 1 del mes
     if (hoy.day == 1) {
+      _mostrarComposta = true;
       _mostrarLixiviado = true;
     } else {
+      _mostrarComposta = false;
       _mostrarLixiviado = false;
     }
   }
-
 
   @override
   void dispose() {
@@ -65,143 +66,72 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
     super.dispose();
   }
 
-  Future<void> _tomarFoto() async {
-    if (_fotosTomadas.length >= 3) {
+  Future<void> _guardarEntrada() async {
+    if (_notaController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Máximo 3 fotos por entrada 📸')),
+        const SnackBar(
+          content: Text('📝 Escribe qué le diste de comer a tus lombrices'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Tomar foto', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              ListTile(
-                leading: const Icon(Icons.camera_alt, color: AppTheme.verde),
-                title: const Text('Cámara'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final ruta = await _diarioService.tomarFoto();
-                  if (ruta != null) setState(() => _fotosTomadas.add(ruta));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library, color: AppTheme.azulCielo),
-                title: const Text('Galería'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final ruta = await _diarioService.seleccionarDeGaleria();
-                  if (ruta != null) setState(() => _fotosTomadas.add(ruta));
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _guardarEntrada() async {
     setState(() => _guardando = true);
 
     await _diarioService.guardarEntrada(
-      fotosRutas: _fotosTomadas,
+      fotosRutas: [],  // ✅ Sin fotos
       nota: _notaController.text.isNotEmpty ? _notaController.text : null,
       estado: _estadoSeleccionado,
-      humedad: _humedad,
+      humedad: null,  // ✅ Sin humedad enviada en este formato antiguo
       temperaturaTexto: _temperaturaSeleccionada,
       tipoResiduo: _tipoResiduo,
-      produccionComposta: _compostaController.text.isNotEmpty ? double.tryParse(_compostaController.text) : null,
-      produccionLixiviado: _lixiviadoController.text.isNotEmpty ? double.tryParse(_lixiviadoController.text) : null,
+      produccionComposta: _mostrarComposta && _compostaController.text.isNotEmpty 
+          ? double.tryParse(_compostaController.text) 
+          : null,
+      produccionLixiviado: _mostrarLixiviado && _lixiviadoController.text.isNotEmpty 
+          ? double.tryParse(_lixiviadoController.text) 
+          : null,
     );
+    
     await MonedasService().ganarPorActividad('diario');
-    if (mounted) Navigator.pop(context, true);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ ¡Entrada guardada! +5 monedas 🪙'),
+          backgroundColor: AppTheme.verde,
+        ),
+      );
+      Navigator.pop(context, true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hoy = DateTime.now();
+    final esDia1 = hoy.day == 1;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('📝 Nueva entrada'),
         backgroundColor: AppTheme.verde,
+        actions: [
+          TextButton(
+            onPressed: _guardando ? null : _guardarEntrada,
+            child: const Text(
+              'Guardar',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Fotos
-            const Text('📸 Fotos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: _tomarFoto,
-                  child: Container(
-                    width: 100, height: 100,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F9EE),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: AppTheme.verde, width: 2),
-                    ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_a_photo, color: AppTheme.verde, size: 35),
-                        SizedBox(height: 4),
-                        Text('Agregar', style: TextStyle(fontSize: 11, color: AppTheme.verde)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: SizedBox(
-                    height: 100,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _fotosTomadas.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Image.file(File(_fotosTomadas[index]), width: 100, height: 100, fit: BoxFit.cover),
-                            ),
-                            Positioned(
-                              top: 2, right: 2,
-                              child: GestureDetector(
-                                onTap: () => setState(() => _fotosTomadas.removeAt(index)),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                  child: const Icon(Icons.close, color: Colors.white, size: 16),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Estado
+            // ✅ Estado de ánimo
             const Text('🌱 ¿Cómo va?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
             const SizedBox(height: 10),
             Row(
@@ -230,135 +160,149 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
             const SizedBox(height: 20),
 
-            // Nota
-            const Text('📝 Nota', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+            // ✅ "¿Qué le di de comer?"
+            const Text('🍽️ ¿Qué le di de comer?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
             const SizedBox(height: 10),
             TextField(
               controller: _notaController,
-              maxLines: 2,
+              maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Ej: Hoy les di cáscaras de plátano...',
+                hintText: 'Ej: Hoy les di cáscaras de plátano, manzana y restos de café ☕',
                 hintStyle: TextStyle(color: Colors.grey[400]),
-                filled: true, fillColor: const Color(0xFFF5F5F5),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                filled: true,
+                fillColor: const Color(0xFFF5F5F5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
+                ),
                 contentPadding: const EdgeInsets.all(16),
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
-            // Botón avanzado
-            GestureDetector(
-              onTap: () => setState(() => _mostrarAvanzado = !_mostrarAvanzado),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.verde.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.verde.withValues(alpha: 0.2)),
+            // ✅ Tipo de residuo
+            const Text('🍎 Tipo de residuo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: _tiposResiduo.map((tipo) {
+                final sel = _tipoResiduo == tipo;
+                return ChoiceChip(
+                  label: Text(tipo, style: const TextStyle(color: Colors.black)),
+                  selected: sel,
+                  selectedColor: AppTheme.verde.withValues(alpha: 0.3),
+                  onSelected: (_) => setState(() => _tipoResiduo = tipo),
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Humedad
+            const Text('💧 Humedad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Text('Seco', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Expanded(
+                  child: Slider(
+                    value: _humedad.toDouble(),
+                    min: 1, max: 10, divisions: 9,
+                    activeColor: AppTheme.verde,
+                    label: '$_humedad/10',
+                    onChanged: (val) => setState(() => _humedad = val.round()),
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(_mostrarAvanzado ? Icons.expand_less : Icons.expand_more, color: AppTheme.verde),
-                    const SizedBox(width: 6),
-                    Text(
-                      _mostrarAvanzado ? 'Ocultar detalles' : 'Agregar más detalles 🌱',
-                      style: const TextStyle(color: AppTheme.verde, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+                const Text('Empapado', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+            Center(
+              child: Text(
+                _humedad <= 3 ? '🟡 Muy seco' : _humedad <= 6 ? '🟢 Ideal' : _humedad <= 8 ? '🟡 Húmedo' : '🔴 Muy mojado',
+                style: const TextStyle(fontSize: 13),
               ),
             ),
 
-            // Campos avanzados
-            if (_mostrarAvanzado) ...[
-              const SizedBox(height: 15),
-
-              // Humedad
-              const Text('💧 Humedad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Text('Seco', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  Expanded(
-                    child: Slider(
-                      value: _humedad.toDouble(),
-                      min: 1, max: 10, divisions: 9,
-                      activeColor: AppTheme.verde,
-                      label: '$_humedad/10',
-                      onChanged: (val) => setState(() => _humedad = val.round()),
-                    ),
+            const SizedBox(height: 12),
+            
+            // Temperatura
+            const Text('🌡️ Temperatura', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Text('Frío', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Expanded(
+                  child: Slider(
+                    value: _temperaturaValor.toDouble(),
+                    min: 1, max: 10, divisions: 9,
+                    activeColor: AppTheme.verde,
+                    label: '$_temperaturaValor/10',
+                    onChanged: (val) {
+                      setState(() {
+                        _temperaturaValor = val.round();
+                        // Actualiza el texto según el valor del Slider para pasarlo al backend
+                        if (_temperaturaValor <= 3) _temperaturaSeleccionada = '❄️ Frío';
+                        else if (_temperaturaValor <= 6) _temperaturaSeleccionada = '🌤️ Buen clima';
+                        else _temperaturaSeleccionada = '☀️ Caliente';
+                      });
+                    },
                   ),
-                  const Text('Empapado', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              Center(
-                child: Text(
-                  _humedad <= 3 ? '🟡 Muy seco' : _humedad <= 6 ? '🟢 Ideal' : _humedad <= 8 ? '🟡 Húmedo' : '🔴 Muy mojado',
-                  style: const TextStyle(fontSize: 13),
                 ),
+                const Text('Caliente', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+            Center(
+              child: Text(
+                _temperaturaValor <= 3 ? '🟡 Muy frio' : _temperaturaValor <= 6 ? '🟢 Ideal' : _temperaturaValor <= 8 ? '🟡 Caliente' : '🔴 Muy caliente',
+                style: const TextStyle(fontSize: 13),
               ),
+            ),
 
-              const SizedBox(height: 12),
-
-              //Temperatura (con estilo similar a humedad)
-              const Text('🌡️ Temperatura', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
-              const SizedBox(height: 6),
-                Row(
+            // ✅ Mensaje informativo si NO es día 1
+            if (!esDia1) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
                   children: [
-                    const Text('Frío', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Icon(Icons.info_outline, size: 20, color: Colors.blue),
+                    SizedBox(width: 10),
                     Expanded(
-                      child: Slider(
-                        value: _temperaturaValor.toDouble(),
-                        min: 1,
-                        max: 10,
-                        divisions: 9,
-                        activeColor: AppTheme.verde,
-                        label: '$_temperaturaValor/10',
-                        onChanged: (val) {
-                          setState(() {
-                            _temperaturaValor = val.round();
-                          });
-                        },
+                      child: Text(
+                        '📅 La composta y el lixiviado se registran el día 1 de cada mes.',
+                        style: TextStyle(fontSize: 13, color: Colors.blue),
                       ),
                     ),
-                    const Text('Caliente', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
-                Center(
-                  child: Text(
-                    _temperaturaValor <= 3 ? '🟡 Muy frio' : _temperaturaValor <= 6 ? '🟢 Ideal' : _temperaturaValor <= 8 ? '🟡 Caliente' : '🔴 Muy caliente',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-
-              const SizedBox(height: 12),
-
-              // Tipo de residuo
-              const Text('🍎 Tipo de residuo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                children: _tiposResiduo.map((tipo) {
-                  final sel = _tipoResiduo == tipo;
-                  return ChoiceChip(
-                    label: Text(tipo, style: const TextStyle(
-                      color: Colors.black, // <-- Esto vuelve las letras negras
-                    ),
-                  ),
-                    selected: sel,
-                    selectedColor: AppTheme.verde.withValues(alpha: 0.3),
-                    onSelected: (_) => setState(() => _tipoResiduo = tipo),
-                  );
-                }).toList(),
               ),
+            ],
 
-              const SizedBox(height: 12),
-              // Producción (composta siempre visible, lixiviado solo el día 1)
+            // ✅ Campos de composta y lixiviado (solo día 1)
+            if (esDia1) ...[
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 10),
+              const Text(
+                '📊 Registro mensual',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.cafe),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Solo disponible el día 1 de cada mes',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+
               Row(
                 children: [
-                  // ✅ Composta (siempre visible)
+                  // Composta
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,68 +313,48 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                           controller: _compostaController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            hintText: 'Ej: 2 puños',
-                            suffixText: 'puños',
+                            hintText: 'Ej: 2',
+                            suffixText: 'puos',
                             filled: true,
                             fillColor: const Color(0xFFF5F5F5),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  
-                  // ✅ Lixiviado (SOLO el día 1 del mes)
-                  if (_mostrarLixiviado) ...[
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('💧 Lixiviado (cucharadas)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: _lixiviadoController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: 'Ej: 3 cucharadas',
-                              suffixText: 'cucharadas',
-                              filled: true,
-                              fillColor: const Color(0xFFF5F5F5),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  const SizedBox(width: 10),
+                  // Lixiviado
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('💧 Lixiviado (cuch.)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.cafe)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _lixiviadoController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Ej: 3',
+                            suffixText: 'cuch.',
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
                             ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
-
-              // ✅ Mensaje informativo cuando NO es día 1
-              if (!_mostrarLixiviado)
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.azulCielo.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline, size: 16, color: AppTheme.azulCielo),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '💧 El lixiviado se registra el día 1 de cada mes. ¡Recuerda revisarlo!',
-                          style: TextStyle(fontSize: 12, color: AppTheme.azulCielo),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
             ],
 
             const SizedBox(height: 30),

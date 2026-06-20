@@ -124,7 +124,7 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
       }
 
       setState(() {
-        _comidaY += 0.025;
+        _comidaY += 0.010;
 
         // Verificar colisión con el personaje
         final distanciaX = (_comidaX - _personajeX).abs();

@@ -6,6 +6,8 @@ environment:
   sdk: ^3.5.0
 
 dependencies:
+  #rerpoductor de video
+  video_player: ^2.8.3
   flutter:
     sdk: flutter
 
@@ -63,6 +65,8 @@ flutter:
     - assets/images/
     - assets/images/personajes/
     - assets/images/accesorios/
+    - assets/images/memorama/
+    - assets/videos/anuncio.mp4
     - assets/animations/
     - assets/images/icons/
     - assets/audio/

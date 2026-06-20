@@ -11,22 +11,36 @@ class RetosService {
   }
 
   void _inicializarRetos() {
-    // Solo inicializar si no hay retos guardados
     if (_box.isEmpty) {
       final List<Reto> retosIniciales = [
         Reto(
           id: 'reto_1',
           titulo: 'Obtener lombrices',
-          descripcion: 'Consigue lombrices para empezar tu lombricomposta.\n¿Ya tienes lombrices?',
+          descripcion: 'Consigue lombrices para empezar tu lombricomposta.',
           emoji: '🎯',
           orden: 1,
         ),
         Reto(
           id: 'reto_2',
           titulo: 'Construir ecosistema',
-          descripcion: 'Construye el hogar de tus lombrices y toma una foto como evidencia.',
+          descripcion: 'Construye el hogar de tus lombrices y toma una foto.',
           emoji: '🏠',
           orden: 2,
+        ),
+        // ✅ NUEVOS RETOS MENSUALES
+        Reto(
+          id: 'reto_humus',
+          titulo: '📸 Producir humus',
+          descripcion: 'Toma una foto de tu humus y mide cuántos puños produjiste.\n(Disponible el día 1 de cada mes)',
+          emoji: '🌱',
+          orden: 3,
+        ),
+        Reto(
+          id: 'reto_lixiviado',
+          titulo: '📸 Producir lixiviado',
+          descripcion: 'Toma una foto de tu lixiviado y mide cuántas cucharadas recolectaste.\n(Disponible el día 1 de cada mes)',
+          emoji: '💧',
+          orden: 4,
         ),
       ];
 

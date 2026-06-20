@@ -12,16 +12,16 @@ class MemoramaScreen extends StatefulWidget {
 }
 
 class _MemoramaScreenState extends State<MemoramaScreen> {
-  // Parejas: emoji + texto
+  // ✅ IMÁGENES para las parejas
   final List<Map<String, String>> _parejasBase = [
-    {'emoji': '🪱', 'texto': 'Lombriz'},
-    {'emoji': '🍎', 'texto': 'Frutas'},
-    {'emoji': '🌱', 'texto': 'Humus'},
-    {'emoji': '♻️', 'texto': 'Reciclar'},
-    {'emoji': '🥚', 'texto': 'Cáscaras'},
-    {'emoji': '🍂', 'texto': 'Hojas secas'},
-    {'emoji': '💧', 'texto': 'Humedad'},
-    {'emoji': '☕', 'texto': 'Café'},
+    {'imagen': 'assets/images/memorama/Lombrices.png', 'nombre': 'Lombrices'},
+    {'imagen': 'assets/images/memorama/Compostaje.png', 'nombre': 'Compostaje'},
+    {'imagen': 'assets/images/memorama/Humus.png', 'nombre': 'Humus'},
+    {'imagen': 'assets/images/memorama/Lixiviado.png', 'nombre': 'Lixiviado'},
+    {'imagen': 'assets/images/memorama/Lombricultura.png', 'nombre': 'Lombricultura'},
+    {'imagen': 'assets/images/memorama/Materia_organica.png', 'nombre': 'Materia organica'},
+    {'imagen': 'assets/images/memorama/Planta_crecimiento.png', 'nombre': 'Plnata en crecimiento'},
+    {'imagen': 'assets/images/memorama/Composteria.png', 'nombre': 'Composteria'},
   ];
 
   List<Map<String, dynamic>> _cartas = [];
@@ -40,26 +40,28 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   }
 
   void _iniciarJuego() {
-    // Crear pares (emoji + texto)
     List<Map<String, dynamic>> cartas = [];
     for (var pareja in _parejasBase) {
+      // Carta 1: Imagen
       cartas.add({
-        'contenido': pareja['emoji'],
-        'tipo': 'emoji',
-        'parejaId': pareja['texto'],
+        'tipo': 'imagen',
+        'contenido': pareja['imagen'],
+        'nombre': pareja['nombre'],
+        'parejaId': pareja['nombre'],
         'volteada': false,
         'encontrada': false,
       });
+      // Carta 2: Texto (nombre)
       cartas.add({
-        'contenido': pareja['texto'],
         'tipo': 'texto',
-        'parejaId': pareja['texto'],
+        'contenido': pareja['nombre'],
+        'nombre': pareja['nombre'],
+        'parejaId': pareja['nombre'],
         'volteada': false,
         'encontrada': false,
       });
     }
 
-    // Revolver cartas
     cartas.shuffle(Random());
 
     setState(() {
@@ -99,19 +101,15 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     });
 
     if (_primeraCarta == null) {
-      // Primera carta
       setState(() {
         _primeraCarta = index;
       });
     } else {
-      // Segunda carta
       setState(() {
         _segundaCarta = index;
         _intentos++;
         _bloqueado = true;
       });
-
-      // Verificar si son pareja
       _verificarPareja();
     }
   }
@@ -120,7 +118,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     final carta1 = _cartas[_primeraCarta!];
     final carta2 = _cartas[_segundaCarta!];
 
-    // Son pareja si: una es emoji, otra es texto, y tienen el mismo parejaId
     final sonPareja = carta1['parejaId'] == carta2['parejaId'] && 
                       carta1['tipo'] != carta2['tipo'];
 
@@ -129,7 +126,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
       setState(() {
         if (sonPareja) {
-          // ¡Encontraron pareja!
           _cartas[_primeraCarta!]['encontrada'] = true;
           _cartas[_segundaCarta!]['encontrada'] = true;
           _paresEncontrados++;
@@ -143,7 +139,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
             _otorgarMonedas();
           }
         } else {
-          // Voltear de nuevo
           _cartas[_primeraCarta!]['volteada'] = false;
           _cartas[_segundaCarta!]['volteada'] = false;
         }
@@ -160,6 +155,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('🧠 Memorama'),
+        backgroundColor: AppTheme.verde,
         actions: [
           Center(
             child: Padding(
@@ -183,7 +179,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   Widget _buildJuego() {
     return Column(
       children: [
-        // Info
         Container(
           padding: const EdgeInsets.all(12),
           color: AppTheme.verde.withValues(alpha: 0.1),
@@ -191,12 +186,10 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Text('Intentos: $_intentos', style: const TextStyle(fontSize: 16, fontFamily: 'Fredoka')),
-              const Text('🧠 Encuentra el emoji con su palabra', style: TextStyle(fontSize: 14, color: AppTheme.cafe)),
+              const Text('🧠 Encuentra la imagen con su palabra', style: TextStyle(fontSize: 14, color: AppTheme.cafe)),
             ],
           ),
         ),
-
-        // Tablero
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.all(12),
@@ -211,8 +204,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
             },
           ),
         ),
-
-        // Botón reiniciar
         Padding(
           padding: const EdgeInsets.all(12),
           child: ElevatedButton.icon(
@@ -229,7 +220,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     final carta = _cartas[index];
     final volteada = carta['volteada'];
     final encontrada = carta['encontrada'];
-    final esEmoji = carta['tipo'] == 'emoji';
+    final esImagen = carta['tipo'] == 'imagen';
 
     return GestureDetector(
       onTap: () => _voltearCarta(index),
@@ -250,26 +241,74 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
                     : AppTheme.verde,
             width: encontrada ? 3 : 2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Center(
-          child: volteada || encontrada
-              ? Text(
-                  carta['contenido'],
-                  style: TextStyle(
-                    fontSize: esEmoji ? 28 : 14,
-                    fontWeight: esEmoji ? FontWeight.normal : FontWeight.bold,
-                    color: AppTheme.cafe,
-                  ),
-                  textAlign: TextAlign.center,
-                )
-              : const Text(
-                  '?',
-                  style: TextStyle(
-                    fontSize: 28,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+          child: encontrada
+              ? (esImagen
+                  ? Image.asset(
+                      carta['contenido'],
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.broken_image,
+                          size: 30,
+                          color: Colors.grey,
+                        );
+                      },
+                    )
+                  : Text(
+                      carta['contenido'],
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.cafe,
+                      ),
+                      textAlign: TextAlign.center,
+                    )
+              )
+              : (volteada
+                  ? (esImagen
+                      ? Image.asset(
+                          carta['contenido'],
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.broken_image,
+                              size: 30,
+                              color: Colors.grey,
+                            );
+                          },
+                        )
+                      : Text(
+                          carta['contenido'],
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.cafe,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                    )
+                  : const Text(
+                      '❓',
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+              ),
         ),
       ),
     );
@@ -298,7 +337,9 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: _iniciarJuego,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+              ),
               child: const Text('🔄 Jugar de nuevo', style: TextStyle(fontSize: 20)),
             ),
           ],
