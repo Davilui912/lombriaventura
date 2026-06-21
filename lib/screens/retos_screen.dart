@@ -4,7 +4,7 @@ import 'dart:io';
 import '../config/theme.dart';
 import '../services/retos_service.dart';
 import '../models/reto.dart';
-
+import '../services/recordatorios_service.dart'; 
 class RetosScreen extends StatefulWidget {
   const RetosScreen({super.key});
 
@@ -81,72 +81,84 @@ class _RetosScreenState extends State<RetosScreen> {
     }
   }
 
-  void _mostrarDialogoLombrices(Reto reto) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('🎯 ${reto.titulo}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(reto.descripcion),
-            const SizedBox(height: 16),
-            const Text(
-              '¿Ya tienes lombrices?',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _mostrarCuantasLombrices(reto);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.verde,
-                    ),
-                    child: const Text('Sí'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Primero consigue lombrices y luego regresa 🪱'),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                    ),
-                    child: const Text('No'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+void _mostrarDialogoLombrices(Reto reto) {
+  if (_retosService.estaCompletado('reto_1')) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✅ ¡Ya completaste este reto!'),
+        backgroundColor: AppTheme.verde,
       ),
     );
+    return;
   }
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text('🎯 ${reto.titulo}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(reto.descripcion),
+          const SizedBox(height: 16),
+          const Text(
+            '¿Ya tienes lombrices?',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _mostrarCuantasLombrices(reto);  // ✅ Llamar a la función corregida
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.verde,
+                  ),
+                  child: const Text('Sí'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Primero consigue lombrices y luego regresa 🪱'),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                  ),
+                  child: const Text('No'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   void _mostrarCuantasLombrices(Reto reto) {
     int cantidad = 0;
+    
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('¿Cuántas lombrices tienes?'),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            return Column(
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('¿Cuántas lombrices tienes?'),
+            content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
@@ -185,40 +197,55 @@ class _RetosScreenState extends State<RetosScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  cantidad == 0 ? 'Necesitas al menos 1 lombriz' : '¡Perfecto!',
+                  cantidad == 0 ? 'Necesitas al menos 1 lombriz' : '¡Perfecto! $cantidad lombriz(es)',
                   style: TextStyle(
                     color: cantidad > 0 ? AppTheme.verde : Colors.grey,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: cantidad > 0
-                ? () async {
-                    Navigator.pop(ctx);
-                    await _retosService.completarReto(reto.id);
-                    _cargarRetos();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🎉 ¡Reto completado!'),
-                        backgroundColor: AppTheme.verde,
-                      ),
-                    );
-                  }
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.verde,
             ),
-            child: const Text('Completar reto'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: cantidad > 0
+                    ? () async {
+                        Navigator.pop(ctx);
+                        await _retosService.completarReto(reto.id);
+                        _cargarRetos();
+                        
+                        // Activar recordatorios al completar el Reto 1
+                        if (reto.id == 'reto_1') {
+                          final recordatorioService = RecordatoriosService();
+                          await recordatorioService.init();
+                          recordatorioService.programarRecordatorioDiario();
+                          recordatorioService.programarRecordatorioLixiviado();
+                        }
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🎉 ¡Reto completado!'),
+                            backgroundColor: AppTheme.verde,
+                          ),
+                        );
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cantidad > 0 ? AppTheme.verde : Colors.grey,
+                ),
+                child: Text(
+                  cantidad > 0 ? 'Completar reto' : 'Agrega lombrices',
+                  style: TextStyle(
+                    color: cantidad > 0 ? Colors.white : Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

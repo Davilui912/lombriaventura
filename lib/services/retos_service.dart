@@ -11,23 +11,23 @@ class RetosService {
   }
 
   void _inicializarRetos() {
+    // Solo inicializar si no hay retos guardados
     if (_box.isEmpty) {
       final List<Reto> retosIniciales = [
         Reto(
           id: 'reto_1',
           titulo: 'Obtener lombrices',
-          descripcion: 'Consigue lombrices para empezar tu lombricomposta.',
+          descripcion: 'Consigue lombrices para empezar tu lombricomposta.\n¿Ya tienes lombrices?',
           emoji: '🎯',
           orden: 1,
         ),
         Reto(
           id: 'reto_2',
           titulo: 'Construir ecosistema',
-          descripcion: 'Construye el hogar de tus lombrices y toma una foto.',
+          descripcion: 'Construye el hogar de tus lombrices y toma una foto como evidencia.',
           emoji: '🏠',
           orden: 2,
         ),
-        // ✅ NUEVOS RETOS MENSUALES
         Reto(
           id: 'reto_humus',
           titulo: '📸 Producir humus',
@@ -86,6 +86,11 @@ class RetosService {
       return reto.completado;
     }
     return false;
+  }
+
+  // ✅ Verificar si el Reto 1 está completado
+  bool estaCompletadoReto1() {
+    return estaCompletado('reto_1');
   }
 
   int obtenerProgreso() {

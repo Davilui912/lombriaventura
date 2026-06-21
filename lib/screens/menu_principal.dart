@@ -19,6 +19,7 @@ import 'tienda/capacitacion.dart';
 import 'juegos/memorama.dart';
 import 'logros.dart';
 import 'modulo_educativo.dart';
+import '../services/retos_service.dart';  // ✅ AGREGAR
 import 'recordatorios.dart';
 import 'avisos.dart';
 import 'perfil_screen.dart';
@@ -45,30 +46,42 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   void initState() {
     super.initState();
     _actividadService.registrarActividad();
-      Future.delayed(const Duration(seconds: 3), () {
-    _verificarRecordatorios();
-  });
+    
+    // ✅ Esperar 3 segundos antes de verificar recordatorios
+    Future.delayed(const Duration(seconds: 3), () {
+      _verificarRecordatorios();
+    });
+    
     _inicializarRecordatorios();
   }
 
   Future<void> _inicializarRecordatorios() async {
-    final recordatorioService = RecordatoriosService();
-    await recordatorioService.init();
-    recordatorioService.programarRecordatorioDiario();
-    recordatorioService.programarRecordatorioLixiviado();
+    // ✅ Verificar si el Reto 1 está completado antes de activar recordatorios
+    final retosService = RetosService();
+    await retosService.init();
+    
+    if (retosService.estaCompletadoReto1()) {
+      final recordatorioService = RecordatoriosService();
+      await recordatorioService.init();
+      recordatorioService.programarRecordatorioDiario();
+      recordatorioService.programarRecordatorioLixiviado();
+    }
   }
   
   void _verificarRecordatorios() async {
+    // ✅ Verificar si el Reto 1 está completado antes de mostrar recordatorios
+    final retosService = RetosService();
+    await retosService.init();
+    
+    if (!retosService.estaCompletadoReto1()) return;
+    
     final service = RecordatoriosService();
     await service.init();
     if (service.hayPendientes()) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (!mounted) return;
-        final pendientes = service.obtenerPendientes();
-        if (pendientes.isNotEmpty) {
-          _mostrarAlertaRecordatorio(pendientes.first);
-        }
-      });
+      final pendientes = service.obtenerPendientes();
+      if (pendientes.isNotEmpty && mounted) {
+        _mostrarAlertaRecordatorio(pendientes.first);
+      }
     }
   }
 
