@@ -34,85 +34,85 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _iniciarSesion() async {
-    if (_usernameController.text.trim().isEmpty) {
-      setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
-      return;
-    }
-    if (_passwordController.text.trim().isEmpty) {
-      setState(() => _errorMessage = 'Ingresa tu contraseña');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final box = await Hive.openBox('usuarios');
-      final username = _usernameController.text.trim();
-      final password = _passwordController.text.trim();
-      
-      final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
-      
-      // ✅ Convertir correctamente los datos
-      final List<Map<String, dynamic>> usuarios = [];
-      for (var item in usuariosRaw) {
-        if (item is Map) {
-          final map = <String, dynamic>{};
-          item.forEach((key, value) {
-            map[key.toString()] = value;
-          });
-          usuarios.add(map);
-        }
-      }
-      
-      // ✅ Buscar por 'usuario' (no por 'nombre')
-      Map<String, dynamic>? usuarioEncontrado;
-      for (var u in usuarios) {
-        if (u['usuario'] == username && u['password'] == password) {
-          usuarioEncontrado = u;
-          break;
-        }
-      }
-
-      if (usuarioEncontrado != null) {
-        final configBox = await Hive.openBox('configuracion');
-        
-        // ✅ Guardar datos de sesión
-        await configBox.put('usuario_actual', username);
-        await configBox.put('usuario_nombre', usuarioEncontrado['nombre'] ?? username);
-        await configBox.put('usuario_edad', usuarioEncontrado['edad']?.toString() ?? '?');
-        await configBox.put('usuario_ciudad', usuarioEncontrado['ciudad'] ?? '?');
-        await configBox.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
-        await configBox.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
-        
-        debugPrint('✅ Usuario conectado: $username');
-        
-        _irAlMenu();
-      } else {
-        // ✅ Verificar si el usuario existe pero la contraseña es incorrecta
-        final usernameExiste = usuarios.any((u) => u['usuario'] == username);
-        if (usernameExiste) {
-          setState(() {
-            _errorMessage = '❌ Contraseña incorrecta';
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _errorMessage = '❌ Usuario no registrado';
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al iniciar sesión: $e';
-        _isLoading = false;
-      });
-    }
+Future<void> _iniciarSesion() async {
+  if (_usernameController.text.trim().isEmpty) {
+    setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
+    return;
   }
+  if (_passwordController.text.trim().isEmpty) {
+    setState(() => _errorMessage = 'Ingresa tu contraseña');
+    return;
+  }
+
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+  });
+
+  try {
+    final box = await Hive.openBox('usuarios');
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
+    
+    // ✅ Convertir correctamente los datos
+    final List<Map<String, dynamic>> usuarios = [];
+    for (var item in usuariosRaw) {
+      if (item is Map) {
+        final map = <String, dynamic>{};
+        item.forEach((key, value) {
+          map[key.toString()] = value;
+        });
+        usuarios.add(map);
+      }
+    }
+    
+    // ✅ Buscar por 'usuario' (no por 'nombre')
+    Map<String, dynamic>? usuarioEncontrado;
+    for (var u in usuarios) {
+      if (u['usuario'] == username && u['password'] == password) {
+        usuarioEncontrado = u;
+        break;
+      }
+    }
+
+    if (usuarioEncontrado != null) {
+      final configBox = await Hive.openBox('configuracion');
+      
+      // ✅ Guardar datos de sesión
+      await configBox.put('usuario_actual', username);
+      await configBox.put('usuario_nombre', usuarioEncontrado['nombre'] ?? username);
+      await configBox.put('usuario_edad', usuarioEncontrado['edad']?.toString() ?? '?');
+      await configBox.put('usuario_ciudad', usuarioEncontrado['ciudad'] ?? '?');
+      await configBox.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
+      await configBox.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
+      
+      debugPrint('✅ Usuario conectado: $username');
+      
+      _irAlMenu();
+    } else {
+      // ✅ Verificar si el usuario existe pero la contraseña es incorrecta
+      final usernameExiste = usuarios.any((u) => u['usuario'] == username);
+      if (usernameExiste) {
+        setState(() {
+          _errorMessage = '❌ Contraseña incorrecta';
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = '❌ Usuario no registrado';
+          _isLoading = false;
+        });
+      }
+    }
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Error al iniciar sesión: $e';
+      _isLoading = false;
+    });
+  }
+}
 
   void _irAlMenu() {
     Navigator.pushAndRemoveUntil(

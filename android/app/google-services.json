@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "20148759640",
+    "project_id": "lombriaventura",
+    "storage_bucket": "lombriaventura.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:20148759640:android:bd57266eb7c319cc19ee2d",
+        "android_client_info": {
+          "package_name": "com.example.lombriaventura"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "20148759640-6t5b16hgp8au3dao5r1ah2lt2o4d8413.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnEI1jrC89_cTT1iUAhmxLdqAMBnYJ5rM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "20148759640-6t5b16hgp8au3dao5r1ah2lt2o4d8413.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'config/theme.dart';
 import 'screens/login_screen.dart';
 import 'models/conversacion.dart';
@@ -8,21 +9,11 @@ import 'services/recordatorios_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ Firebase ya está inicializado automáticamente por google-services.json
+  // Solo asegurar que esté disponible
+  await Firebase.initializeApp();
+
   await Hive.initFlutter();
-
-  // ✅ Registrar versión de la base de datos
-  final box = await Hive.openBox('configuracion');
-  final versionActual = box.get('db_version', defaultValue: 0);
-  const versionNueva = 1;
-  
-  if (versionActual < versionNueva) {
-    // Si la versión es antigua, borrar datos para evitar errores
-    print('🔄 Actualizando base de datos de la versión $versionActual a $versionNueva');
-    await box.clear();
-    await box.put('db_version', versionNueva);
-    print('✅ Base de datos actualizada');
-  }
-
   Hive.registerAdapter(ConversacionAdapter());
   
   await Hive.openBox('logros');
@@ -52,7 +43,7 @@ class LombriaventuraApp extends StatelessWidget {
       title: 'Lombriaventura',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),  // ← Login con email/contraseña
+      home: const LoginScreen(),
     );
   }
 }
