@@ -19,9 +19,10 @@ import 'tienda/capacitacion.dart';
 import 'juegos/memorama.dart';
 import 'logros.dart';
 import 'modulo_educativo.dart';
-import '../services/retos_service.dart';  // ✅ AGREGAR
+import '../services/retos_service.dart'; 
 import 'recordatorios.dart';
 import 'avisos.dart';
+import 'tienda/problemas_matematicos.dart';  
 import 'perfil_screen.dart';
 import 'admin_screen.dart';
 import 'retos_screen.dart';
@@ -47,7 +48,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     super.initState();
     _actividadService.registrarActividad();
     
-    // ✅ Esperar 3 segundos antes de verificar recordatorios
+    //  Esperar 3 segundos antes de verificar recordatorios
     Future.delayed(const Duration(seconds: 3), () {
       _verificarRecordatorios();
     });
@@ -56,7 +57,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   }
 
   Future<void> _inicializarRecordatorios() async {
-    // ✅ Verificar si el Reto 1 está completado antes de activar recordatorios
+    //  Verificar si el Reto 1 está completado antes de activar recordatorios
     final retosService = RetosService();
     await retosService.init();
     
@@ -69,7 +70,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   }
   
   void _verificarRecordatorios() async {
-    // ✅ Verificar si el Reto 1 está completado antes de mostrar recordatorios
+    //  Verificar si el Reto 1 está completado antes de mostrar recordatorios
     final retosService = RetosService();
     await retosService.init();
     
@@ -163,7 +164,94 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       ),
     );
   }
-
+  Widget _buildSubmenuJuegos() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.azulCielo.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.azulCielo.withValues(alpha: 0.2)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppTheme.azulCielo.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.games, color: AppTheme.azulCielo, size: 20),
+          ),
+          title: const Text(
+            '🎮 Juegos',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: AppTheme.azulCielo,
+            ),
+          ),
+          trailing: const Icon(Icons.keyboard_arrow_down, color: AppTheme.azulCielo),
+          children: [
+            _buildOpcion('♻️ Clasifica residuos', 'Juega y aprende', Icons.recycling, 
+                () => _irAPantalla(const ClasificaResiduosScreen())),
+            _buildOpcion('🪱 Alimenta a Lola', 'Cuida a tu lombriz', Icons.restaurant, 
+                () => _irAPantalla(const AlimentaLolaScreen())),
+            _buildOpcion('🧠 Memorama ecológico', 'Encuentra las parejas', Icons.memory, 
+                () => _irAPantalla(const MemoramaScreen())),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildSubmenu({
+    required String titulo,
+    required IconData icon,
+    required Color color,
+    required List<Widget> opciones,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  titulo,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Column(
+              children: opciones,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildCategoria({
     required String titulo,
     required String subtitulo,
@@ -588,21 +676,26 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                         ),
                       ],
                     ),
-                    // ==================== MI COMPOSTA ====================
+                    // ==================== MI COMPOSTA ====================  
                     _buildCategoria(
-                      titulo: 'Mi Composta',
+                      titulo: '📸 Mi Composta',
                       subtitulo: 'Cuida tu composta',
                       color: const Color(0xFFFFA726),
                       color2: const Color(0xFFFFCA28),
                       iconImage: 'assets/images/icons/icono_composta.png',
                       index: 1,
                       opciones: [
-                        _buildOpcion('📓 Mi diario', 'Registra tu avance', Icons.edit_note, () => _irAPantalla(const NuevaEntradaScreen())),
-                        _buildOpcion('🎮 Clasifica residuos', 'Juega y aprende', Icons.recycling, () => _irAPantalla(const ClasificaResiduosScreen())),
-                        _buildOpcion('🎮 Alimenta a Lola', 'Cuida a tu lombriz', Icons.restaurant, () => _irAPantalla(const AlimentaLolaScreen())),
-                        _buildOpcion('🎮 Memorama ecológico', 'Encuentra las parejas', Icons.memory, () => _irAPantalla(const MemoramaScreen())),
-                        _buildMenuButton('Pregúntale a la lombriz sabia 🤖', Icons.chat, AppTheme.azulCielo, () => _irAPantalla(const ChatIAScreen())),
-                        _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber, () => _irAPantalla(const AvisosScreen())),
+                        _buildOpcion('📓 Mi diario', 'Registra tu avance', Icons.edit_note, 
+                            () => _irAPantalla(const NuevaEntradaScreen())),
+                        
+                        _buildMenuButton('Pregúntale a la lombriz sabia 🤖', Icons.chat, AppTheme.azulCielo, 
+                            () => _irAPantalla(const ChatIAScreen())),
+                        
+                        _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber, 
+                            () => _irAPantalla(const AvisosScreen())),
+                        
+                        // ✅ Submenú de juegos (desplegable)
+                        _buildSubmenuJuegos(),
                       ],
                     ),
                     // ==================== PROGRESO ====================
@@ -633,6 +726,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                         _buildOpcion('🌱 Vender humus', 'Precio: \$10 por bolsita', Icons.agriculture, () => _irAPantalla(const VentasHumusScreen())),
                         _buildOpcion('📊 Registro de ventas', 'Historial de ingresos', Icons.receipt, () => _irAPantalla(const VentasHistorialScreen())),
                         _buildOpcion('🎓 Capacitación', 'Capacita a otros niños', Icons.school, () => _irAPantalla(const CapacitacionScreen())),
+                        _buildOpcion('🧮 Problemas matemáticos', 'Gana monedas resolviendo', Icons.calculate, () => _irAPantalla(const ProblemasMatematicosScreen())),
                       ],
                     ),
                     const SizedBox(height: 12),

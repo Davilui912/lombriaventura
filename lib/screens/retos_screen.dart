@@ -82,7 +82,7 @@ class _RetosScreenState extends State<RetosScreen> {
   }
 
 void _mostrarDialogoLombrices(Reto reto) {
-  if (_retosService.estaCompletado('reto_1')) {
+  if (_retosService.estaCompletado('reto_1')) { 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('✅ ¡Ya completaste este reto!'),
