@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
 import '../../services/monedas_service.dart';
+import '../../services/anuncio_service.dart';
 
 class AlimentaLolaScreen extends StatefulWidget {
   const AlimentaLolaScreen({super.key});
@@ -199,7 +200,12 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
       _comidaVisible = false;
     });
   }
-
+  Future<void> _salirConAnuncio() async {
+    await AnuncioService.mostrarAnuncio(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
   @override
   void dispose() {
     _timer?.cancel();
@@ -212,29 +218,33 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('🪱 Alimenta a la lombriz'),
-        backgroundColor: AppTheme.verde,
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.favorite, color: Colors.red, size: 20),
-                  const SizedBox(width: 4),
-                  Text('$_vidas', style: const TextStyle(fontSize: 18)),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.star, color: AppTheme.amarillo, size: 20),
-                  const SizedBox(width: 4),
-                  Text('$_puntuacion', style: const TextStyle(fontSize: 18)),
-                ],
-              ),
+    appBar: AppBar(
+      title: const Text('🪱 Alimenta a la lombriz'),
+      backgroundColor: AppTheme.verde,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: _salirConAnuncio,  // ✅ Cambiar aquí
+      ),
+      actions: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.favorite, color: Colors.red, size: 20),
+                const SizedBox(width: 4),
+                Text('$_vidas', style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: 12),
+                const Icon(Icons.star, color: AppTheme.amarillo, size: 20),
+                const SizedBox(width: 4),
+                Text('$_puntuacion', style: const TextStyle(fontSize: 18)),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    ),
       body: _juegoTerminado ? _buildPantallaFinal() : _buildJuego(),
     );
   }
@@ -458,12 +468,23 @@ class _AlimentaLolaScreenState extends State<AlimentaLolaScreen> {
               style: const TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 30),
+            // ✅ Botón "Jugar de nuevo" (NO muestra anuncio)
             ElevatedButton(
               onPressed: _iniciarJuego,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               ),
               child: const Text('🔄 Jugar de nuevo', style: TextStyle(fontSize: 20)),
+            ),
+            // ✅ Botón "Salir" (MUESTRA anuncio)
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _salirConAnuncio,  // ✅ Muestra anuncio
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                backgroundColor: Colors.grey.shade300,
+              ),
+              child: const Text('🚪 Salir', style: TextStyle(fontSize: 16, color: Colors.black87)),
             ),
           ],
         ),

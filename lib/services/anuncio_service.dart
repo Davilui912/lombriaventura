@@ -24,25 +24,41 @@ class AnuncioService {
   static Future<void> mostrarAnuncio(BuildContext context) async {
     if (!debeMostrarAnuncio()) return;
 
-    // ✅ 1. Inicializamos el controlador y guardamos el proceso en un Future
     _controller = VideoPlayerController.asset('assets/videos/anuncio.mp4');
-    
-    // Almacenamos el Future de la inicialización para dárselo al FutureBuilder
-    final Future<void> inicializarVideo = _controller!.initialize().then((_) {
-      _controller!.setLooping(true);
-      _controller!.play(); // Empieza a reproducirse en cuanto carga
-    });
 
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) {
+          
+          if (_controller != null && !_controller!.value.isInitialized && !_controller!.value.hasError) {
+            _controller!.initialize().then((_) {
+              _controller?.setLooping(true);
+              _controller?.addListener(() {
+                if (ctx.mounted && _controller != null) {
+                  setState(() {}); 
+                }
+              });
+              _controller?.play();
+              if (ctx.mounted) {
+                setState(() {});
+              }
+            }).catchError((error) {
+              debugPrint("❌ ERROR AL INICIALIZAR EL VIDEO: $error");
+            });
+          }
+
+          void cerrarAnuncio() {
+            _controller?.pause();
+            _controller?.dispose();
+            _controller = null;
+            if (ctx.mounted) Navigator.pop(ctx);
+          }
+
           return WillPopScope(
             onWillPop: () async {
-              _controller?.pause();
-              _controller?.dispose();
-              _controller = null;
+              cerrarAnuncio();
               return true;
             },
             child: Dialog(
@@ -56,75 +72,63 @@ class AnuncioService {
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min, 
                   children: [
-                    // ✅ 2. REPRODUCTOR DE VIDEO CON FUTUREBUILDER REAL
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.black, // El fondo mientras carga
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: FutureBuilder(
-                          future: inicializarVideo,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.done) {
-                              // ✅ 3. ASPECT RATIO: La clave para que se vea el video
-                              return AspectRatio(
-                                aspectRatio: _controller!.value.aspectRatio,
-                                child: VideoPlayer(_controller!),
-                              );
-                            } else {
-                              return const Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
+                    
+                    // ✅ CAMBIO 1: Bloqueamos el espacio del video a 16:9 desde el inicio
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9, // Mantiene el marco fijo sin importar si cargó o no
+                        child: Container(
+                          color: Colors.black,
+                          child: (_controller != null && _controller!.value.isInitialized)
+                              ? VideoPlayer(_controller!)
+                              : const Center(
+                                  child: CircularProgressIndicator(color: Colors.white),
                                 ),
-                              );
-                            }
-                          },
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // ✅ Controles de reproducción mostrados solo cuando está listo
-                    FutureBuilder(
-                      future: inicializarVideo,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                                  color: AppTheme.verde,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _controller!.value.isPlaying
-                                        ? _controller!.pause()
-                                        : _controller!.play();
-                                  });
-                                },
+                    
+                    // ✅ CAMBIO 2: Protegemos los controles forzando una altura estricta
+                    if (_controller != null && _controller!.value.isInitialized)
+                      SizedBox(
+                        height: 48, // Altura fija para evitar el error 'hasSize: is not true'
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: AppTheme.verde,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
+                              onPressed: () {
+                                if (_controller != null) {
+                                  _controller!.value.isPlaying
+                                      ? _controller!.pause()
+                                      : _controller!.play();
+                                  setState(() {});
+                                }
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: SizedBox(
+                                height: 10, // Le decimos a la barra exactamente cuánto medir de alto
                                 child: VideoProgressIndicator(
                                   _controller!,
                                   allowScrubbing: true,
-                                  colors: VideoProgressColors(
+                                  colors: const VideoProgressColors(
                                     playedColor: AppTheme.verde,
                                   ),
                                 ),
                               ),
-                            ],
-                          );
-                        }
-                        return const SizedBox.shrink(); // Oculta controles mientras carga el video
-                      }
-                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
                     const SizedBox(height: 12),
                     const Text(
                       '🌟 ¡Mira este video!',
@@ -141,21 +145,13 @@ class AnuncioService {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         TextButton(
-                          onPressed: () {
-                            _controller?.pause();
-                            _controller?.dispose();
-                            _controller = null;
-                            Navigator.pop(ctx);
-                          },
+                          onPressed: cerrarAnuncio,
                           child: const Text('Omitir'),
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            _controller?.pause();
-                            _controller?.dispose();
-                            _controller = null;
+                            cerrarAnuncio();
                             marcarComoMostrado();
-                            Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('¡Gracias por ver el anuncio! +10 monedas 🪙'),
@@ -165,6 +161,7 @@ class AnuncioService {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.verde,
+                            minimumSize: const Size(120, 45), 
                           ),
                           child: const Text('Ver ahora'),
                         ),
