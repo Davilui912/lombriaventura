@@ -18,7 +18,7 @@ dependencies:
 
   # UI y Animaciones
   cupertino_icons: ^1.0.8
-  lottie: ^3.1.2
+  lottie: ^3.3.3
   flutter_animate: ^4.5.0
   
   # Almacenamiento Local

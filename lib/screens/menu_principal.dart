@@ -198,11 +198,11 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
           ),
           trailing: const Icon(Icons.keyboard_arrow_down, color: AppTheme.azulCielo),
           children: [
-            _buildOpcion('♻️ Clasifica residuos', 'Juega y aprende', Icons.recycling, 
+            _buildOpcion('Clasifica residuos', 'Juega y aprende', Icons.recycling, 
                 () => _irAPantalla(const ClasificaResiduosScreen())),
-            _buildOpcion('🪱 Alimenta a Lola', 'Cuida a tu lombriz', Icons.restaurant, 
+            _buildOpcion('Alimenta a Lola', 'Cuida a tu lombriz', Icons.restaurant, 
                 () => _irAPantalla(const AlimentaLolaScreen())),
-            _buildOpcion('🧠 Memorama ecológico', 'Encuentra las parejas', Icons.memory, 
+            _buildOpcion('Memorama ecológico', 'Encuentra las parejas', Icons.memory, 
                 () => _irAPantalla(const MemoramaScreen())),
           ],
         ),
@@ -678,20 +678,20 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                     ),
                     // ==================== MI COMPOSTA ====================  
                     _buildCategoria(
-                      titulo: '📸 Mi Composta',
+                      titulo: 'Mi Composta',
                       subtitulo: 'Cuida tu composta',
                       color: const Color(0xFFFFA726),
                       color2: const Color(0xFFFFCA28),
                       iconImage: 'assets/images/icons/icono_composta.png',
                       index: 1,
                       opciones: [
-                        _buildOpcion('📓 Mi diario', 'Registra tu avance', Icons.edit_note, 
+                        _buildOpcion('Mi diario', 'Registra tu avance', Icons.edit_note, 
                             () => _irAPantalla(const NuevaEntradaScreen())),
                         
-                        _buildMenuButton('Pregúntale a la lombriz sabia 🤖', Icons.chat, AppTheme.azulCielo, 
+                        _buildMenuButton('Pregúntale a la lombriz sabia', Icons.chat, AppTheme.azulCielo, 
                             () => _irAPantalla(const ChatIAScreen())),
                         
-                        _buildOpcion('⚠️ Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber, 
+                        _buildOpcion('Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber, 
                             () => _irAPantalla(const AvisosScreen())),
                         
                         // ✅ Submenú de juegos (desplegable)
@@ -707,9 +707,9 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                       iconImage: 'assets/images/icons/icono_progreso.png',
                       index: 2,
                       opciones: [
-                        _buildOpcion('🏆 Mis logros', 'Insignias y medallas', Icons.emoji_events, () => _irAPantalla(const LogrosScreen())),
-                        _buildOpcion('🎯 Retos', 'Completa los desafíos', Icons.flag, () => _irAPantalla(const RetosScreen())),
-                        _buildOpcion('⏰ Recordatorios', 'Alertas y cuidados', Icons.notifications_active, () => _irAPantalla(const RecordatoriosScreen())),
+                        _buildOpcion('Mis logros', 'Insignias y medallas', Icons.emoji_events, () => _irAPantalla(const LogrosScreen())),
+                        _buildOpcion('Retos', 'Completa los desafíos', Icons.flag, () => _irAPantalla(const RetosScreen())),
+                        _buildOpcion('Recordatorios', 'Alertas y cuidados', Icons.notifications_active, () => _irAPantalla(const RecordatoriosScreen())),
                       ],
                     ),
                     // ==================== MI NEGOCIO REAL ====================
@@ -721,12 +721,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                       iconImage: 'assets/images/icons/icono_negocio.png',
                       index: 3,
                       opciones: [
-                        _buildOpcion('🪱 Vender lombrices', 'Precio: \$2.50 c/u', Icons.sell, () => _irAPantalla(const VentasLombricesScreen())),
-                        _buildOpcion('💧 Atomizador lixiviado', 'Precio: \$25', Icons.water_drop, () => _irAPantalla(const VentasAtomizadorScreen())),
-                        _buildOpcion('🌱 Vender humus', 'Precio: \$10 por bolsita', Icons.agriculture, () => _irAPantalla(const VentasHumusScreen())),
-                        _buildOpcion('📊 Registro de ventas', 'Historial de ingresos', Icons.receipt, () => _irAPantalla(const VentasHistorialScreen())),
-                        _buildOpcion('🎓 Capacitación', 'Capacita a otros niños', Icons.school, () => _irAPantalla(const CapacitacionScreen())),
-                        _buildOpcion('🧮 Problemas matemáticos', 'Gana monedas resolviendo', Icons.calculate, () => _irAPantalla(const ProblemasMatematicosScreen())),
+                        _buildOpcion('Vender lombrices', 'Precio: \$2.50 c/u', Icons.sell, () => _irAPantalla(const VentasLombricesScreen())),
+                        _buildOpcion('Atomizador lixiviado', 'Precio: \$25', Icons.water_drop, () => _irAPantalla(const VentasAtomizadorScreen())),
+                        _buildOpcion('Vender humus', 'Precio: \$10 por bolsita', Icons.agriculture, () => _irAPantalla(const VentasHumusScreen())),
+                        _buildOpcion('Registro de ventas', 'Historial de ingresos', Icons.receipt, () => _irAPantalla(const VentasHistorialScreen())),
+                        _buildOpcion('Capacitación', 'Capacita a otros niños', Icons.school, () => _irAPantalla(const CapacitacionScreen())),
+                        _buildOpcion('Problemas matemáticos', 'Gana monedas resolviendo', Icons.calculate, () => _irAPantalla(const ProblemasMatematicosScreen())),
                       ],
                     ),
                     const SizedBox(height: 12),

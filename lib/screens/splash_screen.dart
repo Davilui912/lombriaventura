@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'menu_principal.dart';
-import '../widgets/logo_lombriaventura.dart';
+import 'package:lottie/lottie.dart'; // Si no lo tienes, usa un CircularProgressIndicator
+import '../config/theme.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -27,18 +28,18 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
-    _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    _scale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
     );
 
     _controller.forward();
 
-    // Navegar al menú principal después de 3 segundos
-    Future.delayed(const Duration(seconds: 3), () {
+    // Navegar al login después de 2.5 segundos
+    Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MenuPrincipal()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       }
     });
@@ -54,11 +55,11 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF7AC943), Color(0xFFF5F9EE)],
+            colors: [AppTheme.verde, AppTheme.verdeClaro],
           ),
         ),
         child: Center(
@@ -69,30 +70,43 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Aquí irá la animación de Lola (por ahora un placeholder)
-                const LogoLombriaventura(size: 150, mostrarTexto: false),
+                  // ✅ Logo grande
+                  Image.asset(
+                    'assets/images/logo_lombriaventura.png',
+                    width: 150,
+                    height: 150,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.bug_report,
+                          size: 80,
+                          color: AppTheme.verde,
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 30),
                   const Text(
-                    'LombriAventura',
+                    'Lombriaventura',
                     style: TextStyle(
                       fontFamily: 'Fredoka',
-                      fontSize: 42,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      letterSpacing: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Aprende, juega y crea tu propia\nlombricomposta',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 20),
+                  // ✅ Indicador de carga
                   const CircularProgressIndicator(
                     color: Colors.white,
+                    strokeWidth: 3,
                   ),
                 ],
               ),

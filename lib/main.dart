@@ -5,12 +5,12 @@ import 'config/theme.dart';
 import 'screens/login_screen.dart';
 import 'models/conversacion.dart';
 import 'services/recordatorios_service.dart';
+import 'screens/splash_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Firebase ya está inicializado automáticamente por google-services.json
-  // Solo asegurar que esté disponible
   await Firebase.initializeApp();
 
   await Hive.initFlutter();
@@ -43,7 +43,7 @@ class LombriaventuraApp extends StatelessWidget {
       title: 'Lombriaventura',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
