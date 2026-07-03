@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'models/conversacion.dart';
 import 'services/recordatorios_service.dart';
 import 'screens/splash_screen.dart';
+import 'screens/privacidad_screen.dart';
 
 
 void main() async {

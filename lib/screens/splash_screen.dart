@@ -73,12 +73,12 @@ class _SplashScreenState extends State<SplashScreen>
                   // ✅ Logo grande
                   Image.asset(
                     'assets/images/logo_lombriaventura.png',
-                    width: 150,
-                    height: 150,
+                    width: 250,
+                    height: 250,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        width: 150,
-                        height: 150,
+                        width: 250,
+                        height: 250,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,

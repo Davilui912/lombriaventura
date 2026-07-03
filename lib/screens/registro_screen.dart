@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart'; // ✅ IMPORTANTE: Para TapGestureRecognizer
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import 'login_screen.dart';
+import '../utils/textos_constantes.dart'; // ✅ Importar texto de privacidad
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -26,6 +28,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmar = true;
   String? _errorMessage;
+  bool _privacidadAceptada = false; // ✅ NUEVO: Checkbox de privacidad
 
   final List<String> _preguntasSeguridad = [
     '¿Cómo se llamaba tu primera mascota?',
@@ -67,8 +70,39 @@ class _RegistroScreenState extends State<RegistroScreen> {
     );
   }
 
+  // ✅ Función para mostrar el diálogo del aviso de privacidad
+  void _mostrarAvisoPrivacidad(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text('🔒 Aviso de Privacidad'),
+        content: SingleChildScrollView(
+          child: Text(
+            TextosConstantes.avisoPrivacidad,
+            style: const TextStyle(fontSize: 14, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _registrarUsuario() async {
-    // Validaciones
+    // ✅ Validar que aceptó la privacidad
+    if (!_privacidadAceptada) {
+      setState(() => _errorMessage = 'Debes aceptar el Aviso de Privacidad para continuar');
+      return;
+    }
+
+    // Validaciones existentes
     if (_usuarioController.text.trim().isEmpty) {
       setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
       return;
@@ -126,7 +160,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
         }
       }
       
-      // Verificar si el nombre de usuario ya existe
       final existe = usuarios.any((u) => u['usuario'] == _usuarioController.text.trim());
       if (existe) {
         setState(() {
@@ -151,7 +184,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
       usuarios.add(nuevoUsuario);
       await box.put('lista', usuarios);
       
-      // Guardar datos de sesión
       final configBox = await Hive.openBox('configuracion');
       await configBox.put('usuario_actual', _usuarioController.text.trim());
       await configBox.put('usuario_nombre', _nombreController.text.trim());
@@ -159,6 +191,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       await configBox.put('usuario_ciudad', _ciudadController.text.trim());
       await configBox.put('usuario_genero', _genero);
       await configBox.put('usuario_fecha_registro', DateTime.now().toIso8601String());
+      await configBox.put('privacidad_aceptada', true); // ✅ Guardar aceptación
 
       setState(() => _isLoading = false);
       
@@ -347,11 +380,55 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
             const SizedBox(height: 24),
             
-            // Botón registrar
+            // ✅ AVISO DE PRIVACIDAD CON CHECKBOX E HIPERVÍNCULO
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Checkbox(
+                    value: _privacidadAceptada,
+                    onChanged: (value) {
+                      setState(() {
+                        _privacidadAceptada = value ?? false;
+                      });
+                    },
+                    activeColor: AppTheme.verde,
+                  ),
+                ),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black87, fontSize: 14),
+                      children: [
+                        const TextSpan(text: 'He leído y acepto el '),
+                        TextSpan(
+                          text: 'Aviso de Privacidad',
+                          style: const TextStyle(
+                            color: AppTheme.verde,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              _mostrarAvisoPrivacidad(context);
+                            },
+                        ),
+                        const TextSpan(text: ' y el tratamiento de mis datos personales.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // ✅ Botón registrar (se habilita solo si acepta privacidad)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _registrarUsuario,
+                onPressed: _isLoading || !_privacidadAceptada ? null : _registrarUsuario,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.verde,
                   padding: const EdgeInsets.symmetric(vertical: 14),
