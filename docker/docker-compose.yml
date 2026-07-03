@@ -5,7 +5,7 @@ services:
     image: mariadb:latest
     container_name: lombriaventura_db
     environment:
-      MYSQL_ROOT_PASSWORD: Lombriaventura*123
+      MYSQL_ROOT_PASSWORD: Lombriaventura
       MYSQL_DATABASE: lombriaventura
       MYSQL_USER: lombriadmin
       MYSQL_PASSWORD: Lombriaventura*123

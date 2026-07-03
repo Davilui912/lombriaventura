@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; // ✅ IMPORTANTE: Para TapGestureRecognizer
+import 'package:flutter/gestures.dart'; 
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import 'login_screen.dart';
-import '../utils/textos_constantes.dart'; // ✅ Importar texto de privacidad
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../utils/textos_constantes.dart'; 
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -146,65 +148,59 @@ class _RegistroScreenState extends State<RegistroScreen> {
     });
 
     try {
-      final box = await Hive.openBox('usuarios');
-      final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
-      
-      final List<Map<String, dynamic>> usuarios = [];
-      for (var item in usuariosRaw) {
-        if (item is Map) {
-          final map = <String, dynamic>{};
-          item.forEach((key, value) {
-            map[key.toString()] = value;
-          });
-          usuarios.add(map);
+      final response = await http.post(
+        Uri.parse('http://148.202.232.100:3000/api/registro'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'nombreUsuario': _usuarioController.text.trim(),
+          'nombre': _nombreController.text.trim(),
+          'contrasena': _passwordController.text.trim(),
+          'edad': int.tryParse(_edadController.text.trim()) ?? 0,
+          'ciudad': _ciudadController.text.trim(),
+          'genero': _genero,
+          'preguntaSeguridad': _preguntaSeguridad,
+          'respuestaSeguridad': _respuestaSeguridadController.text.trim().toLowerCase(),
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        // ✅ Registro exitoso
+        final data = jsonDecode(response.body);
+        
+        // Guardar sesión en Hive (para acceso rápido)
+        final configBox = await Hive.openBox('configuracion');
+        await configBox.put('usuario_actual', _usuarioController.text.trim());
+        await configBox.put('usuario_nombre', _nombreController.text.trim());
+        await configBox.put('usuario_edad', _edadController.text.trim());
+        await configBox.put('usuario_ciudad', _ciudadController.text.trim());
+        await configBox.put('usuario_genero', _genero);
+        await configBox.put('usuario_fecha_registro', DateTime.now().toIso8601String());
+
+        setState(() => _isLoading = false);
+        
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
         }
-      }
-      
-      final existe = usuarios.any((u) => u['usuario'] == _usuarioController.text.trim());
-      if (existe) {
+      } else if (response.statusCode == 400) {
+        // Error: usuario ya existe
+        final data = jsonDecode(response.body);
         setState(() {
-          _errorMessage = '❌ Este nombre de usuario ya está registrado';
+          _errorMessage = data['error'] ?? '❌ Error al registrar';
           _isLoading = false;
         });
-        return;
-      }
-
-      final nuevoUsuario = {
-        'usuario': _usuarioController.text.trim(),
-        'nombre': _nombreController.text.trim(),
-        'password': _passwordController.text.trim(),
-        'edad': int.tryParse(_edadController.text.trim()) ?? 0,
-        'ciudad': _ciudadController.text.trim(),
-        'genero': _genero,
-        'preguntaSeguridad': _preguntaSeguridad,
-        'respuestaSeguridad': _respuestaSeguridadController.text.trim().toLowerCase(),
-        'fechaRegistro': DateTime.now().toIso8601String(),
-      };
-      
-      usuarios.add(nuevoUsuario);
-      await box.put('lista', usuarios);
-      
-      final configBox = await Hive.openBox('configuracion');
-      await configBox.put('usuario_actual', _usuarioController.text.trim());
-      await configBox.put('usuario_nombre', _nombreController.text.trim());
-      await configBox.put('usuario_edad', _edadController.text.trim());
-      await configBox.put('usuario_ciudad', _ciudadController.text.trim());
-      await configBox.put('usuario_genero', _genero);
-      await configBox.put('usuario_fecha_registro', DateTime.now().toIso8601String());
-      await configBox.put('privacidad_aceptada', true); // ✅ Guardar aceptación
-
-      setState(() => _isLoading = false);
-      
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+      } else {
+        setState(() {
+          _errorMessage = '❌ Error al registrar usuario';
+          _isLoading = false;
+        });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al registrar: $e';
+        _errorMessage = 'Error al conectar con el servidor: $e';
         _isLoading = false;
       });
     }
