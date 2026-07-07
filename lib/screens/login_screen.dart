@@ -123,7 +123,13 @@ Future<void> _iniciarSesion() async {
     );
   }
 
-  void _irARegistro() async {
+  void _irARegistro() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RegistroScreen()),
+    );
+  }
+/*  void _irARegistro() async {
     // ✅ Verificar si ya aceptó la privacidad
     final box = await Hive.openBox('configuracion');
     final aceptado = box.get('privacidad_aceptada', defaultValue: false);
@@ -139,7 +145,7 @@ Future<void> _iniciarSesion() async {
         MaterialPageRoute(builder: (_) => const PrivacidadScreen()),
       );
     }
-  }
+  }*/
 
   void _irARecuperarPassword() {
     Navigator.push(

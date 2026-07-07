@@ -69,18 +69,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     if (confirm == true) {
       final configBox = await Hive.openBox('configuracion');
+      await configBox.clear();
       
-      // ✅ Solo borrar las claves de sesión, NO todo el box
-      await configBox.delete('usuario_actual');
-      await configBox.delete('usuario_nombre');
-      await configBox.delete('usuario_edad');
-      await configBox.delete('usuario_ciudad');
-      await configBox.delete('usuario_genero');
-      await configBox.delete('usuario_fecha_registro');
-      
-      // ❌ NO usar configBox.clear() porque borra todo incluyendo historial de ventas
-      
-      debugPrint('🗑️ Sesión cerrada, datos de sesión limpiados');
+      debugPrint('🗑️ Sesión cerrada, datos limpiados');
       
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -123,104 +114,131 @@ class _PerfilScreenState extends State<PerfilScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: generoColor.withValues(alpha: 0.2),
-                    child: Icon(
-                      generoIcon,
-                      size: 60,
-                      color: generoColor,
-                    ),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/fondo.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.90),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _nombreCompleto,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: generoColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _genero == 'Lola' ? '🪱 Lombriz Lola' : '🪱 Lombriz Lalo',
-                      style: TextStyle(color: generoColor, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  
-                  // Nombre de usuario
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.badge, color: AppTheme.verde),
-                      title: const Text('Nombre de usuario'),
-                      subtitle: Text(_usuario.isEmpty ? 'Sin definir' : _usuario),
-                    ),
-                  ),
-                  
-                  // Nombre completo
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.person, color: AppTheme.verde),
-                      title: const Text('Nombre completo'),
-                      subtitle: Text(_nombreCompleto),
-                    ),
-                  ),
-                  
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.cake, color: AppTheme.verde),
-                      title: const Text('Edad'),
-                      subtitle: Text('$_edad años'),
-                    ),
-                  ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.location_city, color: AppTheme.verde),
-                      title: const Text('Ciudad'),
-                      subtitle: Text(_ciudad),
-                    ),
-                  ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.calendar_today, color: AppTheme.verde),
-                      title: const Text('Lombrikid desde'),
-                      subtitle: Text(_formatearFecha(_fechaRegistro)),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.verde.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.info_outline, color: AppTheme.verde),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Completa actividades y juegos para seguir aprendiendo. ¡Sigue ayudando al planeta! 🌱',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: generoColor.withValues(alpha: 0.2),
+                        child: Icon(
+                          generoIcon,
+                          size: 60,
+                          color: generoColor,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _nombreCompleto,
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: generoColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _genero == 'Lola' ? '🪱 Lombriz Lola' : '🪱 Lombriz Lalo',
+                          style: TextStyle(color: generoColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      
+                      Card(
+                        elevation: 2,
+                        child: ListTile(
+                          leading: const Icon(Icons.badge, color: AppTheme.verde),
+                          title: const Text('Nombre de usuario'),
+                          subtitle: Text(_usuario.isEmpty ? 'Sin definir' : _usuario),
+                        ),
+                      ),
+                      
+                      Card(
+                        elevation: 2,
+                        child: ListTile(
+                          leading: const Icon(Icons.person, color: AppTheme.verde),
+                          title: const Text('Nombre completo'),
+                          subtitle: Text(_nombreCompleto),
+                        ),
+                      ),
+                      
+                      Card(
+                        elevation: 2,
+                        child: ListTile(
+                          leading: const Icon(Icons.cake, color: AppTheme.verde),
+                          title: const Text('Edad'),
+                          subtitle: Text('$_edad años'),
+                        ),
+                      ),
+                      
+                      Card(
+                        elevation: 2,
+                        child: ListTile(
+                          leading: const Icon(Icons.location_city, color: AppTheme.verde),
+                          title: const Text('Ciudad'),
+                          subtitle: Text(_ciudad),
+                        ),
+                      ),
+                      
+                      Card(
+                        elevation: 2,
+                        child: ListTile(
+                          leading: const Icon(Icons.calendar_today, color: AppTheme.verde),
+                          title: const Text('Lombrikid desde'),
+                          subtitle: Text(_formatearFecha(_fechaRegistro)),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.verde.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline, color: AppTheme.verde),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Completa actividades y juegos para seguir aprendiendo. ¡Sigue ayudando al planeta! 🌱',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }

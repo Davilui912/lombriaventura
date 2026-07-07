@@ -25,6 +25,7 @@ import 'avisos.dart';
 import 'tienda/problemas_matematicos.dart';  
 import 'perfil_screen.dart';
 import 'admin_screen.dart';
+import 'diario/compara_composta.dart'; 
 import 'retos_screen.dart';
 import '../services/recordatorios_service.dart';
 
@@ -786,6 +787,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           'Cuida a tus lombrices',
                           Icons.warning_amber,
                           () => _irAPantalla(const AvisosScreen()),
+                        ),
+                        _buildOpcion(
+                          '📊 ¿Cómo va mi composta?',
+                          'Compara y revisa tu composta',
+                          Icons.compare_arrows,
+                          () => _irAPantalla(const ComparaCompostaScreen()),
                         ),
                         // ✅ Submenú de juegos (mejorado)
                         _buildSubmenuJuegos(),
