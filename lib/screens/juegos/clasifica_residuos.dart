@@ -31,7 +31,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
   ];
 
   List<Map<String, dynamic>> _residuosPendientes = [];
-  bool _arrastrando = false;
+  final bool _arrastrando = false;
 
   @override
   void initState() {

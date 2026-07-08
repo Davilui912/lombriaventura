@@ -3,8 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../config/theme.dart';
-import '../../services/logros_service.dart';
-import '../../services/monedas_service.dart';
 import '../../services/anuncio_service.dart';
 
 class AlimentaLolaScreen extends StatefulWidget {

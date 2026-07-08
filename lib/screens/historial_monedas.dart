@@ -118,7 +118,7 @@ class _HistorialMonedasScreenState extends State<HistorialMonedasScreen> {
                                   style: const TextStyle(fontSize: 12),
                                 ),
                                 trailing: Text(
-                                  '${esGanancia ? '+' : ''}${cantidad}',
+                                  '${esGanancia ? '+' : ''}$cantidad',
                                   style: TextStyle(
                                     color: esGanancia ? AppTheme.verde : Colors.red,
                                     fontWeight: FontWeight.bold,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../data/contenido_lombrices.dart';
-import '../../widgets/logo_lombriaventura.dart';
 
 class ConoceLombricesScreen extends StatelessWidget {
   const ConoceLombricesScreen({super.key});

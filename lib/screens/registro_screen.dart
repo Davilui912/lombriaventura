@@ -311,7 +311,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: DropdownButtonFormField<String>(
-                value: _preguntaSeguridad,
+                initialValue: _preguntaSeguridad,
                 hint: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Text('Selecciona una pregunta'),

@@ -16,7 +16,7 @@ class _TiendaAccesoriosScreenState extends State<TiendaAccesoriosScreen> {
   final AccesoriosService _accesoriosService = AccesoriosService();
   
   int _monedas = 0;
-  String _personajeActual = 'Lola';
+  final String _personajeActual = 'Lola';
   
   final List<AccesorioItem> _accesorios = [
     AccesorioItem(id: 'gorra_azul_pluma', nombre: 'Gorra Azul con Pluma', tipo: 'gorra', imagen: 'gorra_azul_pluma.png', precio: 50),

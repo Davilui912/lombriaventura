@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/monedas_service.dart';
@@ -242,8 +241,9 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                       setState(() {
                         _temperaturaValor = val.round();
                         // Actualiza el texto según el valor del Slider para pasarlo al backend
-                        if (_temperaturaValor <= 3) _temperaturaSeleccionada = '❄️ Frío';
-                        else if (_temperaturaValor <= 6) _temperaturaSeleccionada = '🌤️ Buen clima';
+                        if (_temperaturaValor <= 3) {
+                          _temperaturaSeleccionada = '❄️ Frío';
+                        } else if (_temperaturaValor <= 6) _temperaturaSeleccionada = '🌤️ Buen clima';
                         else _temperaturaSeleccionada = '☀️ Caliente';
                       });
                     },

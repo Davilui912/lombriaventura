@@ -7,14 +7,20 @@ environment:
 
 dependencies:
 
-  #base de datos
+  flutter:
+    sdk: flutter   
+
+  # Firebase (solo auth, sin firestore)
   firebase_core: ^3.12.0
   firebase_auth: ^5.5.0
-  cloud_firestore: ^5.6.0
-  #rerpoductor de video
+  #cloud_firestore: ^5.6.0 <- descomentar si se desea usar Firestore y si ocurre un error de compatibilidad con Firebase Auth
+
+  # Base de datos local
+  sqflite: ^2.3.3
+  path: ^1.9.0
+
+  # Reproductor de video
   video_player: ^2.8.3
-  flutter:
-    sdk: flutter
 
   # UI y Animaciones
   cupertino_icons: ^1.0.8

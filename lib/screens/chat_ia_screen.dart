@@ -6,7 +6,6 @@ import '../config/theme.dart';
 import '../services/groq_service.dart';
 import '../services/conversacion_service.dart';
 import '../services/accesorios_service.dart';
-import '../widgets/personaje_con_accesorios.dart';
 import '../models/conversacion.dart';
 import 'historial_chat_screen.dart';
 
@@ -113,9 +112,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       
       await _convService.guardarConversacion(conversacion);
       
-      if (_conversacionActualId == null) {
-        _conversacionActualId = id;
-      }
+      _conversacionActualId ??= id;
       if (_conversacionTitulo.isEmpty && _mensajes.length > 1) {
         _conversacionTitulo = titulo;
       }

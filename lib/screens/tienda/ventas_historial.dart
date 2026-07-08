@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../config/theme.dart';
 import '../../services/monedas_service.dart';
 
 class VentasHistorialScreen extends StatefulWidget {

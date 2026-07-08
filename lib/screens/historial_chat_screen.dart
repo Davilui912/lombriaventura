@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../services/conversacion_service.dart';
 import '../models/conversacion.dart';
-import 'chat_ia_screen.dart';
 
 class HistorialChatScreen extends StatefulWidget {
   const HistorialChatScreen({super.key});

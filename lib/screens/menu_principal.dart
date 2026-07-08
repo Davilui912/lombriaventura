@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import '../services/logros_service.dart';
 import '../services/actividad_service.dart';
-import '../services/monedas_service.dart';
-import '../services/accesorios_service.dart';
-import '../widgets/personaje_con_accesorios.dart';
 import 'chat_ia_screen.dart';
-import 'diario/mi_composta.dart';
 import 'diario/nueva_entrada.dart';
 import 'juegos/clasifica_residuos.dart';
 import 'juegos/alimenta_lola.dart';
@@ -743,7 +738,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -793,7 +788,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
+                              color: Colors.black.withValues(alpha: 0.4),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(

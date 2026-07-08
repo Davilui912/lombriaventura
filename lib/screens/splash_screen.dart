@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart'; // Si no lo tienes, usa un CircularProgressIndicator
+// Si no lo tienes, usa un CircularProgressIndicator
 import '../config/theme.dart';
 import 'login_screen.dart';
 
