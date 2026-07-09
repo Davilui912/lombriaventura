@@ -5,7 +5,12 @@ import 'config/theme.dart';
 import 'models/conversacion.dart';
 import 'services/recordatorios_service.dart';
 import 'screens/splash_screen.dart';
+<<<<<<< HEAD
 import 'firebase_options.dart'; // ← necesario para Firebase.initializeApp
+=======
+import 'screens/privacidad_screen.dart';
+
+>>>>>>> 4efefef134a1231f095334d68235a434a06ec165
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +24,6 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ConversacionAdapter());
 
-  // Cajas de Hive: úsalas solo para caché rápido y configuración local
-  // Las entidades principales (logros, diario, usuarios, etc.) viven en PostgreSQL
   await Hive.openBox('configuracion');
   await Hive.openBox('chat_historial');
   await Hive.openBox('accesorios');
@@ -37,11 +40,15 @@ void main() async {
   await recordatorioService.init();
 
   runApp(
-      const LombriaventuraApp()); // ← espacio correcto entre const y el widget
+  ChangeNotifierProvider(
+    create: (_) => UsuarioProvider(),
+    child: const LombriaventuraApp(),
+  ),
+ );
 }
 
 class LombriaventuraApp extends StatelessWidget {
-  const LombriaventuraApp({super.key}); // ← constructor primero
+  const LombriaventuraApp({super.key}); 
 
   @override
   Widget build(BuildContext context) {

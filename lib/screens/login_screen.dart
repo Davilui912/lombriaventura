@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import 'menu_principal.dart';
 import 'registro_screen.dart';
 import 'recuperar_password_screen.dart';
+import 'privacidad_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -128,6 +129,23 @@ Future<void> _iniciarSesion() async {
       MaterialPageRoute(builder: (_) => const RegistroScreen()),
     );
   }
+/*  void _irARegistro() async {
+    // ✅ Verificar si ya aceptó la privacidad
+    final box = await Hive.openBox('configuracion');
+    final aceptado = box.get('privacidad_aceptada', defaultValue: false);
+    
+    if (aceptado) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const RegistroScreen()),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PrivacidadScreen()),
+      );
+    }
+  }*/
 
   void _irARecuperarPassword() {
     Navigator.push(

@@ -20,6 +20,7 @@ import 'avisos.dart';
 import 'tienda/problemas_matematicos.dart';  
 import 'perfil_screen.dart';
 import 'admin_screen.dart';
+import 'diario/compara_composta.dart'; 
 import 'retos_screen.dart';
 import '../services/recordatorios_service.dart';
 
@@ -159,13 +160,81 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       ),
     );
   }
+
+  Widget _buildOpcionJuego(String titulo, String subtitulo, IconData icon, VoidCallback onTap, Color color) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    titulo,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: AppTheme.negro,
+                    ),
+                  ),
+                  Text(
+                    subtitulo,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.play_arrow,
+              color: color,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildSubmenuJuegos() {
+    final Color colorJuegos = const Color(0xFF6DB467);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: AppTheme.azulCielo.withValues(alpha: 0.08),
+        //Fondo blanco
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.azulCielo.withValues(alpha: 0.2)),
+        //Borde verde claro más definido
+        border: Border.all(color: colorJuegos.withValues(alpha: 0.4), width: 1.5),
+        //Sombra suave para darle profundidad
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Theme(
         data: Theme.of(context).copyWith(
@@ -178,27 +247,42 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppTheme.azulCielo.withValues(alpha: 0.15),
+              color: colorJuegos.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.games, color: AppTheme.azulCielo, size: 20),
+            child: Icon(Icons.games, color: colorJuegos, size: 20),
           ),
-          title: const Text(
-            '🎮 Juegos',
+          title: Text(
+            'Juegos',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: AppTheme.azulCielo,
+              fontSize: 15,
+              color: Colors.black,
             ),
           ),
-          trailing: const Icon(Icons.keyboard_arrow_down, color: AppTheme.azulCielo),
+          trailing: Icon(Icons.keyboard_arrow_down, color: colorJuegos),
           children: [
-            _buildOpcion('Clasifica residuos', 'Juega y aprende', Icons.recycling, 
-                () => _irAPantalla(const ClasificaResiduosScreen())),
-            _buildOpcion('Alimenta a Lola', 'Cuida a tu lombriz', Icons.restaurant, 
-                () => _irAPantalla(const AlimentaLolaScreen())),
-            _buildOpcion('Memorama ecológico', 'Encuentra las parejas', Icons.memory, 
-                () => _irAPantalla(const MemoramaScreen())),
+            _buildOpcionJuego(
+              'Clasifica residuos',
+              'Aprende a separar los residuos',
+              Icons.recycling,
+              () => _irAPantalla(const ClasificaResiduosScreen()),
+              colorJuegos,
+            ),
+            _buildOpcionJuego(
+              'Alimenta a Lola',
+              'Cuida a tu lombriz',
+              Icons.restaurant,
+              () => _irAPantalla(const AlimentaLolaScreen()),
+              colorJuegos,
+            ),
+            _buildOpcionJuego(
+              'Memorama ecológico',
+              'Encuentra las parejas',
+              Icons.memory,
+              () => _irAPantalla(const MemoramaScreen()),
+              colorJuegos,
+            ),
           ],
         ),
       ),
@@ -392,6 +476,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
         ),
         child: Row(
           children: [
+            // ✅ Icono con estilo uniforme (círculo con fondo suave)
             Container(
               width: 44,
               height: 44,
@@ -680,16 +765,31 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                       iconImage: 'assets/images/icons/icono_composta.png',
                       index: 1,
                       opciones: [
-                        _buildOpcion('Mi diario', 'Registra tu avance', Icons.edit_note, 
-                            () => _irAPantalla(const NuevaEntradaScreen())),
-                        
-                        _buildMenuButton('Pregúntale a la lombriz sabia', Icons.chat, AppTheme.azulCielo, 
-                            () => _irAPantalla(const ChatIAScreen())),
-                        
-                        _buildOpcion('Avisos importantes', 'Cuida a tus lombrices', Icons.warning_amber, 
-                            () => _irAPantalla(const AvisosScreen())),
-                        
-                        // ✅ Submenú de juegos (desplegable)
+                        _buildOpcion(
+                          'Mi diario',
+                          'Registra tu avance',
+                          Icons.edit_note,
+                          () => _irAPantalla(const NuevaEntradaScreen()),
+                        ),
+                        _buildMenuButton(
+                          'Pregúntale a la lombriz sabia',
+                          Icons.chat,
+                          AppTheme.verdeClaro,
+                          () => _irAPantalla(const ChatIAScreen()),
+                        ),
+                        _buildOpcion(
+                          'Avisos importantes',
+                          'Cuida a tus lombrices',
+                          Icons.warning_amber,
+                          () => _irAPantalla(const AvisosScreen()),
+                        ),
+                        _buildOpcion(
+                          '📊 ¿Cómo va mi composta?',
+                          'Compara y revisa tu composta',
+                          Icons.compare_arrows,
+                          () => _irAPantalla(const ComparaCompostaScreen()),
+                        ),
+                        // ✅ Submenú de juegos (mejorado)
                         _buildSubmenuJuegos(),
                       ],
                     ),
@@ -765,7 +865,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                             ),
                             child: const Center(
                               child: Text(
-                                '🌟 ¡Descubre más en Lombriaventura!',
+                                '¡Descubre más en Lombriaventura!',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

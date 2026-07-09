@@ -1,0 +1,392 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/api_models.dart';
+import 'api_config.dart';
+
+/// Resultado tipado para cada operación de API.
+/// En vez de lanzar excepciones, devuelve [ApiResult.ok] o [ApiResult.error]
+/// para que la UI pueda mostrar mensajes claros al usuario.
+class ApiResult<T> {
+  final T? data;
+  final String? error;
+  bool get ok => error == null;
+
+  ApiResult.ok(this.data) : error = null;
+  ApiResult.error(this.error) : data = null;
+}
+
+/// Servicio central — todos los métodos HTTP hacia la API FastAPI.
+/// Usa [ApiConfig.baseUrl] como base y [ApiConfig.timeout] para timeouts.
+class ApiService {
+  final String _base = ApiConfig.baseUrl;
+  final Map<String, String> _headers = ApiConfig.headers;
+  final Duration _timeout = ApiConfig.timeout;
+
+  // ─── Helpers privados ─────────────────────────────────────────────
+
+  Uri _uri(String path) => Uri.parse('$_base$path');
+
+  /// Decodifica la respuesta y lanza [ApiResult.error] con el mensaje
+  /// del servidor si el status es 4xx o 5xx.
+  ApiResult<T> _handle<T>(http.Response res, T Function(dynamic) parse) {
+    try {
+      final body = jsonDecode(utf8.decode(res.bodyBytes));
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        return ApiResult.ok(parse(body));
+      }
+      final msg = body['detail'] ?? 'Error ${res.statusCode}';
+      return ApiResult.error(msg.toString());
+    } catch (e) {
+      return ApiResult.error('Error al procesar la respuesta: $e');
+    }
+  }
+
+  ApiResult<T> _catch<T>(Object e) =>
+      ApiResult.error('Sin conexión o tiempo de espera agotado: $e');
+
+  // ─── USUARIOS ─────────────────────────────────────────────────────
+
+  /// Crea un usuario en PostgreSQL usando el uid de Firebase Auth.
+  /// Llámalo justo después de que el usuario inicie sesión por primera vez.
+  Future<ApiResult<Usuario>> crearUsuario({
+    required String uid,
+    required String nombre,
+    required String nombreUsuario,
+    required String email,
+    int? edad,
+    String? ciudad,
+    String? genero,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/usuarios'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              'nombre': nombre,
+              'nombre_usuario': nombreUsuario,
+              'email': email,
+              if (edad != null) 'edad': edad,
+              if (ciudad != null) 'ciudad': ciudad,
+              if (genero != null) 'genero': genero,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => Usuario.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<Usuario>> obtenerUsuario(String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(res, (b) => Usuario.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<bool>> eliminarUsuario(String uid) async {
+    try {
+      final res = await http
+          .delete(_uri('/usuarios/$uid'), headers: _headers)
+          .timeout(_timeout);
+      if (res.statusCode == 204) return ApiResult.ok(true);
+      return ApiResult.error('Error al eliminar usuario');
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  // ─── DIARIO ───────────────────────────────────────────────────────
+
+  Future<ApiResult<EntradaDiario>> crearEntradaDiario({
+    required String uid,
+    String? nota,
+    String? estado,
+    String? temperatura,
+    String? tipoResiduo,
+    int? compostaPunos,
+    int? lixiviadoCucharadas,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/diario'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              if (nota != null) 'nota': nota,
+              if (estado != null) 'estado': estado,
+              if (temperatura != null) 'temperatura': temperatura,
+              if (tipoResiduo != null) 'tipo_residuo': tipoResiduo,
+              if (compostaPunos != null) 'composta_punos': compostaPunos,
+              if (lixiviadoCucharadas != null)
+                'lixiviado_cucharadas': lixiviadoCucharadas,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => EntradaDiario.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<List<EntradaDiario>>> obtenerDiario(String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid/diario'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(res,
+          (b) => (b as List).map((e) => EntradaDiario.fromJson(e)).toList());
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  // ─── VENTAS ───────────────────────────────────────────────────────
+
+  Future<ApiResult<Venta>> crearVenta({
+    required String uid,
+    required String producto,
+    required int cantidad,
+    required double precioUnitario,
+    required int totalGanado,
+    String? descripcion,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/ventas'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              'producto': producto,
+              'cantidad': cantidad,
+              'precio_unitario': precioUnitario,
+              'total_ganado': totalGanado,
+              if (descripcion != null) 'descripcion': descripcion,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => Venta.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<List<Venta>>> obtenerVentas(String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid/ventas'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(
+          res, (b) => (b as List).map((e) => Venta.fromJson(e)).toList());
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  // ─── RETOS ────────────────────────────────────────────────────────
+
+  Future<ApiResult<Reto>> crearReto({
+    required String uid,
+    required String retoId,
+    int? medicion,
+    String? fotoUrl,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/retos'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              'reto_id': retoId,
+              'completado': false,
+              if (medicion != null) 'medicion': medicion,
+              if (fotoUrl != null) 'foto_url': fotoUrl,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => Reto.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<List<Reto>>> obtenerRetos(String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid/retos'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(
+          res, (b) => (b as List).map((e) => Reto.fromJson(e)).toList());
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  /// Marca el reto como completado — FastAPI registra la fecha automáticamente.
+  Future<ApiResult<Reto>> completarReto(int retoId) async {
+    try {
+      final res = await http
+          .patch(_uri('/retos/$retoId/completar'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(res, (b) => Reto.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  // ─── LOGROS ───────────────────────────────────────────────────────
+
+  Future<ApiResult<Logro>> crearLogro({
+    required String uid,
+    required String tipo,
+    required String nombre,
+    String? descripcion,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/logros'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              'tipo': tipo,
+              'nombre': nombre,
+              if (descripcion != null) 'descripcion': descripcion,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => Logro.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<List<Logro>>> obtenerLogros(String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid/logros'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(
+          res, (b) => (b as List).map((e) => Logro.fromJson(e)).toList());
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  // ─── RECORDATORIOS ────────────────────────────────────────────────
+
+  Future<ApiResult<Recordatorio>> crearRecordatorio({
+    required String uid,
+    required String titulo,
+    String? mensaje,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/recordatorios'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              'titulo': titulo,
+              if (mensaje != null) 'mensaje': mensaje,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => Recordatorio.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<List<Recordatorio>>> obtenerRecordatorios(String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid/recordatorios'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(res,
+          (b) => (b as List).map((e) => Recordatorio.fromJson(e)).toList());
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<Recordatorio>> marcarRecordatorioVisto(int id) async {
+    try {
+      final res = await http
+          .patch(_uri('/recordatorios/$id/marcar-visto'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(res, (b) => Recordatorio.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<bool>> eliminarRecordatorio(int id) async {
+    try {
+      final res = await http
+          .delete(_uri('/recordatorios/$id'), headers: _headers)
+          .timeout(_timeout);
+      if (res.statusCode == 204) return ApiResult.ok(true);
+      return ApiResult.error('Error al eliminar recordatorio');
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  // ─── CAPACITACIONES ───────────────────────────────────────────────
+
+  Future<ApiResult<Capacitacion>> crearCapacitacion({
+    required String uid,
+    required String nombreCapacitado,
+    int? edadCapacitado,
+    String? municipio,
+    String? estado,
+    String? pais,
+    String? invitadoPor,
+    int monedasGanadas = 50,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            _uri('/capacitaciones'),
+            headers: _headers,
+            body: jsonEncode({
+              'uid': uid,
+              'nombre_capacitado': nombreCapacitado,
+              if (edadCapacitado != null) 'edad_capacitado': edadCapacitado,
+              if (municipio != null) 'municipio': municipio,
+              if (estado != null) 'estado': estado,
+              if (pais != null) 'pais': pais,
+              if (invitadoPor != null) 'invitado_por': invitadoPor,
+              'monedas_ganadas': monedasGanadas,
+            }),
+          )
+          .timeout(_timeout);
+      return _handle(res, (b) => Capacitacion.fromJson(b));
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
+  Future<ApiResult<List<Capacitacion>>> obtenerCapacitaciones(
+      String uid) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios/$uid/capacitaciones'), headers: _headers)
+          .timeout(_timeout);
+      return _handle(res,
+          (b) => (b as List).map((e) => Capacitacion.fromJson(e)).toList());
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+}
