@@ -4,7 +4,6 @@ import '../config/theme.dart';
 import 'menu_principal.dart';
 import 'registro_screen.dart';
 import 'recuperar_password_screen.dart';
-import 'privacidad_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

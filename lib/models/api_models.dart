@@ -38,6 +38,7 @@ class Usuario {
       );
 
   Map<String, dynamic> toJson() => {
+        'uid': uid,
         'nombre': nombre,
         'nombre_usuario': nombreUsuario,
         'email': email,
@@ -56,6 +57,9 @@ class EntradaDiario {
   final String? estado;
   final String? temperatura;
   final String? tipoResiduo;
+  final int? compostaPunos;
+  final int? lixiviadoCucharadas;
+  final List<String> fotos;
 
   EntradaDiario({
     required this.id,
@@ -65,6 +69,9 @@ class EntradaDiario {
     this.estado,
     this.temperatura,
     this.tipoResiduo,
+    this.compostaPunos,
+    this.lixiviadoCucharadas,
+    this.fotos,
   });
 
   factory EntradaDiario.fromJson(Map<String, dynamic> j) => EntradaDiario(
@@ -75,14 +82,22 @@ class EntradaDiario {
         estado: j['estado'],
         temperatura: j['temperatura'],
         tipoResiduo: j['tipo_residuo'],
+        compostaPunos: j['composta_punos'],
+        lixiviadoCucharadas: j['lixiviado_cucharadas'],
+        fotos: List<String>.from(j['fotos'] ?? []),
       );
 
   Map<String, dynamic> toJson() => {
         'uid': uid,
+        'id': id,
         if (nota != null) 'nota': nota,
         if (estado != null) 'estado': estado,
         if (temperatura != null) 'temperatura': temperatura,
         if (tipoResiduo != null) 'tipo_residuo': tipoResiduo,
+        if (compostaPunos != null) 'composta_punos': compostaPunos,
+        if (lixiviadoCucharadas != null)
+          'lixiviado_cucharadas': lixiviadoCucharadas,
+        'fotos': fotos,
       };
 }
 
@@ -95,6 +110,7 @@ class Venta {
   final double precioUnitario;
   final int totalGanado;
   final DateTime fecha;
+  final String? descripcion;
 
   Venta({
     required this.id,
@@ -104,6 +120,7 @@ class Venta {
     required this.precioUnitario,
     required this.totalGanado,
     required this.fecha,
+    this.descripcion,
   });
 
   factory Venta.fromJson(Map<String, dynamic> j) => Venta(
@@ -114,6 +131,7 @@ class Venta {
         precioUnitario: (j['precio_unitario'] as num).toDouble(),
         totalGanado: j['total_ganado'],
         fecha: DateTime.parse(j['fecha']),
+        descripcion: j['descripcion'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -122,6 +140,7 @@ class Venta {
         'cantidad': cantidad,
         'precio_unitario': precioUnitario,
         'total_ganado': totalGanado,
+        if (descripcion != null) 'descripcion': descripcion,
       };
 }
 
@@ -163,6 +182,7 @@ class Reto {
         'completado': completado,
         if (medicion != null) 'medicion': medicion,
         if (fotoUrl != null) 'foto_url': fotoUrl,
+        if (descripcion != null) 'descripcion': descripcion,
       };
 }
 
@@ -282,6 +302,5 @@ class Capacitacion {
         if (estado != null) 'estado': estado,
         if (pais != null) 'pais': pais,
         if (invitadoPor != null) 'invitado_por': invitadoPor,
-        'monedas_ganadas': monedasGanadas,
       };
 }

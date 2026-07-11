@@ -12,7 +12,7 @@ class PrivacidadScreen extends StatefulWidget {
 
 class _PrivacidadScreenState extends State<PrivacidadScreen> {
   bool _aceptado = false;
-  bool _mostrarTextoCompleto = false;
+  final bool _mostrarTextoCompleto = false;
 
   @override
   void initState() {

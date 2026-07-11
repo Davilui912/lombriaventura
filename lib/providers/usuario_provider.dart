@@ -22,7 +22,7 @@ class UsuarioProvider extends ChangeNotifier {
   bool _cargando = false;
   String? _error;
 
-  // ─── Getters ──────────────────────────────────────────────────────
+  // ─── Getters 
   Usuario? get usuario => _usuario;
   List<EntradaDiario> get diario => _diario;
   List<Reto> get retos => _retos;
@@ -36,8 +36,7 @@ class UsuarioProvider extends ChangeNotifier {
   // Recordatorios no vistos — útil para mostrar badge de notificación
   int get recordatoriosSinVer => _recordatorios.where((r) => !r.visto).length;
 
-  // ─── Carga de datos ───────────────────────────────────────────────
-
+  // ─── Carga de datos 
   /// Carga el perfil del usuario y todos sus datos desde la API.
   /// Llámalo una vez después del login.
   Future<void> cargarPerfil(String uid) async {
@@ -57,21 +56,24 @@ class UsuarioProvider extends ChangeNotifier {
     ]);
 
     if (resultados[0].ok) _usuario = resultados[0].data as Usuario?;
-    if (resultados[1].ok)
+    if (resultados[1].ok) {
       _diario = resultados[1].data as List<EntradaDiario>? ?? [];
+    }
     if (resultados[2].ok) _retos = resultados[2].data as List<Reto>? ?? [];
     if (resultados[3].ok) _logros = resultados[3].data as List<Logro>? ?? [];
-    if (resultados[4].ok)
+    if (resultados[4].ok) {
       _recordatorios = resultados[4].data as List<Recordatorio>? ?? [];
-    if (resultados[5].ok)
+    }
+    if (resultados[5].ok) {
       _capacitaciones = resultados[5].data as List<Capacitacion>? ?? [];
+    }
     if (resultados[6].ok) _ventas = resultados[6].data as List<Venta>? ?? [];
 
     _cargando = false;
     notifyListeners();
   }
 
-  // ─── Acciones ─────────────────────────────────────────────────────
+  // ─── Acciones 
 
   Future<String?> agregarEntradaDiario({
     required String uid,

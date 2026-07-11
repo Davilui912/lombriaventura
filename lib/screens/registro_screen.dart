@@ -25,10 +25,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
   String? _preguntaSeguridad;
   
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmar = true;
+  final bool _obscurePassword = true;
+  final bool _obscureConfirmar = true;
   String? _errorMessage;
-  bool _privacidadAceptada = false;
+  final bool _privacidadAceptada = false;
 
   final List<String> _preguntasSeguridad = [
     '¿Cómo se llamaba tu primera mascota?',

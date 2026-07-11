@@ -22,30 +22,42 @@ class ApiService {
   final Map<String, String> _headers = ApiConfig.headers;
   final Duration _timeout = ApiConfig.timeout;
 
-  // ─── Helpers privados ─────────────────────────────────────────────
-
+  // ─── Helpers privados
   Uri _uri(String path) => Uri.parse('$_base$path');
 
-  /// Decodifica la respuesta y lanza [ApiResult.error] con el mensaje
-  /// del servidor si el status es 4xx o 5xx.
-  ApiResult<T> _handle<T>(http.Response res, T Function(dynamic) parse) {
+  ApiResult<T> _handle<T>(
+    http.Response res,
+    T Function(dynamic) parse,
+  ) {
     try {
-      final body = jsonDecode(utf8.decode(res.bodyBytes));
+      dynamic body;
+
+      if (res.bodyBytes.isNotEmpty) {
+        body = jsonDecode(
+          utf8.decode(res.bodyBytes),
+        );
+      }
+
       if (res.statusCode >= 200 && res.statusCode < 300) {
         return ApiResult.ok(parse(body));
       }
-      final msg = body['detail'] ?? 'Error ${res.statusCode}';
+
+      final msg = body is Map
+          ? body['detail'] ?? 'Error ${res.statusCode}'
+          : 'Error ${res.statusCode}';
+
       return ApiResult.error(msg.toString());
     } catch (e) {
-      return ApiResult.error('Error al procesar la respuesta: $e');
+      return ApiResult.error(
+        'Error al procesar la respuesta: $e',
+      );
     }
   }
 
   ApiResult<T> _catch<T>(Object e) =>
       ApiResult.error('Sin conexión o tiempo de espera agotado: $e');
 
-  // ─── USUARIOS ─────────────────────────────────────────────────────
-
+  // ─── USUARIOS
   /// Crea un usuario en PostgreSQL usando el uid de Firebase Auth.
   /// Llámalo justo después de que el usuario inicie sesión por primera vez.
   Future<ApiResult<Usuario>> crearUsuario({
@@ -102,8 +114,7 @@ class ApiService {
     }
   }
 
-  // ─── DIARIO ───────────────────────────────────────────────────────
-
+  // ─── DIARIO
   Future<ApiResult<EntradaDiario>> crearEntradaDiario({
     required String uid,
     String? nota,
@@ -148,8 +159,7 @@ class ApiService {
     }
   }
 
-  // ─── VENTAS ───────────────────────────────────────────────────────
-
+  // ─── VENTAS
   Future<ApiResult<Venta>> crearVenta({
     required String uid,
     required String producto,
@@ -191,7 +201,7 @@ class ApiService {
     }
   }
 
-  // ─── RETOS ────────────────────────────────────────────────────────
+  // ─── RETOS
 
   Future<ApiResult<Reto>> crearReto({
     required String uid,
@@ -243,8 +253,7 @@ class ApiService {
     }
   }
 
-  // ─── LOGROS ───────────────────────────────────────────────────────
-
+  // ─── LOGROS
   Future<ApiResult<Logro>> crearLogro({
     required String uid,
     required String tipo,
@@ -282,8 +291,7 @@ class ApiService {
     }
   }
 
-  // ─── RECORDATORIOS ────────────────────────────────────────────────
-
+  // ─── RECORDATORIOS
   Future<ApiResult<Recordatorio>> crearRecordatorio({
     required String uid,
     required String titulo,
@@ -342,8 +350,7 @@ class ApiService {
     }
   }
 
-  // ─── CAPACITACIONES ───────────────────────────────────────────────
-
+  // ─── CAPACITACIONES
   Future<ApiResult<Capacitacion>> crearCapacitacion({
     required String uid,
     required String nombreCapacitado,
