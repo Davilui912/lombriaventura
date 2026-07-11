@@ -1,4 +1,6 @@
+// ============================================================
 // USUARIO
+// ============================================================
 class Usuario {
   final String uid;
   final String nombre;
@@ -48,7 +50,9 @@ class Usuario {
       };
 }
 
+// ============================================================
 // DIARIO
+// ============================================================
 class EntradaDiario {
   final int id;
   final String uid;
@@ -59,7 +63,7 @@ class EntradaDiario {
   final String? tipoResiduo;
   final int? compostaPunos;
   final int? lixiviadoCucharadas;
-  final List<String> fotos;
+  final List<String> fotos; // ✅ CORREGIDO: ahora tiene valor por defecto
 
   EntradaDiario({
     required this.id,
@@ -71,7 +75,7 @@ class EntradaDiario {
     this.tipoResiduo,
     this.compostaPunos,
     this.lixiviadoCucharadas,
-    this.fotos,
+    this.fotos = const [], // ✅ SOLUCIÓN: valor por defecto no-nulo
   });
 
   factory EntradaDiario.fromJson(Map<String, dynamic> j) => EntradaDiario(
@@ -101,7 +105,9 @@ class EntradaDiario {
       };
 }
 
+// ============================================================
 // VENTA
+// ============================================================
 class Venta {
   final int id;
   final String uid;
@@ -144,7 +150,9 @@ class Venta {
       };
 }
 
+// ============================================================
 // RETO
+// ============================================================
 class Reto {
   final int id;
   final String uid;
@@ -154,6 +162,7 @@ class Reto {
   final int? medicion;
   final String? fotoUrl;
 
+  // ✅ CORREGIDO: descripcion ya no está en el constructor
   Reto({
     required this.id,
     required this.uid,
@@ -182,11 +191,13 @@ class Reto {
         'completado': completado,
         if (medicion != null) 'medicion': medicion,
         if (fotoUrl != null) 'foto_url': fotoUrl,
-        if (descripcion != null) 'descripcion': descripcion,
+        // ✅ SOLUCIÓN: descripcion eliminado de toJson (no existe)
       };
 }
 
+// ============================================================
 // LOGRO
+// ============================================================
 class Logro {
   final int id;
   final String uid;
@@ -221,7 +232,9 @@ class Logro {
       };
 }
 
+// ============================================================
 // RECORDATORIO
+// ============================================================
 class Recordatorio {
   final int id;
   final String uid;
@@ -255,7 +268,9 @@ class Recordatorio {
       };
 }
 
+// ============================================================
 // CAPACITACION
+// ============================================================
 class Capacitacion {
   final int id;
   final String uid;

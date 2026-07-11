@@ -3,7 +3,9 @@ import 'package:flutter/gestures.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import 'login_screen.dart';
+import 'menu_principal.dart'; // Importante para poder navegar directo al menú
 import '../utils/textos_constantes.dart';
+import '../services/api_service.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -21,14 +23,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final TextEditingController _ciudadController = TextEditingController();
   final TextEditingController _respuestaSeguridadController = TextEditingController();
   
-  String? _genero;
   String? _preguntaSeguridad;
   
   bool _isLoading = false;
-  final bool _obscurePassword = true;
-  final bool _obscureConfirmar = true;
+  bool _obscurePassword = true;
+  bool _obscureConfirmar = true;
   String? _errorMessage;
-  final bool _privacidadAceptada = false;
+  bool _privacidadAceptada = false;
 
   final List<String> _preguntasSeguridad = [
     '¿Cómo se llamaba tu primera mascota?',
@@ -37,42 +38,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
     '¿Cuál es tu comida favorita?',
     '¿Cómo se llama tu escuela?',
   ];
-
-  Widget _buildGeneroCard(String nombre, IconData icon, bool seleccionado) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _genero = nombre),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: seleccionado ? AppTheme.verde : Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: seleccionado ? AppTheme.verde : Colors.grey[300]!,
-              width: 1,
-            ),
-          ),
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: seleccionado ? Colors.white : AppTheme.verde, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  nombre,
-                  style: TextStyle(
-                    color: seleccionado ? Colors.white : Colors.black87,
-                    fontSize: 16,
-                    fontWeight: seleccionado ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _mostrarAvisoPrivacidad(BuildContext context) {
     showDialog(
@@ -128,10 +93,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
       setState(() => _errorMessage = 'Ingresa tu ciudad');
       return;
     }
-    if (_genero == null) {
-      setState(() => _errorMessage = 'Elige Lola o Lalo');
-      return;
-    }
     if (_preguntaSeguridad == null) {
       setState(() => _errorMessage = 'Elige una pregunta de seguridad');
       return;
@@ -147,65 +108,51 @@ class _RegistroScreenState extends State<RegistroScreen> {
     });
 
     try {
-      final box = await Hive.openBox('usuarios');
-      final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
-      
-      final List<Map<String, dynamic>> usuarios = [];
-      for (var item in usuariosRaw) {
-        if (item is Map) {
-          final map = <String, dynamic>{};
-          item.forEach((key, value) {
-            map[key.toString()] = value;
-          });
-          usuarios.add(map);
+      final uid = DateTime.now().millisecondsSinceEpoch.toString();
+
+      final result = await ApiService().crearUsuario(
+        uid: uid,
+        nombre: _nombreController.text.trim(),
+        nombreUsuario: _usuarioController.text.trim(),
+        email: '${_usuarioController.text.trim()}@lombriaventura.com',
+        edad: int.tryParse(_edadController.text.trim()),
+        ciudad: _ciudadController.text.trim(),
+        genero: null,
+      );
+
+      if (result.ok) {
+        final configBox = await Hive.openBox('configuracion');
+        
+        // Guardamos todos los datos necesarios para el LoginScreen
+        await configBox.put('usuario_uid', uid);
+        await configBox.put('usuario_nombre_usuario', _usuarioController.text.trim());
+        await configBox.put('usuario_nombre', _nombreController.text.trim());
+        await configBox.put('usuario_password', _passwordController.text.trim());
+        
+        // Esta línea marca la sesión como activa para entrar de inmediato
+        await configBox.put('usuario_actual', _usuarioController.text.trim());
+        
+        print('✅ Registro exitoso y sesión iniciada');
+
+        setState(() => _isLoading = false);
+
+        if (mounted) {
+          // Te lleva directo al Menú Principal
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MenuPrincipal()),
+            (route) => false,
+          );
         }
-      }
-      
-      final existe = usuarios.any((u) => u['usuario'] == _usuarioController.text.trim());
-      if (existe) {
+      } else {
         setState(() {
-          _errorMessage = '❌ Este nombre de usuario ya está registrado';
+          _errorMessage = result.error ?? 'Error al registrar usuario';
           _isLoading = false;
         });
-        return;
-      }
-
-      final nuevoUsuario = {
-        'usuario': _usuarioController.text.trim(),
-        'nombre': _nombreController.text.trim(),
-        'password': _passwordController.text.trim(),
-        'edad': int.tryParse(_edadController.text.trim()) ?? 0,
-        'ciudad': _ciudadController.text.trim(),
-        'genero': _genero,
-        'preguntaSeguridad': _preguntaSeguridad,
-        'respuestaSeguridad': _respuestaSeguridadController.text.trim().toLowerCase(),
-        'fechaRegistro': DateTime.now().toIso8601String(),
-      };
-      
-      usuarios.add(nuevoUsuario);
-      await box.put('lista', usuarios);
-      
-      final configBox = await Hive.openBox('configuracion');
-      await configBox.put('usuario_actual', _usuarioController.text.trim());
-      await configBox.put('usuario_nombre', _nombreController.text.trim());
-      await configBox.put('usuario_edad', _edadController.text.trim());
-      await configBox.put('usuario_ciudad', _ciudadController.text.trim());
-      await configBox.put('usuario_genero', _genero);
-      await configBox.put('usuario_fecha_registro', DateTime.now().toIso8601String());
-      await configBox.put('privacidad_aceptada', true);
-
-      setState(() => _isLoading = false);
-      
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al registrar: $e';
+        _errorMessage = 'Error al conectar con el servidor: $e';
         _isLoading = false;
       });
     }
@@ -240,31 +187,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
               ],
             ),
-<<<<<<< HEAD
-            const SizedBox(height: 16),
-            
-            // Pregunta de seguridad
-            const Text('🔐 Pregunta de seguridad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: DropdownButtonFormField<String>(
-                initialValue: _preguntaSeguridad,
-                hint: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('Selecciona una pregunta'),
-=======
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   '📝 Registro',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
->>>>>>> 4efefef134a1231f095334d68235a434a06ec165
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -282,8 +210,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     ),
                     child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
                   ),
-                if (_errorMessage != null) const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 
+                // Nombre de usuario
                 TextField(
                   controller: _usuarioController,
                   decoration: InputDecoration(
@@ -297,6 +226,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
+                // Nombre completo
                 TextField(
                   controller: _nombreController,
                   decoration: InputDecoration(
@@ -309,6 +239,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
+                // Contraseña
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
@@ -326,6 +257,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
+                // Confirmar contraseña
                 TextField(
                   controller: _confirmarController,
                   obscureText: _obscureConfirmar,
@@ -343,6 +275,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
+                // Edad
                 TextField(
                   controller: _edadController,
                   keyboardType: TextInputType.number,
@@ -356,6 +289,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
+                // Ciudad
                 TextField(
                   controller: _ciudadController,
                   decoration: InputDecoration(
@@ -368,17 +302,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                const Text('🪱 Elige tu acompañante', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _buildGeneroCard('Lola', Icons.female, _genero == 'Lola'),
-                    const SizedBox(width: 16),
-                    _buildGeneroCard('Lalo', Icons.male, _genero == 'Lalo'),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
+                // Pregunta de seguridad
                 const Text('🔐 Pregunta de seguridad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Container(
@@ -413,6 +337,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
+                // Respuesta de seguridad
                 TextField(
                   controller: _respuestaSeguridadController,
                   decoration: InputDecoration(
@@ -426,6 +351,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 24),
                 
+                // Aviso de privacidad
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -469,6 +395,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 
                 const SizedBox(height: 24),
                 
+                // Botón registrar
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

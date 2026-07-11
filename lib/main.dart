@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'models/conversacion.dart';
 import 'services/recordatorios_service.dart';
 import 'screens/splash_screen.dart';
-<<<<<<< HEAD
-import 'firebase_options.dart'; // ← necesario para Firebase.initializeApp
-=======
-import 'screens/privacidad_screen.dart';
-
->>>>>>> 4efefef134a1231f095334d68235a434a06ec165
+import 'providers/usuario_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase con opciones explícitas
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // ✅ Firebase sin opciones (ya está configurado por google-services.json)
+  await Firebase.initializeApp();
 
-  // Hive — solo para datos locales simples
   await Hive.initFlutter();
   Hive.registerAdapter(ConversacionAdapter());
 
@@ -40,15 +33,15 @@ void main() async {
   await recordatorioService.init();
 
   runApp(
-  ChangeNotifierProvider(
-    create: (_) => UsuarioProvider(),
-    child: const LombriaventuraApp(),
-  ),
- );
+    ChangeNotifierProvider(
+      create: (_) => UsuarioProvider(),
+      child: const LombriaventuraApp(),
+    ),
+  );
 }
 
 class LombriaventuraApp extends StatelessWidget {
-  const LombriaventuraApp({super.key}); 
+  const LombriaventuraApp({super.key});
 
   @override
   Widget build(BuildContext context) {

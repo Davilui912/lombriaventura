@@ -24,7 +24,7 @@ class _HistorialMonedasScreenState extends State<HistorialMonedasScreen> {
   Future<void> _cargarDatos() async {
     await _service.init();
     setState(() {
-      _historial = _service.obtenerHistorial();
+      _historial = _service.obtenerHistorialVentas();
       _saldo = _service.obtenerSaldo();
       _isLoading = false;
     });

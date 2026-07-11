@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import 'menu_principal.dart';
 import 'registro_screen.dart';
 import 'recuperar_password_screen.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,85 +35,85 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-Future<void> _iniciarSesion() async {
-  if (_usernameController.text.trim().isEmpty) {
-    setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
-    return;
-  }
-  if (_passwordController.text.trim().isEmpty) {
-    setState(() => _errorMessage = 'Ingresa tu contraseña');
-    return;
-  }
+  Future<void> _iniciarSesion() async {
+    final usernameIngresado = _usernameController.text.trim();
+    final passwordIngresada = _passwordController.text.trim();
 
-  setState(() {
-    _isLoading = true;
-    _errorMessage = null;
-  });
+    if (usernameIngresado.isEmpty) {
+      setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
+      return;
+    }
+    if (passwordIngresada.isEmpty) {
+      setState(() => _errorMessage = 'Ingresa tu contraseña');
+      return;
+    }
 
-  try {
-    final box = await Hive.openBox('usuarios');
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text.trim();
-    
-    final usuariosRaw = box.get('lista', defaultValue: <Map<String, dynamic>>[]);
-    
-    // ✅ Convertir correctamente los datos
-    final List<Map<String, dynamic>> usuarios = [];
-    for (var item in usuariosRaw) {
-      if (item is Map) {
-        final map = <String, dynamic>{};
-        item.forEach((key, value) {
-          map[key.toString()] = value;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final box = await Hive.openBox('configuracion');
+      
+      final uid = box.get('usuario_uid');
+      final passwordGuardada = box.get('usuario_password');
+      final usuarioGuardado = box.get('usuario_nombre_usuario'); 
+      
+      print('🔍 UID en Hive: $uid');
+      print('👤 Usuario en Hive: $usuarioGuardado');
+
+      if (uid == null || usuarioGuardado == null) {
+        setState(() {
+          _errorMessage = 'No se encontró tu usuario. Regístrate en este dispositivo primero.';
+          _isLoading = false;
         });
-        usuarios.add(map);
+        return;
       }
-    }
-    
-    // ✅ Buscar por 'usuario' (no por 'nombre')
-    Map<String, dynamic>? usuarioEncontrado;
-    for (var u in usuarios) {
-      if (u['usuario'] == username && u['password'] == password) {
-        usuarioEncontrado = u;
-        break;
-      }
-    }
 
-    if (usuarioEncontrado != null) {
-      final configBox = await Hive.openBox('configuracion');
-      
-      // ✅ Guardar datos de sesión
-      await configBox.put('usuario_actual', username);
-      await configBox.put('usuario_nombre', usuarioEncontrado['nombre'] ?? username);
-      await configBox.put('usuario_edad', usuarioEncontrado['edad']?.toString() ?? '?');
-      await configBox.put('usuario_ciudad', usuarioEncontrado['ciudad'] ?? '?');
-      await configBox.put('usuario_genero', usuarioEncontrado['genero'] ?? 'Lola');
-      await configBox.put('usuario_fecha_registro', usuarioEncontrado['fechaRegistro'] ?? DateTime.now().toIso8601String());
-      
-      debugPrint('✅ Usuario conectado: $username');
-      
-      _irAlMenu();
-    } else {
-      // ✅ Verificar si el usuario existe pero la contraseña es incorrecta
-      final usernameExiste = usuarios.any((u) => u['usuario'] == username);
-      if (usernameExiste) {
+      if (usernameIngresado != usuarioGuardado) {
+        setState(() {
+          _errorMessage = 'Usuario incorrecto o no registrado en este dispositivo.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      if (passwordIngresada != passwordGuardada) {
+        print('❌ Contraseña incorrecta');
         setState(() {
           _errorMessage = '❌ Contraseña incorrecta';
           _isLoading = false;
         });
+        return;
+      }
+
+      final result = await ApiService().obtenerUsuario(uid);
+      print('📥 Respuesta API: ok=${result.ok}, error=${result.error}');
+
+      if (result.ok && result.data != null) {
+        final usuario = result.data!;
+        print('✅ Usuario validado con la API: ${usuario.nombreUsuario}');
+        
+        await box.put('usuario_actual', usuario.nombreUsuario);
+        await box.put('usuario_nombre', usuario.nombre);
+        
+        _irAlMenu();
       } else {
+        print('❌ Usuario no encontrado en API');
         setState(() {
-          _errorMessage = '❌ Usuario no registrado';
+          _errorMessage = result.error ?? 'Usuario ya no existe en el servidor.';
           _isLoading = false;
         });
       }
+    } catch (e) {
+      print('❌ Error: $e');
+      setState(() {
+        _errorMessage = 'Error al conectar con el servidor: $e';
+        _isLoading = false;
+      });
     }
-  } catch (e) {
-    setState(() {
-      _errorMessage = 'Error al iniciar sesión: $e';
-      _isLoading = false;
-    });
   }
-}
 
   void _irAlMenu() {
     Navigator.pushAndRemoveUntil(
@@ -128,23 +129,6 @@ Future<void> _iniciarSesion() async {
       MaterialPageRoute(builder: (_) => const RegistroScreen()),
     );
   }
-/*  void _irARegistro() async {
-    // ✅ Verificar si ya aceptó la privacidad
-    final box = await Hive.openBox('configuracion');
-    final aceptado = box.get('privacidad_aceptada', defaultValue: false);
-    
-    if (aceptado) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const RegistroScreen()),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const PrivacidadScreen()),
-      );
-    }
-  }*/
 
   void _irARecuperarPassword() {
     Navigator.push(
@@ -157,7 +141,7 @@ Future<void> _iniciarSesion() async {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -178,7 +162,7 @@ Future<void> _iniciarSesion() async {
                     return Container(
                       width: 120,
                       height: 120,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
