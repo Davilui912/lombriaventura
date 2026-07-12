@@ -91,16 +91,32 @@ class ApiService {
     }
   }
 
-  Future<ApiResult<Usuario>> obtenerUsuario(String uid) async {
-    try {
-      final res = await http
-          .get(_uri('/usuarios/$uid'), headers: _headers)
-          .timeout(_timeout);
-      return _handle(res, (b) => Usuario.fromJson(b));
-    } catch (e) {
-      return _catch(e);
+/// Obtener usuario por nombre de usuario (alternativa - obtiene todos y filtra)
+  Future<ApiResult<Usuario>> obtenerUsuario(String nombreUsuario) async {
+  try {
+    final res = await http
+        .get(_uri('/usuarios'), headers: _headers)
+        .timeout(_timeout);
+    
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      final data = jsonDecode(res.body) as List;
+      print('📋 Usuarios encontrados: ${data.length}');
+      
+      for (var item in data) {
+        if (item['nombre_usuario'] == nombreUsuario) {
+          print('✅ Usuario encontrado: ${item['nombre_usuario']}');
+          return ApiResult.ok(Usuario.fromJson(item));
+        }
+      }
+      return ApiResult.error('Usuario no encontrado');
+    } else {
+      return ApiResult.error('Error al obtener usuarios');
     }
+  } catch (e) {
+    print('❌ Error en obtenerUsuarioPorNombre: $e');
+    return _catch(e);
   }
+}
 
   Future<ApiResult<bool>> eliminarUsuario(String uid) async {
     try {

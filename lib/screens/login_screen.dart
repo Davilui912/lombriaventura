@@ -5,6 +5,7 @@ import 'menu_principal.dart';
 import 'registro_screen.dart';
 import 'recuperar_password_screen.dart';
 import '../services/api_service.dart';
+import '../services/sync_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,22 +29,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _verificarSesion() async {
     final box = await Hive.openBox('configuracion');
+    final loginExitoso = box.get('login_exitoso', defaultValue: false);
     final usuarioActual = box.get('usuario_actual');
     
-    if (usuarioActual != null) {
+    if (loginExitoso && usuarioActual != null) {
       _irAlMenu();
     }
   }
 
   Future<void> _iniciarSesion() async {
-    final usernameIngresado = _usernameController.text.trim();
-    final passwordIngresada = _passwordController.text.trim();
-
-    if (usernameIngresado.isEmpty) {
+    if (_usernameController.text.trim().isEmpty) {
       setState(() => _errorMessage = 'Ingresa tu nombre de usuario');
       return;
     }
-    if (passwordIngresada.isEmpty) {
+    if (_passwordController.text.trim().isEmpty) {
       setState(() => _errorMessage = 'Ingresa tu contraseña');
       return;
     }
@@ -55,61 +54,61 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final box = await Hive.openBox('configuracion');
-      
-      final uid = box.get('usuario_uid');
+      final nombreUsuario = _usernameController.text.trim();
+      final passwordIngresada = _passwordController.text.trim();
+
+      // ✅ 1. Buscar en Hive PRIMERO
+      final usuarioGuardado = box.get('usuario_actual');
       final passwordGuardada = box.get('usuario_password');
-      final usuarioGuardado = box.get('usuario_nombre_usuario'); 
-      
-      print('🔍 UID en Hive: $uid');
-      print('👤 Usuario en Hive: $usuarioGuardado');
 
-      if (uid == null || usuarioGuardado == null) {
-        setState(() {
-          _errorMessage = 'No se encontró tu usuario. Regístrate en este dispositivo primero.';
-          _isLoading = false;
-        });
-        return;
-      }
+      print('🔍 Buscando usuario en Hive...');
+      print('  - usuarioGuardado: $usuarioGuardado');
+      print('  - passwordGuardada: $passwordGuardada');
+      print('  - usuarioIngresado: $nombreUsuario');
 
-      if (usernameIngresado != usuarioGuardado) {
-        setState(() {
-          _errorMessage = 'Usuario incorrecto o no registrado en este dispositivo.';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      if (passwordIngresada != passwordGuardada) {
-        print('❌ Contraseña incorrecta');
-        setState(() {
-          _errorMessage = '❌ Contraseña incorrecta';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final result = await ApiService().obtenerUsuario(uid);
-      print('📥 Respuesta API: ok=${result.ok}, error=${result.error}');
-
-      if (result.ok && result.data != null) {
-        final usuario = result.data!;
-        print('✅ Usuario validado con la API: ${usuario.nombreUsuario}');
-        
-        await box.put('usuario_actual', usuario.nombreUsuario);
-        await box.put('usuario_nombre', usuario.nombre);
-        
+      if (usuarioGuardado == nombreUsuario && passwordGuardada == passwordIngresada) {
+        print('✅ Login exitoso desde Hive');
+        await box.put('login_exitoso', true);
         _irAlMenu();
-      } else {
-        print('❌ Usuario no encontrado en API');
-        setState(() {
-          _errorMessage = result.error ?? 'Usuario ya no existe en el servidor.';
-          _isLoading = false;
-        });
+        return;
       }
-    } catch (e) {
-      print('❌ Error: $e');
+
+      // ✅ 2. Si no está en Hive, buscar en API por nombre
+      final syncService = SyncService();
+      if (await syncService.tieneInternet()) {
+        print('🌐 Buscando usuario en API por nombre...');
+        
+        try {
+          final result = await ApiService().obtenerUsuario(nombreUsuario);
+          print('📥 Respuesta API: ok=${result.ok}, error=${result.error}, data=${result.data}');
+          if (result.ok && result.data != null) {
+            final usuario = result.data!;
+            // ✅ Guardar en Hive
+            await box.put('usuario_uid', usuario.uid);
+            await box.put('usuario_actual', usuario.nombreUsuario);
+            await box.put('usuario_nombre', usuario.nombre);
+            await box.put('usuario_password', passwordIngresada);
+            await box.put('usuario_edad', usuario.edad?.toString() ?? 'No especificada');
+            await box.put('usuario_ciudad', usuario.ciudad ?? 'No especificada');
+            await box.put('login_exitoso', true);
+            print('✅ Usuario encontrado en API y guardado en Hive');
+            _irAlMenu();
+            return;
+          }
+        } catch (e) {
+          print('⚠️ Error buscando por nombre: $e');
+        }
+      }
+
+      // ❌ No encontrado en ningún lado
       setState(() {
-        _errorMessage = 'Error al conectar con el servidor: $e';
+        _errorMessage = 'Usuario o contraseña incorrectos';
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('❌ Error en login: $e');
+      setState(() {
+        _errorMessage = 'Error al iniciar sesión: $e';
         _isLoading = false;
       });
     }
@@ -141,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -162,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     return Container(
                       width: 120,
                       height: 120,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),

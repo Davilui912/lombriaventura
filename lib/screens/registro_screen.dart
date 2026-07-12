@@ -3,9 +3,10 @@ import 'package:flutter/gestures.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import 'login_screen.dart';
-import 'menu_principal.dart'; // Importante para poder navegar directo al menú
+import 'menu_principal.dart';
 import '../utils/textos_constantes.dart';
 import '../services/api_service.dart';
+import '../services/sync_service.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -109,50 +110,77 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
     try {
       final uid = DateTime.now().millisecondsSinceEpoch.toString();
+      final syncService = SyncService();
 
-      final result = await ApiService().crearUsuario(
-        uid: uid,
-        nombre: _nombreController.text.trim(),
-        nombreUsuario: _usuarioController.text.trim(),
-        email: '${_usuarioController.text.trim()}@lombriaventura.com',
-        edad: int.tryParse(_edadController.text.trim()),
-        ciudad: _ciudadController.text.trim(),
-        genero: null,
-      );
+      // ✅ 1. Guardar en Hive SIEMPRE
+      final configBox = await Hive.openBox('configuracion');
+      await configBox.put('usuario_uid', uid);
+      await configBox.put('usuario_actual', _usuarioController.text.trim());
+      await configBox.put('usuario_nombre', _nombreController.text.trim());
+      await configBox.put('usuario_password', _passwordController.text.trim());
+      await configBox.put('usuario_edad', _edadController.text.trim());
+      await configBox.put('usuario_ciudad', _ciudadController.text.trim());
+      await configBox.put('usuario_fecha_registro', DateTime.now().toIso8601String());
+      await configBox.put('privacidad_aceptada', true);
+      await configBox.put('login_exitoso', true); // ✅ Marcar como autenticado
 
-      if (result.ok) {
-        final configBox = await Hive.openBox('configuracion');
-        
-        // Guardamos todos los datos necesarios para el LoginScreen
-        await configBox.put('usuario_uid', uid);
-        await configBox.put('usuario_nombre_usuario', _usuarioController.text.trim());
-        await configBox.put('usuario_nombre', _nombreController.text.trim());
-        await configBox.put('usuario_password', _passwordController.text.trim());
-        
-        // Esta línea marca la sesión como activa para entrar de inmediato
-        await configBox.put('usuario_actual', _usuarioController.text.trim());
-        
-        print('✅ Registro exitoso y sesión iniciada');
+      print('✅ Usuario guardado en Hive: ${_usuarioController.text.trim()}');
 
-        setState(() => _isLoading = false);
+      // ✅ 2. Intentar guardar en API
+      if (await syncService.tieneInternet()) {
+        print('🌐 Guardando usuario en API...');
+        final result = await ApiService().crearUsuario(
+          uid: uid,
+          nombre: _nombreController.text.trim(),
+          nombreUsuario: _usuarioController.text.trim(),
+          email: '${_usuarioController.text.trim()}@lombriaventura.com',
+          edad: int.tryParse(_edadController.text.trim()),
+          ciudad: _ciudadController.text.trim(),
+          genero: null,
+        );
 
-        if (mounted) {
-          // Te lleva directo al Menú Principal
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const MenuPrincipal()),
-            (route) => false,
-          );
+        if (result.ok) {
+          print('✅ Usuario guardado en API');
+        } else {
+          // Si falla, guardar en pendientes
+          await syncService.guardarUsuarioPendiente({
+            'uid': uid,
+            'nombre': _nombreController.text.trim(),
+            'nombreUsuario': _usuarioController.text.trim(),
+            'email': '${_usuarioController.text.trim()}@lombriaventura.com',
+            'edad': int.tryParse(_edadController.text.trim()),
+            'ciudad': _ciudadController.text.trim(),
+            'genero': null,
+          });
+          print('💾 Usuario guardado en pendientes (API falló)');
         }
       } else {
-        setState(() {
-          _errorMessage = result.error ?? 'Error al registrar usuario';
-          _isLoading = false;
+        // Sin internet, guardar en pendientes
+        await syncService.guardarUsuarioPendiente({
+          'uid': uid,
+          'nombre': _nombreController.text.trim(),
+          'nombreUsuario': _usuarioController.text.trim(),
+          'email': '${_usuarioController.text.trim()}@lombriaventura.com',
+          'edad': int.tryParse(_edadController.text.trim()),
+          'ciudad': _ciudadController.text.trim(),
+          'genero': null,
         });
+        print('💾 Usuario guardado en pendientes (sin internet)');
+      }
+
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        // ✅ Ir al menú principal directamente (ya autenticado)
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MenuPrincipal()),
+          (route) => false,
+        );
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al conectar con el servidor: $e';
+        _errorMessage = 'Error al registrar: $e';
         _isLoading = false;
       });
     }
@@ -212,7 +240,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   ),
                 const SizedBox(height: 16),
                 
-                // Nombre de usuario
                 TextField(
                   controller: _usuarioController,
                   decoration: InputDecoration(
@@ -226,7 +253,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Nombre completo
                 TextField(
                   controller: _nombreController,
                   decoration: InputDecoration(
@@ -239,7 +265,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Contraseña
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
@@ -257,7 +282,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Confirmar contraseña
                 TextField(
                   controller: _confirmarController,
                   obscureText: _obscureConfirmar,
@@ -275,7 +299,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Edad
                 TextField(
                   controller: _edadController,
                   keyboardType: TextInputType.number,
@@ -289,7 +312,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Ciudad
                 TextField(
                   controller: _ciudadController,
                   decoration: InputDecoration(
@@ -302,7 +324,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Pregunta de seguridad
                 const Text('🔐 Pregunta de seguridad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Container(
@@ -337,7 +358,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Respuesta de seguridad
                 TextField(
                   controller: _respuestaSeguridadController,
                   decoration: InputDecoration(
@@ -351,7 +371,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 24),
                 
-                // Aviso de privacidad
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -395,7 +414,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Botón registrar
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:lombriaventura/screens/login_screen.dart';
 import '../config/theme.dart';
 import '../services/logros_service.dart';
 import '../services/actividad_service.dart';
@@ -42,6 +44,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   @override
   void initState() {
     super.initState();
+    _verificarSesion();
     _actividadService.registrarActividad();
     
     //  Esperar 3 segundos antes de verificar recordatorios
@@ -124,7 +127,21 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       MaterialPageRoute(builder: (_) => pantalla),
     );
   }
+  Future<void> _verificarSesion() async {
+    final configBox = await Hive.openBox('configuracion');
+    final loginExitoso = configBox.get('login_exitoso', defaultValue: false);
 
+    if (!loginExitoso) {
+      // Si no hay sesión, redirigir al login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      });
+    }
+  }
   void _abrirPanelAdmin() {
     _contadorToques++;
     if (_contadorToques >= 5) {
