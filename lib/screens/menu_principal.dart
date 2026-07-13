@@ -800,12 +800,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           Icons.warning_amber,
                           () => _irAPantalla(const AvisosScreen()),
                         ),
-                        _buildOpcion(
-                          '📊 ¿Cómo va mi composta?',
+                       /* _buildOpcion(
+                          '¿Cómo va mi composta?',
                           'Compara y revisa tu composta',
                           Icons.compare_arrows,
                           () => _irAPantalla(const ComparaCompostaScreen()),
-                        ),
+                        ),*/
                         // ✅ Submenú de juegos (mejorado)
                         _buildSubmenuJuegos(),
                       ],

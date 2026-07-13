@@ -2,15 +2,21 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+}
+
+// ✅ Cargar propiedades del keystore
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
 val flutterVersionCode = project.properties["flutter.versionCode"]?.toString() ?: "1"
 val flutterVersionName = project.properties["flutter.versionName"]?.toString() ?: "1.0"
 
 android {
-    namespace = "com.example.lombriaventura"
-    compileSdk = 36  // ✅ CAMBIADO A 36
+    namespace = "com.DevNexo.lombriaventura"
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -29,16 +35,32 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.lombriaventura"
+        applicationId = "com.DevNexo.lombriaventura"
         minSdk = flutter.minSdkVersion
-        targetSdk = 36  // ✅ TAMBIÉN SUBIR targetSdk
+        targetSdk = 36
         versionCode = flutterVersionCode.toInt()
         versionName = flutterVersionName
     }
 
+    // ✅ CONFIGURACIÓN DE FIRMA PARA RELEASE
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
+            minifyEnabled = false
+            shrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

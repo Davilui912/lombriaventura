@@ -52,6 +52,7 @@ class SyncService {
           nombre: usuario['nombre'],
           nombreUsuario: usuario['nombreUsuario'],
           email: usuario['email'],
+          password: usuario['password'] ?? '', // ✅ AGREGADO
           edad: usuario['edad'],
           ciudad: usuario['ciudad'],
           genero: usuario['genero'],

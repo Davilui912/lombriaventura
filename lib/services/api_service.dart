@@ -58,13 +58,14 @@ class ApiService {
       ApiResult.error('Sin conexión o tiempo de espera agotado: $e');
 
   // ─── USUARIOS
-  /// Crea un usuario en PostgreSQL usando el uid de Firebase Auth.
-  /// Llámalo justo después de que el usuario inicie sesión por primera vez.
+
+  /// Crea un usuario en PostgreSQL usando el nombre de usuario como ID único.
   Future<ApiResult<Usuario>> crearUsuario({
     required String uid,
     required String nombre,
     required String nombreUsuario,
     required String email,
+    required String password, // ✅ AGREGADO: contraseña
     int? edad,
     String? ciudad,
     String? genero,
@@ -79,6 +80,7 @@ class ApiService {
               'nombre': nombre,
               'nombre_usuario': nombreUsuario,
               'email': email,
+              'password': password, // ✅ AGREGADO
               if (edad != null) 'edad': edad,
               if (ciudad != null) 'ciudad': ciudad,
               if (genero != null) 'genero': genero,
@@ -91,32 +93,95 @@ class ApiService {
     }
   }
 
-/// Obtener usuario por nombre de usuario (alternativa - obtiene todos y filtra)
+  /// Obtener usuario por nombre de usuario (obtiene todos y filtra)
   Future<ApiResult<Usuario>> obtenerUsuario(String nombreUsuario) async {
-  try {
-    final res = await http
-        .get(_uri('/usuarios'), headers: _headers)
-        .timeout(_timeout);
-    
-    if (res.statusCode >= 200 && res.statusCode < 300) {
-      final data = jsonDecode(res.body) as List;
-      print('📋 Usuarios encontrados: ${data.length}');
-      
-      for (var item in data) {
-        if (item['nombre_usuario'] == nombreUsuario) {
-          print('✅ Usuario encontrado: ${item['nombre_usuario']}');
-          return ApiResult.ok(Usuario.fromJson(item));
+    try {
+        final res = await http
+            .get(_uri('/usuarios'), headers: _headers)
+            .timeout(_timeout);
+        
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          final data = jsonDecode(res.body) as List;
+          print('📋 Usuarios encontrados: ${data.length}');
+          
+          for (var item in data) {
+            if (item['nombre_usuario'] == nombreUsuario) {
+              print('✅ Usuario encontrado: ${item['nombre_usuario']}');
+              return ApiResult.ok(Usuario.fromJson(item));
+            }
+          }
+          return ApiResult.error('Usuario no encontrado');
+        } else {
+          return ApiResult.error('Error al obtener usuarios');
         }
+      } catch (e) {
+        print('❌ Error en obtenerUsuario: $e');
+        return _catch(e);
       }
-      return ApiResult.error('Usuario no encontrado');
-    } else {
-      return ApiResult.error('Error al obtener usuarios');
     }
-  } catch (e) {
-    print('❌ Error en obtenerUsuarioPorNombre: $e');
-    return _catch(e);
+
+  /// ✅ NUEVO: Login con nombre de usuario y contraseña
+  /// Verifica que el usuario exista y que la contraseña coincida
+  Future<ApiResult<Usuario>> loginUsuario({
+    required String nombreUsuario,
+    required String password,
+  }) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios'), headers: _headers)
+          .timeout(_timeout);
+      
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final data = jsonDecode(res.body) as List;
+        print('📋 Buscando usuario: $nombreUsuario');
+        
+        for (var item in data) {
+          if (item['nombre_usuario'] == nombreUsuario) {
+            print('✅ Usuario encontrado: ${item['nombre_usuario']}');
+            
+            // ✅ Verificar contraseña
+            if (item['password'] == password) {
+              print('✅ Contraseña correcta');
+              return ApiResult.ok(Usuario.fromJson(item));
+            } else {
+              print('❌ Contraseña incorrecta');
+              return ApiResult.error('Contraseña incorrecta');
+            }
+          }
+        }
+        print('❌ Usuario no encontrado');
+        return ApiResult.error('Usuario no encontrado');
+      } else {
+        return ApiResult.error('Error al obtener usuarios');
+      }
+    } catch (e) {
+      print('❌ Error en loginUsuario: $e');
+      return _catch(e);
+    }
   }
-}
+
+  /// Obtener usuario por email (alternativa)
+  Future<ApiResult<Usuario>> obtenerUsuarioPorEmail(String email) async {
+    try {
+      final res = await http
+          .get(_uri('/usuarios'), headers: _headers)
+          .timeout(_timeout);
+      
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final data = jsonDecode(res.body) as List;
+        for (var item in data) {
+          if (item['email'] == email) {
+            return ApiResult.ok(Usuario.fromJson(item));
+          }
+        }
+        return ApiResult.error('Usuario no encontrado');
+      } else {
+        return ApiResult.error('Error al obtener usuarios');
+      }
+    } catch (e) {
+      return _catch(e);
+    }
+  }
 
   Future<ApiResult<bool>> eliminarUsuario(String uid) async {
     try {
@@ -131,6 +196,7 @@ class ApiService {
   }
 
   // ─── DIARIO
+
   Future<ApiResult<EntradaDiario>> crearEntradaDiario({
     required String uid,
     String? nota,
@@ -176,6 +242,7 @@ class ApiService {
   }
 
   // ─── VENTAS
+
   Future<ApiResult<Venta>> crearVenta({
     required String uid,
     required String producto,
@@ -270,6 +337,7 @@ class ApiService {
   }
 
   // ─── LOGROS
+
   Future<ApiResult<Logro>> crearLogro({
     required String uid,
     required String tipo,
@@ -308,6 +376,7 @@ class ApiService {
   }
 
   // ─── RECORDATORIOS
+
   Future<ApiResult<Recordatorio>> crearRecordatorio({
     required String uid,
     required String titulo,
@@ -367,6 +436,7 @@ class ApiService {
   }
 
   // ─── CAPACITACIONES
+
   Future<ApiResult<Capacitacion>> crearCapacitacion({
     required String uid,
     required String nombreCapacitado,

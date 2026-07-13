@@ -6,48 +6,47 @@ class Usuario {
   final String nombre;
   final String nombreUsuario;
   final String email;
+  final String password; 
   final int? edad;
   final String? ciudad;
   final String? genero;
-  final int estrellas;
-  final int monedas;
-  final DateTime fechaRegistro;
 
   Usuario({
     required this.uid,
     required this.nombre,
     required this.nombreUsuario,
     required this.email,
+    required this.password, 
     this.edad,
     this.ciudad,
     this.genero,
-    required this.estrellas,
-    required this.monedas,
-    required this.fechaRegistro,
   });
 
-  factory Usuario.fromJson(Map<String, dynamic> j) => Usuario(
-        uid: j['uid'],
-        nombre: j['nombre'],
-        nombreUsuario: j['nombre_usuario'],
-        email: j['email'],
-        edad: j['edad'],
-        ciudad: j['ciudad'],
-        genero: j['genero'],
-        estrellas: j['estrellas'] ?? 0,
-        monedas: j['monedas'] ?? 0,
-        fechaRegistro: DateTime.parse(j['fecha_registro']),
-      );
+  factory Usuario.fromJson(Map<String, dynamic> json) {
+    return Usuario(
+      uid: json['uid'] ?? '',
+      nombre: json['nombre'] ?? '',
+      nombreUsuario: json['nombre_usuario'] ?? '',
+      email: json['email'] ?? '',
+      password: json['password'] ?? '', 
+      edad: json['edad'],
+      ciudad: json['ciudad'],
+      genero: json['genero'],
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-        'uid': uid,
-        'nombre': nombre,
-        'nombre_usuario': nombreUsuario,
-        'email': email,
-        if (edad != null) 'edad': edad,
-        if (ciudad != null) 'ciudad': ciudad,
-        if (genero != null) 'genero': genero,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'nombre': nombre,
+      'nombre_usuario': nombreUsuario,
+      'email': email,
+      'password': password,
+      if (edad != null) 'edad': edad,
+      if (ciudad != null) 'ciudad': ciudad,
+      if (genero != null) 'genero': genero,
+    };
+  }
 }
 
 // ============================================================

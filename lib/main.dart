@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'models/conversacion.dart';
@@ -11,8 +10,7 @@ import 'providers/usuario_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Firebase sin opciones (ya está configurado por google-services.json)
-  await Firebase.initializeApp();
+  // ❌ ELIMINADA: await Firebase.initializeApp();
 
   await Hive.initFlutter();
   Hive.registerAdapter(ConversacionAdapter());

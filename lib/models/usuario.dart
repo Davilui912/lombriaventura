@@ -1,39 +1,48 @@
+
 class Usuario {
+  final String uid;
   final String nombre;
+  final String nombreUsuario;
   final String email;
-  final String password;
-  final int edad;
-  final String ciudad;
-  final DateTime fechaRegistro;
+  final String password; 
+  final int? edad;
+  final String? ciudad;
+  final String? genero;
 
   Usuario({
+    required this.uid,
     required this.nombre,
+    required this.nombreUsuario,
     required this.email,
-    required this.password,
-    required this.edad,
-    required this.ciudad,
-    required this.fechaRegistro,
+    required this.password, 
+    this.edad,
+    this.ciudad,
+    this.genero,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'nombre': nombre,
-      'email': email,
-      'password': password,
-      'edad': edad,
-      'ciudad': ciudad,
-      'fechaRegistro': fechaRegistro.toIso8601String(),
-    };
+  factory Usuario.fromJson(Map<String, dynamic> json) {
+    return Usuario(
+      uid: json['uid'] ?? '',
+      nombre: json['nombre'] ?? '',
+      nombreUsuario: json['nombre_usuario'] ?? '',
+      email: json['email'] ?? '',
+      password: json['password'] ?? '', 
+      edad: json['edad'],
+      ciudad: json['ciudad'],
+      genero: json['genero'],
+    );
   }
 
-  factory Usuario.fromMap(Map<String, dynamic> map) {
-    return Usuario(
-      nombre: map['nombre'],
-      email: map['email'],
-      password: map['password'],
-      edad: map['edad'],
-      ciudad: map['ciudad'],
-      fechaRegistro: DateTime.parse(map['fechaRegistro']),
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'nombre': nombre,
+      'nombre_usuario': nombreUsuario,
+      'email': email,
+      'password': password, 
+      if (edad != null) 'edad': edad,
+      if (ciudad != null) 'ciudad': ciudad,
+      if (genero != null) 'genero': genero,
+    };
   }
 }
