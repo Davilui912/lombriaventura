@@ -41,6 +41,7 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
   bool _problemaRespondido = false;
   String _mensajeFeedback = '';
   Color _colorFeedback = AppTheme.verde;
+  int _monedasActuales = 0;
 
   // Lista de todos los problemas (32 del documento)
   final List<ProblemaMatematico> _todosLosProblemas = [];
@@ -54,6 +55,14 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
   void initState() {
     super.initState();
     _cargarProblemas();
+    _cargarMonedasActuales();
+  }
+
+  Future<void> _cargarMonedasActuales() async {
+    final box = await Hive.openBox('progreso');
+    setState(() {
+      _monedasActuales = box.get('monedas', defaultValue: 0);
+    });
   }
 
   void _cargarProblemas() {
@@ -429,7 +438,7 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
         _mensajeFeedback = '🎉 ¡Correcto! +${problema.monedasGanadas} monedas';
         _colorFeedback = AppTheme.verde;
       } else {
-        _mensajeFeedback = '😅 ¡Ups! La respuesta correcta era: ${problema.respuestaCorrecta}';
+        _mensajeFeedback = '😅 La correcta era: ${problema.respuestaCorrecta}';
         _colorFeedback = Colors.red;
       }
     });
@@ -454,7 +463,9 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
         final box = await Hive.openBox('progreso');
         int monedasActuales = box.get('monedas', defaultValue: 0);
         await box.put('monedas', monedasActuales + _monedasGanadas);
-        // Registrar actividad para mantener la racha
+        setState(() {
+          _monedasActuales = monedasActuales + _monedasGanadas;
+        });
         _actividadService.registrarActividad();
       } catch (e) {
         print('Error guardando monedas: $e');
@@ -474,44 +485,38 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Detectar tamaño de pantalla para ajustar
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.calculate, color: Colors.white),
-            const SizedBox(width: 8),
-            const Text('Problemas Matemáticos'),
-          ],
-        ),
+        title: const Text('Problemas Matemáticos'),
         backgroundColor: AppTheme.verde,
+        elevation: 0,
+        // ✅ Las monedas van en un chip fijo en la AppBar, sin superposición
         actions: [
-          // Mostrar monedas actuales
-          FutureBuilder(
-            future: Hive.openBox('progreso'),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final box = snapshot.data as Box;
-                final monedas = box.get('monedas', defaultValue: 0);
-                return Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.monetization_on, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$monedas',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                const SizedBox(width: 4),
+                Text(
+                  '$_monedasActuales',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -523,19 +528,19 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              // Selector de nivel
+              // Selector de nivel (más compacto)
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
+                      blurRadius: 6,
                     ),
                   ],
                 ),
@@ -549,13 +554,17 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
-              // Contenido principal
+              // Contenido principal (con ScrollView para evitar overflow)
               Expanded(
                 child: _mostrarResultado
-                    ? _buildResultado()
-                    : _buildProblema(),
+                    ? SingleChildScrollView(
+                        child: _buildResultado(),
+                      )
+                    : SingleChildScrollView(
+                        child: _buildProblema(isSmallScreen),
+                      ),
               ),
             ],
           ),
@@ -571,22 +580,24 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
     return GestureDetector(
       onTap: () => _seleccionarNivel(nivel),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
         ),
-        child: Column(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
+            Text(emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected ? color : Colors.grey.shade600,
               ),
@@ -597,7 +608,7 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
     );
   }
 
-  Widget _buildProblema() {
+  Widget _buildProblema(bool isSmallScreen) {
     final problemas = _problemasFiltrados;
     if (problemas.isEmpty) {
       return const Center(
@@ -610,20 +621,21 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
     final progreso = ((_problemaActualIndex + 1) / total * 100);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Progreso
           Row(
@@ -631,50 +643,51 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
             children: [
               Text(
                 '${_getEmojiNivel(_nivelSeleccionado)} ${_getNombreNivel(_nivelSeleccionado)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: isSmallScreen ? 14 : 16,
                 ),
               ),
               Text(
                 '${_problemaActualIndex + 1} / $total',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.grey,
-                  fontSize: 14,
+                  fontSize: isSmallScreen ? 12 : 14,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           LinearProgressIndicator(
             value: progreso / 100,
             backgroundColor: Colors.grey.shade200,
             color: _getColorNivel(_nivelSeleccionado),
-            minHeight: 6,
+            minHeight: 4,
             borderRadius: BorderRadius.circular(3),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
-          // Pregunta
+          // Pregunta (con tamaño ajustable)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isSmallScreen ? 10 : 14),
             decoration: BoxDecoration(
               color: AppTheme.verde.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppTheme.verde.withValues(alpha: 0.1)),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   problema.emoji,
-                  style: const TextStyle(fontSize: 28),
+                  style: TextStyle(fontSize: isSmallScreen ? 22 : 28),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     problema.pregunta,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 16,
                       height: 1.3,
                     ),
                   ),
@@ -682,26 +695,29 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
-          // Opciones
+          // Opciones (más compactas en pantallas pequeñas)
           ...problema.opciones.map((opcion) {
             bool isCorrect = opcion == problema.respuestaCorrecta;
             bool isSelected = _problemaRespondido;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 6),
               child: GestureDetector(
                 onTap: _problemaRespondido ? null : () => _responderOpcion(opcion),
                 child: Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 10 : 14,
+                    vertical: isSmallScreen ? 10 : 12,
+                  ),
                   decoration: BoxDecoration(
                     color: _problemaRespondido
                         ? (isCorrect
-                            ? AppTheme.verde.withValues(alpha: 0.15)
-                            : Colors.red.withValues(alpha: 0.1))
+                            ? AppTheme.verde.withValues(alpha: 0.12)
+                            : Colors.red.withValues(alpha: 0.08))
                         : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _problemaRespondido
                           ? (isCorrect ? AppTheme.verde : Colors.red)
@@ -712,8 +728,8 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
                   child: Row(
                     children: [
                       Container(
-                        width: 28,
-                        height: 28,
+                        width: 24,
+                        height: 24,
                         decoration: BoxDecoration(
                           color: _problemaRespondido
                               ? (isCorrect ? AppTheme.verde : Colors.red)
@@ -726,20 +742,22 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
                             style: TextStyle(
                               color: _problemaRespondido ? Colors.white : Colors.grey.shade600,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 11,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           opcion,
-                          style: const TextStyle(fontSize: 15),
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 13 : 15,
+                          ),
                         ),
                       ),
                       if (_problemaRespondido && isCorrect)
-                        const Icon(Icons.check_circle, color: AppTheme.verde, size: 20),
+                        const Icon(Icons.check_circle, color: AppTheme.verde, size: 18),
                     ],
                   ),
                 ),
@@ -747,22 +765,23 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
             );
           }),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // Feedback
+          // Feedback (más compacto)
           if (_problemaRespondido)
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
               decoration: BoxDecoration(
-                color: _colorFeedback.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _colorFeedback.withValues(alpha: 0.3)),
+                color: _colorFeedback.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _colorFeedback.withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
                   Icon(
                     _colorFeedback == AppTheme.verde ? Icons.check_circle : Icons.cancel,
                     color: _colorFeedback,
+                    size: 18,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -771,6 +790,7 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
                       style: TextStyle(
                         color: _colorFeedback,
                         fontWeight: FontWeight.bold,
+                        fontSize: isSmallScreen ? 12 : 14,
                       ),
                     ),
                   ),
@@ -810,59 +830,59 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(iconoFinal, size: 80, color: colorFinal),
-          const SizedBox(height: 16),
+          Icon(iconoFinal, size: 60, color: colorFinal),
+          const SizedBox(height: 10),
           Text(
             '¡Nivel completado!',
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             '${_getEmojiNivel(_nivelSeleccionado)} ${_getNombreNivel(_nivelSeleccionado)}',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: _getColorNivel(_nivelSeleccionado),
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 '$aciertos / $total',
-                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                 decoration: BoxDecoration(
                   color: colorFinal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: colorFinal.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '$porcentaje%',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: colorFinal,
                   ),
@@ -870,29 +890,29 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             mensajeFinal,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
+              color: Colors.amber.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.monetization_on, color: Colors.amber),
-                const SizedBox(width: 8),
+                const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                const SizedBox(width: 6),
                 Text(
                   '+$_monedasGanadas monedas',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.amber,
                   ),
@@ -900,7 +920,7 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -908,18 +928,20 @@ class _ProblemasMatematicosScreenState extends State<ProblemasMatematicosScreen>
                 onPressed: _reiniciarNivel,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _getColorNivel(_nivelSeleccionado),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  minimumSize: const Size(80, 40),
                 ),
-                child: const Text('🔄 Repetir nivel'),
+                child: const Text('🔄 Repetir'),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.verdeClaro,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  minimumSize: const Size(80, 40),
                 ),
                 child: const Text('⬅️ Volver'),
               ),
