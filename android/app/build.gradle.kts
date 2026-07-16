@@ -1,21 +1,29 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// ✅ Cargar propiedades del keystore
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-val flutterVersionCode = project.properties["flutter.versionCode"]?.toString() ?: "1"
-val flutterVersionName = project.properties["flutter.versionName"]?.toString() ?: "1.0"
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toIntOrNull() ?: 1
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
-    namespace = "com.DevNexo.lombriaventura"
+    namespace = "com.lombriaventura.app"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -35,14 +43,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.DevNexo.lombriaventura"
+        applicationId = "com.lombriaventura.app"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = flutterVersionCode.toInt()
+        versionCode = flutterVersionCode
         versionName = flutterVersionName
     }
 
-    // ✅ CONFIGURACIÓN DE FIRMA PARA RELEASE
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
@@ -55,8 +62,8 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
-            minifyEnabled = false
-            shrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"

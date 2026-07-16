@@ -1,4 +1,4 @@
-package com.example.lombriaventura
+package com.lombriaventura.app
 
 import io.flutter.embedding.android.FlutterActivity
 

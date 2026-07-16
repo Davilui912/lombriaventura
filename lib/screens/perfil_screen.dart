@@ -205,7 +205,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     if (confirm == true) {
       final configBox = await Hive.openBox('configuracion');
-      await configBox.clear();
+      
+      // ✅ CAMBIO APLICADO: Solo marcamos que la sesión ya no está activa, sin borrar los datos locales
+      await configBox.put('login_exitoso', false);
       
       if (mounted) {
         Navigator.pushAndRemoveUntil(

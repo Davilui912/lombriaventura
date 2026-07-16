@@ -9,42 +9,31 @@ class SyncService {
 
   final Connectivity _connectivity = Connectivity();
 
-  /// Verificar si hay internet
   Future<bool> tieneInternet() async {
     final result = await _connectivity.checkConnectivity();
     return result != ConnectivityResult.none;
   }
 
-  /// Sincronizar datos pendientes con la API
   Future<void> sincronizar() async {
     if (!await tieneInternet()) {
       print('🌐 Sin internet, no se puede sincronizar');
       return;
     }
-
     print('🔄 Iniciando sincronización...');
-
-    // 1. Sincronizar usuarios pendientes
     await _sincronizarUsuarios();
-
-    // 2. Sincronizar diario pendiente
     await _sincronizarDiario();
-
-    // 3. Sincronizar ventas pendientes
     await _sincronizarVentas();
-
+    await _sincronizarCambiosPassword();
+    await _sincronizarLogros();
+    await _sincronizarRetos();
+    await _sincronizarRecordatorios();
     print('✅ Sincronización completada');
   }
 
-  /// Sincronizar usuarios pendientes
   Future<void> _sincronizarUsuarios() async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('usuarios', defaultValue: <Map<String, dynamic>>[]);
-
     if (pendientes.isEmpty) return;
-
-    print('📤 Sincronizando ${pendientes.length} usuarios pendientes...');
-
     for (var usuario in pendientes) {
       try {
         final result = await ApiService().crearUsuario(
@@ -52,14 +41,11 @@ class SyncService {
           nombre: usuario['nombre'],
           nombreUsuario: usuario['nombreUsuario'],
           email: usuario['email'],
-          password: usuario['password'] ?? '', // ✅ AGREGADO
           edad: usuario['edad'],
           ciudad: usuario['ciudad'],
           genero: usuario['genero'],
         );
-
         if (result.ok) {
-          // ✅ Eliminar de pendientes
           pendientes.remove(usuario);
           await box.put('usuarios', pendientes);
           print('✅ Usuario ${usuario['nombreUsuario']} sincronizado');
@@ -70,15 +56,10 @@ class SyncService {
     }
   }
 
-  /// Sincronizar diario pendiente
   Future<void> _sincronizarDiario() async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('diario', defaultValue: <Map<String, dynamic>>[]);
-
     if (pendientes.isEmpty) return;
-
-    print('📤 Sincronizando ${pendientes.length} entradas de diario...');
-
     for (var entrada in pendientes) {
       try {
         final result = await ApiService().crearEntradaDiario(
@@ -90,7 +71,6 @@ class SyncService {
           compostaPunos: entrada['compostaPunos'],
           lixiviadoCucharadas: entrada['lixiviadoCucharadas'],
         );
-
         if (result.ok) {
           pendientes.remove(entrada);
           await box.put('diario', pendientes);
@@ -102,15 +82,10 @@ class SyncService {
     }
   }
 
-  /// Sincronizar ventas pendientes
   Future<void> _sincronizarVentas() async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('ventas', defaultValue: <Map<String, dynamic>>[]);
-
     if (pendientes.isEmpty) return;
-
-    print('📤 Sincronizando ${pendientes.length} ventas pendientes...');
-
     for (var venta in pendientes) {
       try {
         final result = await ApiService().crearVenta(
@@ -121,7 +96,6 @@ class SyncService {
           totalGanado: venta['totalGanado'],
           descripcion: venta['descripcion'],
         );
-
         if (result.ok) {
           pendientes.remove(venta);
           await box.put('ventas', pendientes);
@@ -133,7 +107,122 @@ class SyncService {
     }
   }
 
-  /// Guardar usuario pendiente de sincronización
+  Future<void> guardarCambioPasswordPendiente(Map<String, dynamic> cambio) async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('cambios_password', defaultValue: <Map<String, dynamic>>[]);
+    pendientes.add(cambio);
+    await box.put('cambios_password', pendientes);
+    print('💾 Cambio de contraseña guardado en pendientes');
+  }
+
+  Future<void> _sincronizarCambiosPassword() async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('cambios_password', defaultValue: <Map<String, dynamic>>[]);
+    if (pendientes.isEmpty) return;
+    for (var cambio in pendientes) {
+      try {
+        print('💾 Cambio de contraseña para ${cambio['uid']} (solo Hive)');
+        pendientes.remove(cambio);
+        await box.put('cambios_password', pendientes);
+        print('✅ Cambio de contraseña procesado');
+      } catch (e) {
+        print('❌ Error sincronizando cambio de contraseña: $e');
+      }
+    }
+  }
+
+  Future<void> guardarLogroPendiente(Map<String, dynamic> logro) async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('logros', defaultValue: <Map<String, dynamic>>[]);
+    pendientes.add(logro);
+    await box.put('logros', pendientes);
+    print('💾 Logro guardado en pendientes');
+  }
+
+  Future<void> _sincronizarLogros() async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('logros', defaultValue: <Map<String, dynamic>>[]);
+    if (pendientes.isEmpty) return;
+    for (var logro in pendientes) {
+      try {
+        final result = await ApiService().crearLogro(
+          uid: logro['uid'],
+          tipo: logro['tipo'],
+          nombre: logro['nombre'],
+          descripcion: logro['descripcion'],
+        );
+        if (result.ok) {
+          pendientes.remove(logro);
+          await box.put('logros', pendientes);
+          print('✅ Logro sincronizado');
+        }
+      } catch (e) {
+        print('❌ Error sincronizando logro: $e');
+      }
+    }
+  }
+
+  Future<void> guardarRetoPendiente(Map<String, dynamic> reto) async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('retos', defaultValue: <Map<String, dynamic>>[]);
+    pendientes.add(reto);
+    await box.put('retos', pendientes);
+    print('💾 Reto guardado en pendientes');
+  }
+
+  Future<void> _sincronizarRetos() async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('retos', defaultValue: <Map<String, dynamic>>[]);
+    if (pendientes.isEmpty) return;
+    for (var reto in pendientes) {
+      try {
+        final result = await ApiService().crearReto(
+          uid: reto['uid'],
+          retoId: reto['retoId'],
+          medicion: reto['medicion'],
+          fotoUrl: reto['fotoUrl'],
+        );
+        if (result.ok) {
+          pendientes.remove(reto);
+          await box.put('retos', pendientes);
+          print('✅ Reto sincronizado');
+        }
+      } catch (e) {
+        print('❌ Error sincronizando reto: $e');
+      }
+    }
+  }
+
+  Future<void> guardarRecordatorioPendiente(Map<String, dynamic> recordatorio) async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('recordatorios', defaultValue: <Map<String, dynamic>>[]);
+    pendientes.add(recordatorio);
+    await box.put('recordatorios', pendientes);
+    print('💾 Recordatorio guardado en pendientes');
+  }
+
+  Future<void> _sincronizarRecordatorios() async {
+    final box = await Hive.openBox('sync_pendientes');
+    final pendientes = box.get('recordatorios', defaultValue: <Map<String, dynamic>>[]);
+    if (pendientes.isEmpty) return;
+    for (var recordatorio in pendientes) {
+      try {
+        final result = await ApiService().crearRecordatorio(
+          uid: recordatorio['uid'],
+          titulo: recordatorio['titulo'],
+          mensaje: recordatorio['mensaje'],
+        );
+        if (result.ok) {
+          pendientes.remove(recordatorio);
+          await box.put('recordatorios', pendientes);
+          print('✅ Recordatorio sincronizado');
+        }
+      } catch (e) {
+        print('❌ Error sincronizando recordatorio: $e');
+      }
+    }
+  }
+
   Future<void> guardarUsuarioPendiente(Map<String, dynamic> usuario) async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('usuarios', defaultValue: <Map<String, dynamic>>[]);
@@ -142,7 +231,6 @@ class SyncService {
     print('💾 Usuario guardado localmente (pendiente de sincronizar)');
   }
 
-  /// Guardar diario pendiente de sincronización
   Future<void> guardarDiarioPendiente(Map<String, dynamic> entrada) async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('diario', defaultValue: <Map<String, dynamic>>[]);
@@ -151,7 +239,6 @@ class SyncService {
     print('💾 Entrada de diario guardada localmente (pendiente de sincronizar)');
   }
 
-  /// Guardar venta pendiente de sincronización
   Future<void> guardarVentaPendiente(Map<String, dynamic> venta) async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('ventas', defaultValue: <Map<String, dynamic>>[]);

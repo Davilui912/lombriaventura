@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/api_models.dart';
 import 'api_config.dart';
 
-/// Resultado tipado para cada operación de API.
-/// En vez de lanzar excepciones, devuelve [ApiResult.ok] o [ApiResult.error]
-/// para que la UI pueda mostrar mensajes claros al usuario.
 class ApiResult<T> {
   final T? data;
   final String? error;
@@ -15,14 +13,11 @@ class ApiResult<T> {
   ApiResult.error(this.error) : data = null;
 }
 
-/// Servicio central — todos los métodos HTTP hacia la API FastAPI.
-/// Usa [ApiConfig.baseUrl] como base y [ApiConfig.timeout] para timeouts.
 class ApiService {
   final String _base = ApiConfig.baseUrl;
   final Map<String, String> _headers = ApiConfig.headers;
   final Duration _timeout = ApiConfig.timeout;
 
-  // ─── Helpers privados
   Uri _uri(String path) => Uri.parse('$_base$path');
 
   ApiResult<T> _handle<T>(
@@ -31,41 +26,31 @@ class ApiService {
   ) {
     try {
       dynamic body;
-
       if (res.bodyBytes.isNotEmpty) {
-        body = jsonDecode(
-          utf8.decode(res.bodyBytes),
-        );
+        body = jsonDecode(utf8.decode(res.bodyBytes));
       }
-
       if (res.statusCode >= 200 && res.statusCode < 300) {
         return ApiResult.ok(parse(body));
       }
-
       final msg = body is Map
           ? body['detail'] ?? 'Error ${res.statusCode}'
           : 'Error ${res.statusCode}';
-
       return ApiResult.error(msg.toString());
     } catch (e) {
-      return ApiResult.error(
-        'Error al procesar la respuesta: $e',
-      );
+      return ApiResult.error('Error al procesar la respuesta: $e');
     }
   }
 
   ApiResult<T> _catch<T>(Object e) =>
       ApiResult.error('Sin conexión o tiempo de espera agotado: $e');
 
-  // ─── USUARIOS
+  // ─── USUARIOS (SIN CONTRASEÑA) ───
 
-  /// Crea un usuario en PostgreSQL usando el nombre de usuario como ID único.
   Future<ApiResult<Usuario>> crearUsuario({
     required String uid,
     required String nombre,
     required String nombreUsuario,
     required String email,
-    required String password, // ✅ AGREGADO: contraseña
     int? edad,
     String? ciudad,
     String? genero,
@@ -80,7 +65,6 @@ class ApiService {
               'nombre': nombre,
               'nombre_usuario': nombreUsuario,
               'email': email,
-              'password': password, // ✅ AGREGADO
               if (edad != null) 'edad': edad,
               if (ciudad != null) 'ciudad': ciudad,
               if (genero != null) 'genero': genero,
@@ -93,80 +77,72 @@ class ApiService {
     }
   }
 
-  /// Obtener usuario por nombre de usuario (obtiene todos y filtra)
   Future<ApiResult<Usuario>> obtenerUsuario(String nombreUsuario) async {
-    try {
-        final res = await http
-            .get(_uri('/usuarios'), headers: _headers)
-            .timeout(_timeout);
-        
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          final data = jsonDecode(res.body) as List;
-          print('📋 Usuarios encontrados: ${data.length}');
-          
-          for (var item in data) {
-            if (item['nombre_usuario'] == nombreUsuario) {
-              print('✅ Usuario encontrado: ${item['nombre_usuario']}');
-              return ApiResult.ok(Usuario.fromJson(item));
-            }
-          }
-          return ApiResult.error('Usuario no encontrado');
-        } else {
-          return ApiResult.error('Error al obtener usuarios');
-        }
-      } catch (e) {
-        print('❌ Error en obtenerUsuario: $e');
-        return _catch(e);
-      }
-    }
-
-  /// ✅ NUEVO: Login con nombre de usuario y contraseña
-  /// Verifica que el usuario exista y que la contraseña coincida
-  Future<ApiResult<Usuario>> loginUsuario({
-    required String nombreUsuario,
-    required String password,
-  }) async {
     try {
       final res = await http
           .get(_uri('/usuarios'), headers: _headers)
           .timeout(_timeout);
-      
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final data = jsonDecode(res.body) as List;
-        print('📋 Buscando usuario: $nombreUsuario');
-        
         for (var item in data) {
           if (item['nombre_usuario'] == nombreUsuario) {
-            print('✅ Usuario encontrado: ${item['nombre_usuario']}');
-            
-            // ✅ Verificar contraseña
-            if (item['password'] == password) {
-              print('✅ Contraseña correcta');
-              return ApiResult.ok(Usuario.fromJson(item));
-            } else {
-              print('❌ Contraseña incorrecta');
-              return ApiResult.error('Contraseña incorrecta');
-            }
+            return ApiResult.ok(Usuario.fromJson(item));
           }
         }
-        print('❌ Usuario no encontrado');
         return ApiResult.error('Usuario no encontrado');
       } else {
         return ApiResult.error('Error al obtener usuarios');
       }
     } catch (e) {
-      print('❌ Error en loginUsuario: $e');
       return _catch(e);
     }
   }
 
-  /// Obtener usuario por email (alternativa)
+  Future<ApiResult<Usuario>> loginUsuario({
+    required String nombreUsuario,
+    required String password,
+  }) async {
+    try {
+      final box = await Hive.openBox('configuracion');
+      final usuarioGuardado = box.get('usuario_actual');
+      final passwordGuardada = box.get('usuario_password');
+
+      if (usuarioGuardado == nombreUsuario && passwordGuardada == password) {
+        final res = await http
+            .get(_uri('/usuarios'), headers: _headers)
+            .timeout(_timeout);
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          final data = jsonDecode(res.body) as List;
+          for (var item in data) {
+            if (item['nombre_usuario'] == nombreUsuario) {
+              final usuarioApi = Usuario.fromJson(item);
+              return ApiResult.ok(Usuario(
+                uid: usuarioApi.uid,
+                nombre: usuarioApi.nombre,
+                nombreUsuario: usuarioApi.nombreUsuario,
+                email: usuarioApi.email,
+                password: password,
+                edad: usuarioApi.edad,
+                ciudad: usuarioApi.ciudad,
+                genero: usuarioApi.genero,
+              ));
+            }
+          }
+          return ApiResult.error('Usuario no encontrado en API');
+        }
+        return ApiResult.error('Error al obtener datos de API');
+      }
+      return ApiResult.error('Usuario o contraseña incorrectos');
+    } catch (e) {
+      return _catch(e);
+    }
+  }
+
   Future<ApiResult<Usuario>> obtenerUsuarioPorEmail(String email) async {
     try {
       final res = await http
           .get(_uri('/usuarios'), headers: _headers)
           .timeout(_timeout);
-      
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final data = jsonDecode(res.body) as List;
         for (var item in data) {
@@ -195,7 +171,7 @@ class ApiService {
     }
   }
 
-  // ─── DIARIO
+  // ─── DIARIO ───
 
   Future<ApiResult<EntradaDiario>> crearEntradaDiario({
     required String uid,
@@ -241,7 +217,7 @@ class ApiService {
     }
   }
 
-  // ─── VENTAS
+  // ─── VENTAS ───
 
   Future<ApiResult<Venta>> crearVenta({
     required String uid,
@@ -284,7 +260,7 @@ class ApiService {
     }
   }
 
-  // ─── RETOS
+  // ─── RETOS ───
 
   Future<ApiResult<Reto>> crearReto({
     required String uid,
@@ -324,7 +300,6 @@ class ApiService {
     }
   }
 
-  /// Marca el reto como completado — FastAPI registra la fecha automáticamente.
   Future<ApiResult<Reto>> completarReto(int retoId) async {
     try {
       final res = await http
@@ -336,7 +311,7 @@ class ApiService {
     }
   }
 
-  // ─── LOGROS
+  // ─── LOGROS ───
 
   Future<ApiResult<Logro>> crearLogro({
     required String uid,
@@ -375,7 +350,7 @@ class ApiService {
     }
   }
 
-  // ─── RECORDATORIOS
+  // ─── RECORDATORIOS ───
 
   Future<ApiResult<Recordatorio>> crearRecordatorio({
     required String uid,
@@ -435,7 +410,7 @@ class ApiService {
     }
   }
 
-  // ─── CAPACITACIONES
+  // ─── CAPACITACIONES ───
 
   Future<ApiResult<Capacitacion>> crearCapacitacion({
     required String uid,

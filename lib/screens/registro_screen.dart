@@ -134,7 +134,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
           nombre: _nombreController.text.trim(),
           nombreUsuario: _usuarioController.text.trim(),
           email: '${_usuarioController.text.trim()}@lombriaventura.com',
-          password: _passwordController.text.trim(), 
           edad: int.tryParse(_edadController.text.trim()),
           ciudad: _ciudadController.text.trim(),
           genero: null,
