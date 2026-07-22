@@ -4,13 +4,12 @@ import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'models/conversacion.dart';
 import 'services/recordatorios_service.dart';
+import 'services/monedas_service.dart'; // ✅ AGREGAR ESTE IMPORT
 import 'screens/splash_screen.dart';
 import 'providers/usuario_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ❌ ELIMINADA: await Firebase.initializeApp();
 
   await Hive.initFlutter();
   Hive.registerAdapter(ConversacionAdapter());
@@ -26,6 +25,9 @@ void main() async {
   await Hive.openBox('capacitaciones');
   await Hive.openBox('usuarios');
   await Hive.openBox('historial_ventas');
+
+  // ✅ INICIALIZAR MonedasService
+  await MonedasService().init();
 
   final recordatorioService = RecordatoriosService();
   await recordatorioService.init();

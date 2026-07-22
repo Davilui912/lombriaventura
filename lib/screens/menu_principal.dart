@@ -13,6 +13,7 @@ import 'tienda/ventas_atomizador.dart';
 import 'tienda/ventas_historial.dart';
 import 'tienda/ventas_humus.dart';
 import 'tienda/capacitacion.dart';
+import '../../services/monedas_service.dart';
 import 'juegos/memorama.dart';
 import 'logros.dart';
 import 'modulo_educativo.dart';
@@ -153,30 +154,62 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     });
   }
 
-  Widget _buildTituloAdmin() {
-    return GestureDetector(
-      onTap: _abrirPanelAdmin,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text(
-            '¡Hola, Lombrikid!',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 12),
-          Image.asset(
-            'assets/images/logo_lombriaventura.png',
-            height: 50,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Text('🪱', style: TextStyle(fontSize: 40));
-            },
-          ),
-        ],
-      ),
-    );
+  Future<int> _obtenerMonedas() async {
+    try {
+      // ✅ Usar MonedasService en lugar de acceder directamente al box
+      final monedas = MonedasService().obtenerMonedas();
+      print('🪙 Monedas en menú: $monedas');
+      return monedas;
+    } catch (e) {
+      print('Error al obtener monedas: $e');
+      return 0;
+    }
   }
+
+    Widget _buildTituloAdmin() {
+      return GestureDetector(
+        onTap: _abrirPanelAdmin,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              '¡Hola, Lombrikid!',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/logo_lombriaventura.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.bug_report,
+                      size: 30,
+                      color: AppTheme.verde,
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
   Widget _buildOpcionJuego(String titulo, String subtitulo, IconData icon, VoidCallback onTap, Color color) {
     return GestureDetector(
@@ -287,7 +320,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               colorJuegos,
             ),
             _buildOpcionJuego(
-              'Alimenta a Lola',
+              'Alimenta a la lombriz',
               'Cuida a tu lombriz',
               Icons.restaurant,
               () => _irAPantalla(const AlimentaLolaScreen()),
@@ -586,6 +619,58 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       appBar: AppBar(
         title: _buildTituloAdmin(),
         actions: [
+          // ✅ Mostrar monedas en el AppBar
+          FutureBuilder<int>(
+            future: _obtenerMonedas(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const SizedBox(
+                    width: 30,
+                    height: 20,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              if (snapshot.hasData && snapshot.data! > 0) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.monetization_on, color: Colors.amber, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${snapshot.data}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person, color: Colors.white),
             onPressed: () => _irAPantalla(const PerfilScreen()),
@@ -605,7 +690,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: 80, // ✅ Espacio para el botón flotante
+                ),
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
@@ -788,12 +878,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           Icons.edit_note,
                           () => _irAPantalla(const NuevaEntradaScreen()),
                         ),
-                        _buildMenuButton(
-                          'Pregúntale a la lombriz sabia',
-                          Icons.chat,
-                          AppTheme.verdeClaro,
-                          () => _irAPantalla(const ChatIAScreen()),
-                        ),
                         _buildOpcion(
                           'Avisos importantes',
                           'Cuida a tus lombrices',
@@ -838,7 +922,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                         _buildOpcion('Vender humus', 'Precio: \$10 por bolsita', Icons.agriculture, () => _irAPantalla(const VentasHumusScreen())),
                         _buildOpcion('Registro de ventas', 'Historial de ingresos', Icons.receipt, () => _irAPantalla(const VentasHistorialScreen())),
                         _buildOpcion('Capacitación', 'Capacita a otros niños', Icons.school, () => _irAPantalla(const CapacitacionScreen())),
-                        _buildOpcion('Problemas matemáticos', 'Gana monedas resolviendo', Icons.calculate, () => _irAPantalla(const ProblemasMatematicosScreen())),
+                        _buildOpcion('Matematicas de negocios', 'Gana monedas resolviendo', Icons.calculate, () => _irAPantalla(const ProblemasMatematicosScreen())),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -855,7 +939,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: Colors.black.withOpacity(0.06),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -905,7 +989,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.4),
+                              color: Colors.black.withOpacity(0.4),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -924,6 +1008,27 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
           ],
         ),
       ),
+    floatingActionButton: _categoriaAbierta == -1
+        ? Padding(
+            padding: const EdgeInsets.only(bottom: 120.0),
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatIAScreen()),
+                );
+              },
+              backgroundColor: AppTheme.verde,
+              elevation: 4,
+              icon: const Icon(Icons.chat, color: Colors.white),
+              label: const Text(
+                'Pregúntale a la lombriz',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ),
+          )
+        : null, // ✅ Se oculta cuando una categoría está abierta
+    floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

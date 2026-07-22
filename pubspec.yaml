@@ -1,6 +1,6 @@
 name: lombriaventura
 description: App educativa infantil de lombricomposta
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.5.0
@@ -9,6 +9,8 @@ provider: ^6.1.2
 
 dependencies:
 
+  
+  audioplayers: ^6.0.0
   flutter:
     sdk: flutter   
 

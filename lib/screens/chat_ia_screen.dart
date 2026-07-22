@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/theme.dart';
 import '../services/groq_service.dart';
 import '../services/conversacion_service.dart';
 import '../services/accesorios_service.dart';
+import '../services/tts_service.dart'; // ✅ NUEVO: Servicio de Google Cloud TTS
 import '../models/conversacion.dart';
 import 'historial_chat_screen.dart';
 
@@ -21,7 +21,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final GroqService _iaService = GroqService();
-  final FlutterTts _flutterTts = FlutterTts();
+  final TTSService _ttsService = TTSService(); // ✅ NUEVO: Google Cloud TTS
   final SpeechToText _speechToText = SpeechToText();
   
   List<Map<String, String>> _mensajes = [];
@@ -43,7 +43,6 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     _cargarPersonaje();
     _initServices();
     _cargarAccesorios();
-    _initTTS();
     _initSpeech();
     _cargarConversacion();
   }
@@ -120,16 +119,27 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       print('Error guardando conversación: $e');
     }
   }
-  
-  Future<void> _initTTS() async {
-    await _flutterTts.setLanguage('es-ES');
-    await _flutterTts.setPitch(1.2);
-    await _flutterTts.setSpeechRate(0.5);
-    _flutterTts.setCompletionHandler(() {
-      setState(() => _isSpeaking = false);
-    });
+
+  // ==================== TTS CON GOOGLE CLOUD ====================
+
+  /// ✅ Limpia el texto de emojis y caracteres especiales
+  String _limpiarTextoParaTTS(String texto) {
+    final regex = RegExp(
+      r'[^A-Za-zÁÉÍÓÚáéíóúÑñÜü\s.,;:!?¡¿0-9]',
+      unicode: true,
+    );
+
+    String textoLimpio = texto.replaceAll(regex, '');
+    textoLimpio = textoLimpio.replaceAll(RegExp(r'\n+'), '. ');
+    textoLimpio = textoLimpio.replaceAll(RegExp(r'\s+'), ' ');
+    textoLimpio = textoLimpio.replaceAll(RegExp(r'[*_#~]'), '');
+    textoLimpio = textoLimpio.replaceAll(RegExp(r'https?://[^\s]+'), '');
+    
+    return textoLimpio.trim();
   }
-  
+
+  // ==================== FIN TTS ====================
+
   Future<void> _initSpeech() async {
     await _speechToText.initialize();
   }
@@ -149,6 +159,11 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   Future<void> _enviarMensaje({String? preguntaTexto}) async {
     final pregunta = preguntaTexto ?? _controller.text.trim();
     if (pregunta.isEmpty) return;
+    
+    // ✅ Si está hablando, detener
+    if (_isSpeaking) {
+      await _detenerLectura();
+    }
     
     setState(() {
       _mensajes.add({'role': 'user', 'content': pregunta});
@@ -187,19 +202,55 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       print('Error guardando: $e');
     });
     
+    // ✅ Esperar un momento antes de leer
     if (_vozAutomatica && respuesta.isNotEmpty) {
+      await Future.delayed(const Duration(milliseconds: 300));
       await _leerRespuesta(respuesta);
     }
   }
   
   Future<void> _leerRespuesta(String texto) async {
+    // ✅ Si ya está hablando, detener primero
+    if (_isSpeaking) {
+      await _ttsService.stop();
+      setState(() => _isSpeaking = false);
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+    
+    // ✅ Limpiar el texto antes de leerlo
+    final textoLimpio = _limpiarTextoParaTTS(texto);
+    
+    if (textoLimpio.isEmpty) {
+      print('⚠️ Texto vacío después de limpiar, no se lee');
+      return;
+    }
+    
+    print('🔊 Texto original: $texto');
+    print('🔊 Texto limpiado: $textoLimpio');
+    
     setState(() => _isSpeaking = true);
-    await _flutterTts.speak(texto);
+    
+    try {
+      // ✅ Usar Google Cloud TTS
+      final exito = await _ttsService.speak(textoLimpio);
+      if (!exito) {
+        setState(() => _isSpeaking = false);
+        print('⚠️ Error al generar voz con Google Cloud TTS');
+      }
+    } catch (e) {
+      print('❌ Error al hablar: $e');
+      setState(() => _isSpeaking = false);
+    }
   }
   
   Future<void> _detenerLectura() async {
-    await _flutterTts.stop();
-    setState(() => _isSpeaking = false);
+    try {
+      await _ttsService.stop();
+      setState(() => _isSpeaking = false);
+      print('🔇 Lectura detenida');
+    } catch (e) {
+      print('❌ Error al detener: $e');
+    }
   }
   
   Future<void> _escucharPregunta() async {
@@ -258,14 +309,23 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       _scrollToBottom();
     }
   }
-  
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    _ttsService.dispose(); // ✅ Liberar recursos de TTS
+    _speechToText.stop();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final preguntasRestantes = _iaService.preguntasRestantesHoy;
     
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 0, // Elimina los márgenes internos por defecto del AppBar
+        titleSpacing: 0,
         title: Row(
           children: [
             const SizedBox(width: 6),
@@ -278,14 +338,12 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
             ),
           ],
         ),
-
-
         backgroundColor: AppTheme.verde,
         actions: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -318,40 +376,64 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (!_vozAutomatica)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              color: Colors.grey.shade200,
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.volume_off, size: 14, color: Colors.grey),
-                  SizedBox(width: 4),
-                  Text('Voz desactivada', style: TextStyle(fontSize: 11)),
-                ],
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/fondo.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
+          children: [
+            if (!_vozAutomatica)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                color: Colors.grey.shade200,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.volume_off, size: 14, color: Colors.grey),
+                    SizedBox(width: 4),
+                    Text('Voz desactivada', style: TextStyle(fontSize: 11)),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.92),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _mensajes.length + (_isLoading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _mensajes.length && _isLoading) {
+                        return _buildLoadingIndicator();
+                      }
+                      final mensaje = _mensajes[index];
+                      return _buildMensaje(
+                        mensaje['content']!,
+                        esUsuario: mensaje['role'] == 'user',
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _mensajes.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _mensajes.length && _isLoading) {
-                  return _buildLoadingIndicator();
-                }
-                final mensaje = _mensajes[index];
-                return _buildMensaje(
-                  mensaje['content']!,
-                  esUsuario: mensaje['role'] == 'user',
-                );
-              },
-            ),
-          ),
-          _buildInputArea(),
-        ],
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
@@ -372,7 +454,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -448,7 +530,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -483,14 +565,5 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
         ],
       ),
     );
-  }
-  
-  @override
-  void dispose() {
-    _controller.dispose();
-    _scrollController.dispose();
-    _flutterTts.stop();
-    _speechToText.stop();
-    super.dispose();
   }
 }

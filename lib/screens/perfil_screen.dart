@@ -249,147 +249,169 @@ class _PerfilScreenState extends State<PerfilScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  
-                  GestureDetector(
-                    onTap: _cambiarFoto,
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: AppTheme.verde.withValues(alpha: 0.2),
-                          child: _fotoPerfil != null && File(_fotoPerfil!).existsSync()
-                              ? ClipOval(
-                                  child: Image.file(
-                                    File(_fotoPerfil!),
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: AppTheme.verde,
-                                      );
-                                    },
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: AppTheme.verde,
-                                ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: AppTheme.verde,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  Text(
-                    _nombreCompleto,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.verde.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      '🪱 Lombrikid',
-                      style: TextStyle(
-                        color: AppTheme.verde,
-                        fontWeight: FontWeight.bold,
+          : Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/fondo.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 30),
-                  
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.badge, color: AppTheme.verde),
-                      title: const Text('Nombre de usuario'),
-                      subtitle: Text(_usuario.isEmpty ? 'Sin definir' : _usuario),
-                    ),
-                  ),
-                  
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.person, color: AppTheme.verde),
-                      title: const Text('Nombre completo'),
-                      subtitle: Text(_nombreCompleto),
-                    ),
-                  ),
-                  
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.cake, color: AppTheme.verde),
-                      title: const Text('Edad'),
-                      subtitle: Text(_edad),
-                    ),
-                  ),
-                  
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.location_city, color: AppTheme.verde),
-                      title: const Text('Ciudad'),
-                      subtitle: Text(_ciudad),
-                    ),
-                  ),
-                  
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.calendar_today, color: AppTheme.verde),
-                      title: const Text('Lombrikid desde'),
-                      subtitle: Text(_formatearFecha(_fechaRegistro)),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 30),
-                  
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.verde.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.info_outline, color: AppTheme.verde),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Toca tu foto de perfil para cambiarla. ¡Sigue ayudando al planeta! 🌱',
-                            style: TextStyle(fontSize: 12),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      
+                      GestureDetector(
+                        onTap: _cambiarFoto,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 60,
+                              backgroundColor: AppTheme.verde.withValues(alpha: 0.2),
+                              child: _fotoPerfil != null && File(_fotoPerfil!).existsSync()
+                                  ? ClipOval(
+                                      child: Image.file(
+                                        File(_fotoPerfil!),
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: AppTheme.verde,
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 60,
+                                      color: AppTheme.verde,
+                                    ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.verde,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      Text(
+                        _nombreCompleto,
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.verde.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          '🪱 Lombrikid',
+                          style: TextStyle(
+                            color: AppTheme.verde,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 30),
+                      
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.badge, color: AppTheme.verde),
+                          title: const Text('Nombre de usuario'),
+                          subtitle: Text(_usuario.isEmpty ? 'Sin definir' : _usuario),
+                        ),
+                      ),
+                      
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.person, color: AppTheme.verde),
+                          title: const Text('Nombre completo'),
+                          subtitle: Text(_nombreCompleto),
+                        ),
+                      ),
+                      
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.cake, color: AppTheme.verde),
+                          title: const Text('Edad'),
+                          subtitle: Text(_edad),
+                        ),
+                      ),
+                      
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.location_city, color: AppTheme.verde),
+                          title: const Text('Ciudad'),
+                          subtitle: Text(_ciudad),
+                        ),
+                      ),
+                      
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.calendar_today, color: AppTheme.verde),
+                          title: const Text('Lombrikid desde'),
+                          subtitle: Text(_formatearFecha(_fechaRegistro)),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 30),
+                      
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.verde.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline, color: AppTheme.verde),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Toca tu foto de perfil para cambiarla. ¡Sigue ayudando al planeta! 🌱',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
             ),
     );

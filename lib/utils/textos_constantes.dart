@@ -1,34 +1,43 @@
 class TextosConstantes {
   static const String avisoPrivacidad = '''
-🔒 Aviso de Privacidad - Lombriaventura
+📋 AVISO DE PRIVACIDAD - LOMBRIAVENTURA
 
-En Lombriaventura nos tomamos muy en serio la privacidad y seguridad de los datos de nuestros usuarios, especialmente de los niños.
+Última actualización: 15 de julio de 2026
 
-📝 ¿Qué información recopilamos?
-• Nombre completo
-• Nombre de usuario
-• Edad
-• Ciudad de residencia
-• Género (Lola/Lalo)
-• Respuesta de seguridad (para recuperar tu cuenta)
+Lombriaventura es una aplicación educativa diseñada para niños y jóvenes. Nos comprometemos a proteger tu privacidad y la de tus hijos.
 
-🔐 ¿Cómo usamos tu información?
-• Para personalizar tu experiencia en la app
-• Para guardar tu progreso y logros
-• Para mostrarte el personaje que elegiste
-• Para ayudarte a recuperar tu cuenta si olvidas tu contraseña
+🔒 INFORMACIÓN QUE RECOPILAMOS
+- Nombre de usuario
+- Nombre completo
+- Edad
+- Ciudad
+- Correo electrónico (generado automáticamente)
+- Fotos del diario "Mi Composta" (opcionales)
 
-🛡️ ¿Cómo protegemos tus datos?
-• Tus datos se guardan de forma segura en tu dispositivo
-• No compartimos tu información con terceros
-• Solo usamos tu información dentro de la app
-• Puedes solicitar eliminar tus datos en cualquier momento
+📊 CÓMO USAMOS TU INFORMACIÓN
+- Personalizar tu experiencia educativa
+- Guardar tu progreso y logros
+- Mostrar estadísticas de uso
+- Mejorar la aplicación
 
-👨‍👩‍👦 Consentimiento de los padres
-Esta app está diseñada para niños, pero la información personal solo se recopila con el consentimiento de los padres o tutores. Al aceptar, confirmas que tienes la autorización de tus padres para usar esta app y proporcionar tu información.
+🤝 COMPARTIR INFORMACIÓN
+No compartimos tus datos personales con terceros. Tu información se almacena de forma segura en tu dispositivo y en nuestros servidores (con conexión HTTPS).
 
-📧 Contacto
-Si tienes preguntas sobre tu privacidad, contáctanos en:
-📧 privacidad@lombriaventura.com
+🔐 SEGURIDAD
+Implementamos medidas de seguridad para proteger tus datos, incluyendo cifrado y almacenamiento seguro. Todas las comunicaciones con nuestros servidores están encriptadas.
+
+👶 PRIVACIDAD DE LOS NIÑOS
+Lombriaventura está diseñada para niños de todas las edades. No recopilamos información personal de niños sin el consentimiento de sus padres o tutores. Si eres menor de 13 años, necesitas el permiso de tus padres para usar la aplicación.
+
+📧 CONTACTO
+Si tienes preguntas sobre esta política de privacidad, contáctanos en:
+lombriaventura@gmail.com
+
+🗑️ ELIMINACIÓN DE DATOS
+Puedes solicitar la eliminación de tu cuenta y datos personales enviando un correo a lombriaventura@gmail.com con el asunto "Solicitud de eliminación de datos".
+
+🔗 POLÍTICA COMPLETA
+Lee nuestra política de privacidad completa en:
+https://davilui912.github.io/lombriaventura-privacidad/
 ''';
 }
