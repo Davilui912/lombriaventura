@@ -181,8 +181,8 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 32,  // ✅ Reducido de 40 a 32
-            height: 32, // ✅ Reducido de 40 a 32
+            width: 32,  
+            height: 32, 
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,

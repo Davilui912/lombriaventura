@@ -14,13 +14,13 @@ class ConfigAccesorio {
 }
 
 final Map<String, ConfigAccesorio> coordenadasAccesorios = {
-  'gorra_azul_pluma': const ConfigAccesorio(top: -10, right: 10, width: 70),  
+  'gorra_azul_pluma': const ConfigAccesorio(top: -10, right: 10, width: 70),
   'gorra_balon': const ConfigAccesorio(top: -3, right: 15, width: 70),
   'gorra_futbol_lentes': const ConfigAccesorio(top: -10, right: 10, width: 70),
   'gorra_futbol_sinta': const ConfigAccesorio(top: -10, right: 10, width: 70),
   'gorra_lentes_oscuros': const ConfigAccesorio(top: -3, right: 15, width: 70),
   'gorra_lombriz': const ConfigAccesorio(top: -13, right: 15, width: 70),
-  'gorra_parches_amarilla': const ConfigAccesorio(top: -3  , right: 15, width: 70),
+  'gorra_parches_amarilla': const ConfigAccesorio(top: -3, right: 15, width: 70),
   'gorra_parches_azul': const ConfigAccesorio(top: -5, right: 11, width: 70),
   'gorra_parches_futbol': const ConfigAccesorio(top: -5, right: 10, width: 70),
   'gorra_parches_gris': const ConfigAccesorio(top: -5, right: 11, width: 70),
@@ -58,14 +58,18 @@ class AccesoriosScreen extends StatefulWidget {
 class _AccesoriosScreenState extends State<AccesoriosScreen> {
   late AccesoriosService _accesoriosService;
   late MonedasService _monedasService;
-  
+
   List<Accesorio> _accesorios = [];
   int _monedas = 0;
   bool _isLoading = true;
-  
+
   final List<String> _categorias = ['Gorras', 'Lentes', 'Collares', 'Sombreros'];
   String _categoriaSeleccionada = 'Gorras';
   String _personaje = 'Lombriz';
+
+  // ✅ Variables para la prueba de accesorios
+  Accesorio? _accesorioEnPrueba;
+  bool _modoPrueba = false;
 
   @override
   void initState() {
@@ -75,25 +79,25 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
 
   Future<void> _cargarDatos() async {
     setState(() => _isLoading = true);
-    
+
     try {
       _accesoriosService = AccesoriosService();
       await _accesoriosService.init();
-      
+
       _monedasService = MonedasService();
       await _monedasService.init();
-      
+
       _monedas = _monedasService.obtenerMonedas();
-      
+
       final configBox = await Hive.openBox('configuracion');
       _personaje = configBox.get('personaje', defaultValue: 'Lombriz');
-      
+
       _cargarAccesorios();
-      
+
     } catch (e) {
       print('Error cargando datos: $e');
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -110,7 +114,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       Accesorio(id: 'gorra_parches_futbol', nombre: 'Gorra Parches Fútbol', imagen: 'assets/images/accesorios/gorra_parches_futbol.png', precio: 28),
       Accesorio(id: 'gorra_parches_gris', nombre: 'Gorra Parches Gris', imagen: 'assets/images/accesorios/gorra_parches_gris.png', precio: 25),
       Accesorio(id: 'gorra_parches_militar', nombre: 'Gorra Parches Militar', imagen: 'assets/images/accesorios/gorra_parches_militar.png', precio: 30),
-      
+
       Accesorio(id: 'lentes_azules', nombre: 'Lentes Azules', imagen: 'assets/images/accesorios/lentes_azules.png', precio: 30),
       Accesorio(id: 'lentes_descanso', nombre: 'Lentes de Descanso', imagen: 'assets/images/accesorios/lentes_descanso.png', precio: 25),
       Accesorio(id: 'lentes_futbol', nombre: 'Lentes Fútbol', imagen: 'assets/images/accesorios/lentes_futbol.png', precio: 28),
@@ -120,12 +124,12 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       Accesorio(id: 'lentes_oscuros', nombre: 'Lentes Oscuros', imagen: 'assets/images/accesorios/lentes_oscuros.png', precio: 35),
       Accesorio(id: 'lentes_simples', nombre: 'Lentes Simples', imagen: 'assets/images/accesorios/lentes_simples.png', precio: 20),
       Accesorio(id: 'lentes_sol', nombre: 'Lentes de Sol', imagen: 'assets/images/accesorios/lentes_sol.png', precio: 30),
-      
+
       Accesorio(id: 'collar_perlas_amarillas', nombre: 'Collar Perlas Amarillas', imagen: 'assets/images/accesorios/collar_perlas_amarillas.png', precio: 45),
       Accesorio(id: 'collar_perlas', nombre: 'Collar de Perlas', imagen: 'assets/images/accesorios/collar_perlas.png', precio: 40),
       Accesorio(id: 'collar_plateado_pluma', nombre: 'Collar Plateado con Pluma', imagen: 'assets/images/accesorios/collar_plateado_pluma.png', precio: 50),
       Accesorio(id: 'collar_pluma', nombre: 'Collar con Pluma', imagen: 'assets/images/accesorios/collar_pluma.png', precio: 35),
-      
+
       Accesorio(id: 'sombrero_amarillo', nombre: 'Sombrero Amarillo', imagen: 'assets/images/accesorios/sombrero_amarillo.png', precio: 35),
       Accesorio(id: 'sombrero_arcoiris', nombre: 'Sombrero Arcoíris', imagen: 'assets/images/accesorios/sombrero_arcoiris.png', precio: 40),
       Accesorio(id: 'sombrero_azul', nombre: 'Sombrero Azul', imagen: 'assets/images/accesorios/sombrero_azul.png', precio: 35),
@@ -153,7 +157,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
 
     for (var accesorio in accesoriosFiltrados) {
       accesorio.comprado = comprados.contains(accesorio.id);
-      
+
       if (equipados['gorra'] == accesorio.id ||
           equipados['lentes'] == accesorio.id ||
           equipados['collar'] == accesorio.id ||
@@ -167,11 +171,62 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
     });
   }
 
+  // ✅ Método para probar un accesorio
+  void _probarAccesorio(Accesorio accesorio) {
+    setState(() {
+      _accesorioEnPrueba = accesorio;
+      _modoPrueba = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('👀 Probando: ${accesorio.nombre}'),
+        backgroundColor: AppTheme.verde,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // ✅ Método para quitar la prueba
+  void _quitarPrueba() {
+    setState(() {
+      _accesorioEnPrueba = null;
+      _modoPrueba = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🔙 Prueba finalizada'),
+        backgroundColor: Colors.grey,
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
   Widget _buildPersonajeConAccesorios() {
     final equipados = _accesoriosService.obtenerEquipados(_personaje);
 
+    // ✅ Si estamos en modo prueba, mostrar el accesorio en prueba
+    String? gorra = equipados['gorra'];
+    String? lentes = equipados['lentes'];
+    String? collar = equipados['collar'];
+    String? sombrero = equipados['sombrero'];
+
+    if (_modoPrueba && _accesorioEnPrueba != null) {
+      final id = _accesorioEnPrueba!.id;
+      if (id.startsWith('gorra')) {
+        gorra = id;
+        sombrero = null; // Excluir sombrero si se prueba una gorra
+      } else if (id.startsWith('lentes')) {
+        lentes = id;
+      } else if (id.startsWith('collar')) {
+        collar = id;
+      } else if (id.startsWith('sombrero')) {
+        sombrero = id;
+        gorra = null; // Excluir gorra si se prueba un sombrero
+      }
+    }
+
     return Container(
-      height: 180, 
+      height: 180,
       width: 180,
       child: Stack(
         clipBehavior: Clip.none,
@@ -179,46 +234,46 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
           Align(
             alignment: Alignment.center,
             child: Image.asset(
-              'assets/images/personaje/lombriz_base.png', 
+              'assets/images/personaje/lombriz_base.png',
               width: 180,
               height: 180,
               fit: BoxFit.contain,
             ),
           ),
-          if (equipados['collar'] != null)
+          if (collar != null)
             Positioned(
-              top: coordenadasAccesorios[equipados['collar']]?.top ?? 18,
-              right: coordenadasAccesorios[equipados['collar']]?.right ?? 100,
+              top: coordenadasAccesorios[collar]?.top ?? 18,
+              right: coordenadasAccesorios[collar]?.right ?? 100,
               child: Image.asset(
-                'assets/images/accesorios/${equipados['collar']}.png',
-                width: coordenadasAccesorios[equipados['collar']]?.width ?? 50,
+                'assets/images/accesorios/$collar.png',
+                width: coordenadasAccesorios[collar]?.width ?? 50,
               ),
             ),
-          if (equipados['lentes'] != null)
+          if (lentes != null)
             Positioned(
-              top: coordenadasAccesorios[equipados['lentes']]?.top ?? 10,
-              right: coordenadasAccesorios[equipados['lentes']]?.right ?? 30,
+              top: coordenadasAccesorios[lentes]?.top ?? 10,
+              right: coordenadasAccesorios[lentes]?.right ?? 30,
               child: Image.asset(
-                'assets/images/accesorios/${equipados['lentes']}.png',
-                width: coordenadasAccesorios[equipados['lentes']]?.width ?? 58,
+                'assets/images/accesorios/$lentes.png',
+                width: coordenadasAccesorios[lentes]?.width ?? 58,
               ),
             ),
-          if (equipados['gorra'] != null)
+          if (gorra != null)
             Positioned(
-              top: coordenadasAccesorios[equipados['gorra']]?.top ?? -5,
-              right: coordenadasAccesorios[equipados['gorra']]?.right ?? 22,
+              top: coordenadasAccesorios[gorra]?.top ?? -5,
+              right: coordenadasAccesorios[gorra]?.right ?? 22,
               child: Image.asset(
-                'assets/images/accesorios/${equipados['gorra']}.png',
-                width: coordenadasAccesorios[equipados['gorra']]?.width ?? 65,
+                'assets/images/accesorios/$gorra.png',
+                width: coordenadasAccesorios[gorra]?.width ?? 65,
               ),
             ),
-          if (equipados['sombrero'] != null)
+          if (sombrero != null)
             Positioned(
-              top: coordenadasAccesorios[equipados['sombrero']]?.top ?? -5,
-              right: coordenadasAccesorios[equipados['sombrero']]?.right ?? 33,
+              top: coordenadasAccesorios[sombrero]?.top ?? -5,
+              right: coordenadasAccesorios[sombrero]?.right ?? 33,
               child: Image.asset(
-                'assets/images/accesorios/${equipados['sombrero']}.png',
-                width: coordenadasAccesorios[equipados['sombrero']]?.width ?? 65,
+                'assets/images/accesorios/$sombrero.png',
+                width: coordenadasAccesorios[sombrero]?.width ?? 65,
               ),
             ),
         ],
@@ -269,15 +324,20 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       setState(() {
         accesorio.comprado = true;
         _monedas = _monedasService.obtenerMonedas();
+        // ✅ Si estábamos probando, quitamos el modo prueba
+        if (_modoPrueba && _accesorioEnPrueba?.id == accesorio.id) {
+          _modoPrueba = false;
+          _accesorioEnPrueba = null;
+        }
       });
-      
+
       _equiparAccesorio(accesorio);
     }
   }
 
   void _equiparAccesorio(Accesorio accesorio) async {
     final equipados = _accesoriosService.obtenerEquipados(_personaje);
-    
+
     String categoria;
     if (accesorio.id.startsWith('gorra')) categoria = 'gorra';
     else if (accesorio.id.startsWith('lentes')) categoria = 'lentes';
@@ -285,7 +345,6 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
     else if (accesorio.id.startsWith('sombrero')) categoria = 'sombrero';
     else return;
 
-    // Si ya está equipado este mismo, lo quitamos (desequipar)
     if (equipados[categoria] == accesorio.id) {
       await _accesoriosService.equiparAccesorio(
         _personaje,
@@ -294,7 +353,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
         categoria == 'collar' ? null : equipados['collar'],
         categoria == 'sombrero' ? null : equipados['sombrero'],
       );
-      
+
       setState(() {
         accesorio.equipado = false;
         _cargarAccesorios();
@@ -302,7 +361,6 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       return;
     }
 
-    // 🛑 VALIDACIÓN NUEVA: Gorra y Sombrero se excluyen mutuamente
     if (categoria == 'gorra' && equipados['sombrero'] != null) {
       _mostrarAlertaConflicto('No puedes equipar una gorra si ya tienes un sombrero puesto. ¡Quítatelo primero!');
       return;
@@ -313,7 +371,6 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       return;
     }
 
-    // Equipar normalmente
     String? nuevaGorra = equipados['gorra'];
     String? nuevaLentes = equipados['lentes'];
     String? nuevaCollar = equipados['collar'];
@@ -321,13 +378,13 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
 
     if (categoria == 'gorra') {
       nuevaGorra = accesorio.id;
-      nuevaSombrero = null; // Por seguridad limpia el otro
+      nuevaSombrero = null;
     }
     else if (categoria == 'lentes') nuevaLentes = accesorio.id;
     else if (categoria == 'collar') nuevaCollar = accesorio.id;
     else if (categoria == 'sombrero') {
       nuevaSombrero = accesorio.id;
-      nuevaGorra = null; // Por seguridad limpia el otro
+      nuevaGorra = null;
     }
 
     await _accesoriosService.equiparAccesorio(
@@ -340,11 +397,15 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
 
     setState(() {
       accesorio.equipado = true;
+      // ✅ Si estábamos probando, quitamos el modo prueba
+      if (_modoPrueba) {
+        _modoPrueba = false;
+        _accesorioEnPrueba = null;
+      }
       _cargarAccesorios();
     });
   }
 
-  // 🌟 Ventana emergente cuando hay conflicto entre gorra y sombrero
   void _mostrarAlertaConflicto(String mensaje) {
     showDialog(
       context: context,
@@ -382,6 +443,12 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
         title: const Text('🛍️ Tienda de Accesorios'),
         backgroundColor: AppTheme.verde,
         actions: [
+          if (_modoPrueba)
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: _quitarPrueba,
+              tooltip: 'Quitar prueba',
+            ),
           Container(
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -418,7 +485,39 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
             if (!_isLoading)
               Padding(
                 padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-                child: _buildPersonajeConAccesorios(),
+                child: Column(
+                  children: [
+                    _buildPersonajeConAccesorios(),
+                    // ✅ Indicador de modo prueba
+                    if (_modoPrueba && _accesorioEnPrueba != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.amber, width: 2),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.visibility, color: Colors.amber, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Probando: ${_accesorioEnPrueba!.nombre}',
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
 
             Container(
@@ -448,6 +547,8 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
                       onTap: () {
                         setState(() {
                           _categoriaSeleccionada = categoria;
+                          // ✅ Quitar prueba al cambiar de categoría
+                          if (_modoPrueba) _quitarPrueba();
                           _cargarAccesorios();
                         });
                       },
@@ -472,7 +573,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -499,15 +600,22 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
   }
 
   Widget _buildAccesorioCard(Accesorio accesorio) {
+    final enPrueba = _modoPrueba && _accesorioEnPrueba?.id == accesorio.id;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: enPrueba
+            ? Border.all(color: Colors.amber, width: 2)
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: enPrueba
+                ? Colors.amber.withValues(alpha: 0.2)
+                : Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -519,7 +627,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: enPrueba ? Colors.amber.shade50 : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Image.asset(
@@ -565,6 +673,38 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
               ],
             ),
           ),
+          // ✅ Botón de Probar (solo si NO está comprado)
+          if (!accesorio.comprado && !enPrueba)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: IconButton(
+                onPressed: () => _probarAccesorio(accesorio),
+                icon: const Icon(Icons.visibility, color: Colors.amber),
+                tooltip: 'Probar',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.amber.withValues(alpha: 0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          // ✅ Botón de Quitar prueba
+          if (enPrueba)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: IconButton(
+                onPressed: _quitarPrueba,
+                icon: const Icon(Icons.close, color: Colors.red),
+                tooltip: 'Quitar prueba',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red.withValues(alpha: 0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
           ElevatedButton(
             onPressed: () => _comprarAccesorio(accesorio),
             style: ElevatedButton.styleFrom(
