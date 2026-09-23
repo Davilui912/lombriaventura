@@ -1,6 +1,4 @@
-// lib/services/tts_service.dart
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import '/secrets.dart';
@@ -15,8 +13,11 @@ class TTSService {
 
   static const String _apiKey = Secrets.googleTtsApiKey;
 
-  // ✅ VOZ NEURAL - ESPAÑOL (ES-US) - FUNCIONA
-  static const String _voz = 'es-US-Neural2-A';
+  // ✅ CONFIGURACIÓN PARA ESPAÑOL (MÉXICO) Y VOZ ARCHENAR
+  static const String _languageCode = 'es-MX';
+  
+  // Nombre identificador según el catálogo de voces de Google
+  static const String _voz = 'es-MX-Chirp3-HD-Archenar'; 
 
   Future<bool> speak(String texto) async {
     try {
@@ -33,7 +34,7 @@ class TTSService {
       _player = AudioPlayer();
       _isSpeaking = true;
 
-      print('🔊 Enviando texto a Google TTS: $textoLimpio');
+      print('🔊 Enviando texto a Google TTS (es-MX / Archenar): $textoLimpio');
 
       final response = await http.post(
         Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=$_apiKey'),
@@ -41,13 +42,13 @@ class TTSService {
         body: jsonEncode({
           'input': {'text': textoLimpio},
           'voice': {
-            'languageCode': 'es-US',
+            'languageCode': _languageCode,
             'name': _voz,
           },
           'audioConfig': {
             'audioEncoding': 'MP3',
-            'speakingRate': 0.85,
-            'pitch': 1.0,
+            'speakingRate': 0.90, // Ajuste sutil para mejor pronunciación
+            'pitch': 0.0,
           },
         }),
       );
