@@ -14,10 +14,10 @@ class TTSService {
   static const String _apiKey = Secrets.googleTtsApiKey;
 
   // ✅ CONFIGURACIÓN PARA ESPAÑOL (MÉXICO) Y VOZ ARCHENAR
-  static const String _languageCode = 'es-MX';
+  static const String _languageCode = 'es-US';
   
   // Nombre identificador según el catálogo de voces de Google
-  static const String _voz = 'es-MX-Chirp3-HD-Archenar'; 
+  static const String _voz = 'es-US-Neural2-A'; 
 
   Future<bool> speak(String texto) async {
     try {
@@ -31,7 +31,7 @@ class TTSService {
       }
 
       // ✅ Crear un nuevo AudioPlayer cada vez
-      _player = AudioPlayer();
+      _player = AudioPlayer();    
       _isSpeaking = true;
 
       print('🔊 Enviando texto a Google TTS (es-MX / Archenar): $textoLimpio');

@@ -477,7 +477,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              _buildEstadistica('✅ Aciertos', _aciertos, AppTheme.verd  e),
+              _buildEstadistica('✅ Aciertos', _aciertos, AppTheme.verde),
               _buildEstadistica('❌ Errores', _errores, Colors.red),
               _buildEstadistica(
                   '⏱️ Tiempo', _tiempoLimite - _segundosRestantes, Colors.blue),

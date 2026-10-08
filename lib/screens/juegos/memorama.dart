@@ -13,6 +13,9 @@ class MemoramaScreen extends StatefulWidget {
 }
 
 class _MemoramaScreenState extends State<MemoramaScreen> {
+  // ✅ Ahora son vidas (solo se restan al fallar)
+  static const int _vidasIniciales = 10;
+
   // ✅ IMÁGENES para las parejas
   final List<Map<String, String>> _parejasBase = [
     {'imagen': 'assets/images/memorama/Lombrices.png', 'nombre': 'Lombrices'},
@@ -29,7 +32,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     },
     {
       'imagen': 'assets/images/memorama/Planta_crecimiento.png',
-      'nombre': 'Plnata en crecimiento'
+      'nombre': 'Planta en crecimiento'
     },
     {
       'imagen': 'assets/images/memorama/Composteria.png',
@@ -41,9 +44,11 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   int? _primeraCarta;
   int? _segundaCarta;
   int _paresEncontrados = 0;
-  int _intentos = 0;
+  int _vidasRestantes = _vidasIniciales;
+  int _fallos = 0;
   bool _bloqueado = false;
   bool _juegoTerminado = false;
+  bool _juegoGanado = false;
   bool _monedasOtorgadas = false;
 
   @override
@@ -55,7 +60,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   void _iniciarJuego() {
     List<Map<String, dynamic>> cartas = [];
     for (var pareja in _parejasBase) {
-      // Carta 1: Imagen
       cartas.add({
         'tipo': 'imagen',
         'contenido': pareja['imagen'],
@@ -64,7 +68,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
         'volteada': false,
         'encontrada': false,
       });
-      // Carta 2: Texto (nombre)
       cartas.add({
         'tipo': 'texto',
         'contenido': pareja['nombre'],
@@ -82,9 +85,11 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
       _primeraCarta = null;
       _segundaCarta = null;
       _paresEncontrados = 0;
-      _intentos = 0;
+      _vidasRestantes = _vidasIniciales;
+      _fallos = 0;
       _bloqueado = false;
       _juegoTerminado = false;
+      _juegoGanado = false;
       _monedasOtorgadas = false;
     });
   }
@@ -122,7 +127,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     } else {
       setState(() {
         _segundaCarta = index;
-        _intentos++;
         _bloqueado = true;
       });
       _verificarPareja();
@@ -141,6 +145,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
       setState(() {
         if (sonPareja) {
+          // ✅ ACIERTO: No se resta vida
           _cartas[_primeraCarta!]['encontrada'] = true;
           _cartas[_segundaCarta!]['encontrada'] = true;
           _paresEncontrados++;
@@ -152,11 +157,21 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
           if (_paresEncontrados == _parejasBase.length) {
             _juegoTerminado = true;
+            _juegoGanado = true;
             _otorgarMonedas();
           }
         } else {
+          // ❌ FALLO: Se resta una vida
           _cartas[_primeraCarta!]['volteada'] = false;
           _cartas[_segundaCarta!]['volteada'] = false;
+          _fallos++;
+          _vidasRestantes--;
+
+          // ✅ Si se quedó sin vidas, pierde
+          if (_vidasRestantes <= 0 && !_juegoTerminado) {
+            _juegoTerminado = true;
+            _juegoGanado = false;
+          }
         }
 
         _primeraCarta = null;
@@ -194,46 +209,153 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           ),
         ],
       ),
-      body: _juegoTerminado ? _buildPantallaFinal() : _buildJuego(),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/fondo.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: _juegoTerminado ? _buildPantallaFinal() : _buildJuego(),
+        ),
+      ),
     );
   }
 
   Widget _buildJuego() {
     return Column(
       children: [
+        // ✅ Cabecera con vidas y pares
         Container(
-          padding: const EdgeInsets.all(12),
-          color: AppTheme.verde.withValues(alpha: 0.1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
             children: [
-              Text('Intentos: $_intentos',
-                  style: const TextStyle(fontSize: 16, fontFamily: 'Fredoka')),
-              const Text('🧠 Encuentra la imagen con su palabra',
-                  style: TextStyle(fontSize: 14, color: AppTheme.cafe)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // ✅ Vidas (corazones)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.favorite,
+                        color: _vidasRestantes <= 2
+                            ? Colors.red
+                            : Colors.pink,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Vidas: $_vidasRestantes/$_vidasIniciales',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'Fredoka',
+                          color: _vidasRestantes <= 2
+                              ? Colors.red
+                              : AppTheme.cafe,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Pares encontrados
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle,
+                          color: AppTheme.verde, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Pares: $_paresEncontrados/${_parejasBase.length}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'Fredoka',
+                          color: AppTheme.verde,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // ✅ Barra de vidas (se vacía conforme pierdes)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: _vidasRestantes / _vidasIniciales,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    _vidasRestantes <= 2 ? Colors.red : AppTheme.verde,
+                  ),
+                  minHeight: 6,
+                ),
+              ),
             ],
           ),
         ),
+
+        // ✅ Tablero de cartas
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            itemCount: _cartas.length,
-            itemBuilder: (context, index) {
-              return _buildCarta(index);
-            },
+            child: GridView.builder(
+              padding: const EdgeInsets.all(4),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+              ),
+              itemCount: _cartas.length,
+              itemBuilder: (context, index) {
+                return _buildCarta(index);
+              },
+            ),
           ),
         ),
+
+        // ✅ Botón reiniciar
         Padding(
           padding: const EdgeInsets.all(12),
           child: ElevatedButton.icon(
             onPressed: _iniciarJuego,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Reiniciar'),
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text(
+              'Reiniciar',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.verde,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
           ),
         ),
       ],
@@ -273,61 +395,24 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
             ),
           ],
         ),
-        child: Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
           child: encontrada
               ? (esImagen
-                  ? Image.asset(
-                      carta['contenido'],
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.broken_image,
-                          size: 30,
-                          color: Colors.grey,
-                        );
-                      },
-                    )
-                  : Text(
-                      carta['contenido'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.cafe,
-                      ),
-                      textAlign: TextAlign.center,
-                    ))
+                  ? _buildImagenCarta(carta['contenido'])
+                  : _buildTextoCarta(carta['contenido']))
               : (volteada
                   ? (esImagen
-                      ? Image.asset(
-                          carta['contenido'],
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.broken_image,
-                              size: 30,
-                              color: Colors.grey,
-                            );
-                          },
-                        )
-                      : Text(
-                          carta['contenido'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.cafe,
-                          ),
-                          textAlign: TextAlign.center,
-                        ))
-                  : const Text(
-                      '❓',
-                      style: TextStyle(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      ? _buildImagenCarta(carta['contenido'])
+                      : _buildTextoCarta(carta['contenido']))
+                  : const Center(
+                      child: Text(
+                        '❓',
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     )),
         ),
@@ -335,39 +420,173 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     );
   }
 
+  Widget _buildImagenCarta(String ruta) {
+    return SizedBox.expand(
+      child: Image.asset(
+        ruta,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(
+              Icons.broken_image,
+              size: 30,
+              color: Colors.grey,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTextoCarta(String texto) {
+    return Container(
+      color: Colors.white,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(4),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          texto,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.cafe,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   Widget _buildPantallaFinal() {
-    final estrellas = _intentos <= 12 ? 3 : (_intentos <= 16 ? 2 : 1);
+    final estrellas = _juegoGanado
+        ? (_vidasRestantes >= 7 ? 3 : (_vidasRestantes >= 4 ? 2 : 1))
+        : 0;
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('🎉', style: TextStyle(fontSize: 80)),
-            const SizedBox(height: 20),
-            const Text(
-              '¡Completaste el memorama!',
-              style: TextStyle(
-                  fontFamily: 'Fredoka', fontSize: 28, color: AppTheme.verde),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Text('⭐' * estrellas, style: const TextStyle(fontSize: 40)),
-            const SizedBox(height: 20),
-            _buildEstadistica('🧠 Pares encontrados',
-                '$_paresEncontrados/${_parejasBase.length}'),
-            _buildEstadistica('🎯 Intentos', '$_intentos'),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _iniciarJuego,
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
-              child: const Text('🔄 Jugar de nuevo',
-                  style: TextStyle(fontSize: 20)),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono según resultado
+              Text(
+                _juegoGanado ? '🎉' : '💔',
+                style: const TextStyle(fontSize: 70),
+              ),
+              const SizedBox(height: 16),
+
+              // Título
+              Text(
+                _juegoGanado ? '¡Ganaste!' : '¡Perdiste!',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 28,
+                  color: _juegoGanado ? AppTheme.verde : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+
+              // Mensaje
+              Text(
+                _juegoGanado
+                    ? '¡Encontraste todas las parejas!'
+                    : 'Te quedaste sin vidas',
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Estrellas (solo si ganó)
+              if (_juegoGanado)
+                Text('⭐' * estrellas, style: const TextStyle(fontSize: 36)),
+
+              const SizedBox(height: 16),
+
+              // Estadísticas
+              _buildEstadistica(
+                '🧠 Pares encontrados',
+                '$_paresEncontrados/${_parejasBase.length}',
+              ),
+              _buildEstadistica(
+                '❤️ Vidas restantes',
+                '$_vidasRestantes/$_vidasIniciales',
+              ),
+              _buildEstadistica(
+                '❌ Fallos',
+                '$_fallos',
+              ),
+
+              const SizedBox(height: 24),
+
+              // ✅ Botones: Reiniciar y Volver
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _iniciarJuego,
+                      icon: const Icon(Icons.refresh,
+                          color: Colors.white, size: 18),
+                      label: const Text(
+                        'Reiniciar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.verde,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.exit_to_app,
+                          color: Colors.white, size: 18),
+                      label: const Text(
+                        'Volver',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade600,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -375,21 +594,21 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
   Widget _buildEstadistica(String label, String valor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label, style: const TextStyle(fontSize: 18)),
+          Text(label, style: const TextStyle(fontSize: 16)),
           const SizedBox(width: 10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
               color: AppTheme.verde.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(valor,
                 style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.verde)),
           ),

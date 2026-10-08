@@ -34,7 +34,7 @@ final Map<String, ConfigAccesorio> coordenadasAccesorios = {
   'lentes_oscuros': const ConfigAccesorio(top: 19, right: 28, width: 60),
   'lentes_simples': const ConfigAccesorio(top: 4, right: 25, width: 65),
   'lentes_sol': const ConfigAccesorio(top: 15, right: 31, width: 60),
-  'collar_perlas_amarillas': const ConfigAccesorio(top: 48, right: 20, width: 60),
+  'collar_perlas_amarillas': const ConfigAccesorio(top: 48, right: 25, width: 50),
   'collar_perlas': const ConfigAccesorio(top: 55, right: 20, width: 60),
   'collar_plateado_pluma': const ConfigAccesorio(top: 55, right: 20, width: 60),
   'collar_pluma': const ConfigAccesorio(top: 55, right: 20, width: 60),
