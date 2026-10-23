@@ -795,7 +795,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                             informacion:
                                 'La lombricomposta, también llamada vermicomposta, es el resultado de la descomposición de residuos orgánicos por lombrices californianas. '
                                 'Estas lombrices comen los restos de comida y los convierten en humus, un abono rico en nutrientes.\n\n'
-                                'Es 100% natural, no contamina y ayuda a reducir la basura que va a los tiraderos.',
+                                'Es 100% natural, no contamina y ayuda a reducir la basura que va a los tiraderos .',
                             puntosClave: [
                               {
                                 'emoji': '🪱',

@@ -17,7 +17,7 @@ class TTSService {
   static const String _languageCode = 'es-US';
   
   // Nombre identificador según el catálogo de voces de Google
-  static const String _voz = 'es-US-Neural2-A'; 
+  static const String _voz = 'es-US-Chirp3-HD-Zephyr'; 
 
   Future<bool> speak(String texto) async {
     try {
