@@ -29,7 +29,7 @@ class _VentasLombricesScreenState extends State<VentasLombricesScreen> {
 
   Future<void> _vender() async {
     final cantidad = _cantidad;
-    final precioTotal = (cantidad * 2.5).round();
+    final precioTotal = 3;
     
     await _monedasService.agregarMonedas(precioTotal);
     

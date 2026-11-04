@@ -3,6 +3,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 class ActividadService {
   static const String _boxName = 'actividad';
 
+  // ✅ Clave donde se guarda el récord de días
+  static const String _recordKey = 'record_dias';
+
   Future<void> _guardarEntrada() async {
     final box = Hive.box(_boxName);
     final hoy = DateTime.now().toIso8601String().split('T')[0];
@@ -17,7 +20,8 @@ class ActividadService {
   // Obtener total de días activos
   int obtenerDiasActivos() {
     final box = Hive.box(_boxName);
-    return box.keys.length;
+    // ✅ Excluimos la clave del récord para que no cuente como día activo
+    return box.keys.where((k) => k != _recordKey).length;
   }
 
   // Obtener días consecutivos (racha actual)
@@ -36,6 +40,33 @@ class ActividadService {
       }
     }
     return racha;
+  }
+
+  // ✅ NUEVO: Obtener el récord guardado
+  int obtenerRecord() {
+    final box = Hive.box(_boxName);
+    return box.get(_recordKey, defaultValue: 0);
+  }
+
+  // ✅ NUEVO: Actualizar el récord si la racha actual es mayor
+  Future<void> actualizarRecordSiEsNecesario() async {
+    final box = Hive.box(_boxName);
+    final rachaActual = obtenerRacha();
+    final recordActual = obtenerRecord();
+
+    if (rachaActual > recordActual) {
+      await box.put(_recordKey, rachaActual);
+      print('🏆 ¡Nuevo récord! $rachaActual días');
+    }
+  }
+
+  // ✅ NUEVO: Obtener racha y récord en un solo paso (actualiza el récord si hace falta)
+  Future<Map<String, int>> obtenerRachaYRecord() async {
+    await actualizarRecordSiEsNecesario();
+    return {
+      'racha': obtenerRacha(),
+      'record': obtenerRecord(),
+    };
   }
 
   // Obtener fase de Max según días activos

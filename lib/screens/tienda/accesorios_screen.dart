@@ -25,6 +25,7 @@ final Map<String, ConfigAccesorio> coordenadasAccesorios = {
   'gorra_parches_futbol': const ConfigAccesorio(top: -5, right: 10, width: 70),
   'gorra_parches_gris': const ConfigAccesorio(top: -5, right: 11, width: 70),
   'gorra_parches_militar': const ConfigAccesorio(top: -3, right: 12, width: 70),
+  
   'lentes_azules': const ConfigAccesorio(top: 10, right: 26, width: 60),
   'lentes_descanso': const ConfigAccesorio(top: 15, right: 25, width: 60),
   'lentes_futbol': const ConfigAccesorio(top: 12, right: 23, width: 80),
@@ -34,10 +35,12 @@ final Map<String, ConfigAccesorio> coordenadasAccesorios = {
   'lentes_oscuros': const ConfigAccesorio(top: 19, right: 28, width: 60),
   'lentes_simples': const ConfigAccesorio(top: 4, right: 25, width: 65),
   'lentes_sol': const ConfigAccesorio(top: 15, right: 31, width: 60),
+
   'collar_perlas_amarillas': const ConfigAccesorio(top: 48, right: 32, width: 48),
   'collar_perlas': const ConfigAccesorio(top: 45, right: 30, width: 49),
   'collar_plateado_pluma': const ConfigAccesorio(top: 55, right: 33, width: 45),
   'collar_pluma': const ConfigAccesorio(top: 55, right: 28, width: 55),
+
   'sombrero_amarillo': const ConfigAccesorio(top: -25, right: 20, width: 65),
   'sombrero_arcoiris': const ConfigAccesorio(top: -25, right: 20, width: 65),
   'sombrero_azul': const ConfigAccesorio(top: -25, right: 20, width: 65),
@@ -287,6 +290,77 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       return;
     }
 
+    // ✅ Verificar si tiene suficientes monedas ANTES de abrir el diálogo de compra
+    if (_monedas < accesorio.precio) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: const [
+              Icon(Icons.monetization_on, color: Colors.red, size: 28),
+              SizedBox(width: 8),
+              Text('¡No tienes suficientes monedas!'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Necesitas ${accesorio.precio} monedas para comprar ${accesorio.nombre}.',
+                style: const TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tienes: $_monedas monedas',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Te faltan ${accesorio.precio - _monedas} monedas.',
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.verde,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // ✅ Si tiene suficientes monedas, mostrar el diálogo de compra
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -324,7 +398,6 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       setState(() {
         accesorio.comprado = true;
         _monedas = _monedasService.obtenerMonedas();
-        // ✅ Si estábamos probando, quitamos el modo prueba
         if (_modoPrueba && _accesorioEnPrueba?.id == accesorio.id) {
           _modoPrueba = false;
           _accesorioEnPrueba = null;

@@ -89,11 +89,7 @@ class _ModuloEducativoScreenState extends State<ModuloEducativoScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            '¡Bienvenido al curso de lombricomposta! 🌱\n'
-                            '¡Hola! Soy Nene, amiga de Lombrikid.'
-                            'Te acompañaré en esta ruta de aprendizaje. Lombrikid ha preparado un video especial para ti. Cuando lo termines, aparecerá una ✓ que te permitirá continuar.\n\n'
-                            '🎓 ¡Completa el curso para obtener un certificado virtual y ganar increíbles recompensas durante tu aventura! 🪙'
-                            '¡Mucho gusto en conocerte y que comience el viaje!',
+                            '¡Bienvenido al curso de lombricomposta! 🌱\n Estamos trabajando en los videos gracias por su paciencia',
                             style: const TextStyle(fontSize: 16, height: 1.4),
                           ),
                         ),

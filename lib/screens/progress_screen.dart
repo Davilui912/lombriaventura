@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../services/actividad_service.dart';
 import '../services/monedas_service.dart';
 
@@ -23,18 +24,21 @@ class ProgressScreen extends StatefulWidget {
 class _ProgressScreenState extends State<ProgressScreen> {
   late final Future<int> _coinsFuture;
   late Future<int> _streakFuture;
+  late Future<int> _recordFuture; // ✅ NUEVO
 
   @override
   void initState() {
     super.initState();
     _coinsFuture = _loadCurrentCoins();
     _streakFuture = _loadCurrentStreak();
+    _recordFuture = _loadCurrentRecord(); // ✅ NUEVO
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _streakFuture = _loadCurrentStreak();
+    _recordFuture = _loadCurrentRecord(); // ✅ NUEVO
   }
 
   Future<int> _loadCurrentCoins() async {
@@ -44,6 +48,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
   Future<int> _loadCurrentStreak() async {
     return ActividadService().obtenerRacha();
+  }
+
+  // ✅ NUEVO: Cargar el récord real (y actualizarlo si hace falta)
+  Future<int> _loadCurrentRecord() async {
+    await ActividadService().actualizarRecordSiEsNecesario();
+    return ActividadService().obtenerRecord();
   }
 
   @override
@@ -71,7 +81,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // NUEVA INSTRUCCIÓN ENTRE APP BAR Y RACHA
-                        _InstruccionBanner(),
+                        const _InstruccionBanner(),
                         const SizedBox(height: 16),
                         FutureBuilder<int>(
                           future: _streakFuture,
@@ -82,7 +92,15 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        _RecordCard(days: widget.recordDays),
+                        // ✅ Récord real con FutureBuilder
+                        FutureBuilder<int>(
+                          future: _recordFuture,
+                          builder: (context, snapshot) {
+                            final record =
+                                snapshot.data ?? widget.recordDays;
+                            return _RecordCard(days: record);
+                          },
+                        ),
                       ],
                     ),
                   ),

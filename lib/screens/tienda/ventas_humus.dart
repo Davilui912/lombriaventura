@@ -29,7 +29,7 @@ class _VentasHumusScreenState extends State<VentasHumusScreen> {
 
   Future<void> _vender() async {
     final cantidad = _cantidad;
-    final precioTotal = cantidad * 10;
+    final precioTotal = 3;
     
     await _monedasService.agregarMonedas(precioTotal);
     await _monedasService.agregarVenta(

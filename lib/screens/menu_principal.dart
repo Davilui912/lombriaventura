@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lombriaventura/screens/curso_videos_screen.dart';
 import 'package:lombriaventura/screens/juegos/alimenta_lombriz_cayendo.dart';
 import 'package:lombriaventura/screens/juegos/selector_nivel_alimenta.dart';
@@ -51,7 +51,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     _verificarSesion();
     _actividadService.registrarActividad();
 
-    //  Esperar 3 segundos antes de verificar recordatorios
+    // Esperar 3 segundos antes de verificar recordatorios
     Future.delayed(const Duration(seconds: 3), () {
       _verificarRecordatorios();
     });
@@ -60,7 +60,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   }
 
   Future<void> _inicializarRecordatorios() async {
-    //  Verificar si el Reto 1 está completado antes de activar recordatorios
     final retosService = RetosService();
     await retosService.init();
 
@@ -73,7 +72,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   }
 
   void _verificarRecordatorios() async {
-    //  Verificar si el Reto 1 está completado antes de mostrar recordatorios
     final retosService = RetosService();
     await retosService.init();
 
@@ -139,7 +137,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     final loginExitoso = configBox.get('login_exitoso', defaultValue: false);
 
     if (!loginExitoso) {
-      // Si no hay sesión, redirigir al login
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -161,16 +158,92 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     });
   }
 
-  Future<int> _obtenerMonedas() async {
-    try {
-      // ✅ Usar MonedasService en lugar de acceder directamente al box
-      final monedas = MonedasService().obtenerMonedas();
-      print('🪙 Monedas en menú: $monedas');
-      return monedas;
-    } catch (e) {
-      print('Error al obtener monedas: $e');
-      return 0;
-    }
+  // ✅ Diálogo de bienvenida reutilizable
+  void mostrarBienvenidaCurso(BuildContext context,
+      {VoidCallback? onContinue}) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 25, 188, 90)
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🎓', style: TextStyle(fontSize: 30)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '¡Bienvenido al curso de lombricomposta! 🌱\n'
+                            '¡Hola! Soy Nene, amiga de Lombrikid. '
+                            'Te acompañaré en esta ruta de aprendizaje. Lombrikid ha preparado unos videos especiales para ti. Cuando los termines, aparecerá una ✓ que te permitirá continuar.\n\n'
+                            '🎓 ¡Completa el curso para obtener un certificado virtual y ganar increíbles recompensas durante tu aventura! 🪙\n'
+                            '¡Mucho gusto en conocerte y que comience el viaje!',
+                            style: const TextStyle(fontSize: 16, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        if (onContinue != null) onContinue();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 43, 236, 18),
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 0,
+              bottom: 20,
+              child: Image.asset(
+                'assets/images/personaje/cochinilla.png',
+                width: 110,
+                height: 110,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildTituloAdmin() {
@@ -181,8 +254,8 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 32,  
-            height: 32, 
+            width: 32,
+            height: 32,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
@@ -203,12 +276,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               ),
             ),
           ),
-          const SizedBox(width: 6), // ✅ Reducido de 8 a 6
-          Flexible(  // ✅ Envuelve el texto en Flexible para que se ajuste
+          const SizedBox(width: 6),
+          Flexible(
             child: Text(
               '¡Hola, Lombrikid!',
               style: TextStyle(
-                fontSize: 16, // ✅ Reducido de 18 a 16
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -217,72 +290,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildOpcionJuego(
-      String titulo,
-      String subtitulo,
-      IconData? icon, // 1. Le agregamos el '?' para que pueda ser nulo
-      VoidCallback onTap,
-      Color color,
-      {Widget? customIcon} // 2. Agregamos el widget personalizado como opción
-      ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.15)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              // 3. Agregamos un Center y le decimos: "¿Hay customIcon? Úsalo. Si no, usa el icono normal"
-              child: Center(
-                child: customIcon ?? Icon(icon, color: color, size: 20),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    titulo,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppTheme.negro,
-                    ),
-                  ),
-                  Text(
-                    subtitulo,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.play_arrow,
-              color: color,
-              size: 18,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -415,10 +422,9 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   Widget _buildOpcion(
       String titulo,
       String subtitulo,
-      String emoji, // ⬅️ ¡Ahora pide directamente el emoji!
+      String emoji,
       VoidCallback onTap,
-      {Color color = Colors.grey} // Color opcional para los bordes y flecha
-      ) {
+      {Color color = Colors.grey}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -439,7 +445,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                // ⬅️ Aquí mostramos el emoji directamente
                 child: Text(
                   emoji,
                   style: const TextStyle(fontSize: 22),
@@ -474,44 +479,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               color: color,
               size: 18,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuButton(
-      String label, IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.cafe),
           ],
         ),
       ),
@@ -611,33 +578,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       appBar: AppBar(
         title: _buildTituloAdmin(),
         actions: [
-          // Mostrar monedas en el AppBar (SIEMPRE visible)
-          FutureBuilder<int>(
-            future: _obtenerMonedas(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const SizedBox(
-                    width: 25,
-                    height: 20,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                );
-              }
+          // ✅ Contador de monedas reactivo (se actualiza en tiempo real)
+          ValueListenableBuilder(
+            valueListenable: Hive.box('monedas').listenable(),
+            builder: (context, Box box, _) {
+              final monedas = box.get('total', defaultValue: 0) as int;
 
-              final monedas = snapshot.data ?? 0;
               return Container(
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
@@ -697,13 +643,19 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
           ),
           // Botón de progreso
           GestureDetector(
-            onTap: () => _irAPantalla(
-              ProgressScreen(
-                coins: MonedasService().obtenerMonedas(),
-                streakDays: 7,
-                recordDays: 15,
-              ),
-            ),
+            onTap: () async {
+              // ✅ Cargar racha y récord reales antes de abrir la pantalla
+              final datos = await _actividadService.obtenerRachaYRecord();
+              if (!mounted) return;
+
+              _irAPantalla(
+                ProgressScreen(
+                  coins: MonedasService().obtenerMonedas(),
+                  streakDays: datos['racha'] ?? 0,
+                  recordDays: datos['record'] ?? 0,
+                ),
+              );
+            },
             child: Container(
               width: 40,
               height: 30,
@@ -763,12 +715,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   left: 16,
                   right: 16,
                   top: 16,
-                  bottom: 80, // ✅ Espacio para el botón flotante
+                  bottom: 80,
                 ),
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
-                    // ==================== APRENDIZAJE ====================
+                    // ==================== LOMBRIAULA ====================
                     _buildCategoria(
                       titulo: 'LombriAula',
                       subtitulo: 'Descubre y aprende',
@@ -777,351 +729,405 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                       iconImage: 'assets/images/icons/icono_aprendizaje.png',
                       index: 0,
                       opciones: [
-                      _buildOpcion(
-                        'Conoce a las lombrices',
-                        'Completa los 7 videos y obtén tu certificado',
-                        '🐛',
-                        () => _irAPantalla(const CursoVideosScreen()),
-                        color: const Color(0xFF43A047),
-                      ),
+                        _buildOpcion(
+                          'Conoce a las lombrices',
+                          'Completa los videos y obtén tu certificado',
+                          '🐛',
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(const CursoVideosScreen()),
+                            );
+                          },
+                          color: const Color(0xFF43A047),
+                        ),
                         _buildOpcion(
                           '¿Qué es la lombricomposta?',
                           'Beneficios y proceso',
                           '♻️',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '♻️ ¿Qué es la lombricomposta?',
-                            descripcion:
-                                'La lombricomposta es un abono natural creado por lombrices que transforman residuos orgánicos en el mejor fertilizante para las plantas.',
-                            informacion:
-                                'La lombricomposta, también llamada vermicomposta, es el resultado de la descomposición de residuos orgánicos por lombrices californianas. '
-                                'Estas lombrices comen los restos de comida y los convierten en humus, un abono rico en nutrientes.\n\n'
-                                'Es 100% natural, no contamina y ayuda a reducir la basura que va a los tiraderos .',
-                            puntosClave: [
-                              {
-                                'emoji': '🪱',
-                                'titulo': 'Hecho por lombrices',
-                                'descripcion':
-                                    'Las lombrices californianas son las protagonistas'
-                              },
-                              {
-                                'emoji': '🌱',
-                                'titulo': 'Abono natural',
-                                'descripcion':
-                                    'Aporta nitrógeno, fósforo y potasio a las plantas'
-                              },
-                              {
-                                'emoji': '♻️',
-                                'titulo': 'Cero contaminación',
-                                'descripcion':
-                                    'Reduce hasta 50% de basura orgánica en casa'
-                              },
-                              {
-                                'emoji': '💧',
-                                'titulo': 'Produce lixiviado',
-                                'descripcion':
-                                    'Un líquido nutritivo para regar plantas'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '♻️ ¿Qué es la lombricomposta?',
+                                descripcion:
+                                    'La lombricomposta es un abono natural creado por lombrices que transforman residuos orgánicos en el mejor fertilizante para las plantas.',
+                                informacion:
+                                    'La lombricomposta, también llamada vermicomposta, es el resultado de la descomposición de residuos orgánicos por lombrices californianas. '
+                                    'Estas lombrices comen los restos de comida y los convierten en humus, un abono rico en nutrientes.\n\n'
+                                    'Es 100% natural, no contamina y ayuda a reducir la basura que va a los tiraderos.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '🪱',
+                                    'titulo': 'Hecho por lombrices',
+                                    'descripcion':
+                                        'Las lombrices californianas son las protagonistas'
+                                  },
+                                  {
+                                    'emoji': '🌱',
+                                    'titulo': 'Abono natural',
+                                    'descripcion':
+                                        'Aporta nitrógeno, fósforo y potasio a las plantas'
+                                  },
+                                  {
+                                    'emoji': '♻️',
+                                    'titulo': 'Cero contaminación',
+                                    'descripcion':
+                                        'Reduce hasta 50% de basura orgánica en casa'
+                                  },
+                                  {
+                                    'emoji': '💧',
+                                    'titulo': 'Produce lixiviado',
+                                    'descripcion':
+                                        'Un líquido nutritivo para regar plantas'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                         ),
                         _buildOpcion(
                           'Aprende a hacerla',
                           'Paso a paso en casa',
                           '🛠️',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '🛠️ Aprende a hacerla',
-                            descripcion:
-                                'Crear tu propia lombricomposta es muy fácil. Solo necesitas seguir estos pasos y tener paciencia.',
-                            informacion:
-                                'Puedes hacer lombricomposta de dos formas:\n\n'
-                                'Opción 1: Con estiércol de animales herbívoros (conejo, vaca, caballo).\n'
-                                'Opción 2: Con residuos de cocina (cáscaras, restos de frutas y verduras).\n\n'
-                                'En ambos casos necesitas un contenedor con agujeros para ventilación, tierra, fibra de coco y lombrices californianas.',
-                            puntosClave: [
-                              {
-                                'emoji': '📦',
-                                'titulo': '1. Prepara el contenedor',
-                                'descripcion':
-                                    'Haz agujeros para que respiren las lombrices'
-                              },
-                              {
-                                'emoji': '🥥',
-                                'titulo': '2. Agrega sustrato',
-                                'descripcion':
-                                    'Fibra de coco y tierra húmeda como cama'
-                              },
-                              {
-                                'emoji': '🪱',
-                                'titulo': '3. Coloca las lombrices',
-                                'descripcion':
-                                    'Ponlas sobre la cama y deja que se adapten'
-                              },
-                              {
-                                'emoji': '🍎',
-                                'titulo': '4. Añade residuos',
-                                'descripcion':
-                                    'Cáscaras de frutas, verduras y restos de café'
-                              },
-                              {
-                                'emoji': '💧',
-                                'titulo': '5. Mantén la humedad',
-                                'descripcion':
-                                    'Rocía agua para que esté húmedo, no empapado'
-                              },
-                              {
-                                'emoji': '⏳',
-                                'titulo': '6. Espera 2-3 meses',
-                                'descripcion':
-                                    'Cosecha el humus cuando esté oscuro y suave'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '🛠️ Aprende a hacerla',
+                                descripcion:
+                                    'Crear tu propia lombricomposta es muy fácil. Solo necesitas seguir estos pasos y tener paciencia.',
+                                informacion:
+                                    'Puedes hacer lombricomposta de dos formas:\n\n'
+                                    'Opción 1: Con estiércol de animales herbívoros (conejo, vaca, caballo).\n'
+                                    'Opción 2: Con residuos de cocina (cáscaras, restos de frutas y verduras).\n\n'
+                                    'En ambos casos necesitas un contenedor con agujeros para ventilación, tierra, fibra de coco y lombrices californianas.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '📦',
+                                    'titulo': '1. Prepara el contenedor',
+                                    'descripcion':
+                                        'Haz agujeros para que respiren las lombrices'
+                                  },
+                                  {
+                                    'emoji': '🥥',
+                                    'titulo': '2. Agrega sustrato',
+                                    'descripcion':
+                                        'Fibra de coco y tierra húmeda como cama'
+                                  },
+                                  {
+                                    'emoji': '🪱',
+                                    'titulo': '3. Coloca las lombrices',
+                                    'descripcion':
+                                        'Ponlas sobre la cama y deja que se adapten'
+                                  },
+                                  {
+                                    'emoji': '🍎',
+                                    'titulo': '4. Añade residuos',
+                                    'descripcion':
+                                        'Cáscaras de frutas, verduras y restos de café'
+                                  },
+                                  {
+                                    'emoji': '💧',
+                                    'titulo': '5. Mantén la humedad',
+                                    'descripcion':
+                                        'Rocía agua para que esté húmedo, no empapado'
+                                  },
+                                  {
+                                    'emoji': '⏳',
+                                    'titulo': '6. Espera 2-3 meses',
+                                    'descripcion':
+                                        'Cosecha el humus cuando esté oscuro y suave'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                         ),
                         _buildOpcion(
                           'Materiales necesarios',
                           'Lo que ocupas para empezar',
                           '📋',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '📋 Materiales necesarios',
-                            descripcion:
-                                'No necesitas muchas cosas para empezar tu lombricomposta. ¡Seguro ya tienes varias en casa!',
-                            informacion:
-                                'Los materiales básicos son económicos y fáciles de conseguir. '
-                                'Lo más importante son las lombrices californianas, que son diferentes a las lombrices de jardín.',
-                            puntosClave: [
-                              {
-                                'emoji': '📦',
-                                'titulo': 'Contenedor',
-                                'descripcion':
-                                    'De plástico o madera, con agujeros para ventilación'
-                              },
-                              {
-                                'emoji': '🪱',
-                                'titulo': 'Lombrices californianas',
-                                'descripcion':
-                                    'Las mejores para composta, comen su peso en un día'
-                              },
-                              {
-                                'emoji': '🥥',
-                                'titulo': 'Fibra de coco',
-                                'descripcion':
-                                    'Sirve como cama y retiene humedad'
-                              },
-                              {
-                                'emoji': '🪨',
-                                'titulo': 'Tierra',
-                                'descripcion':
-                                    'Tierra de jardín o composta como base'
-                              },
-                              {
-                                'emoji': '🍂',
-                                'titulo': 'Material seco',
-                                'descripcion':
-                                    'Hojas secas, cartón sin tinta, aserrín (carbono)'
-                              },
-                              {
-                                'emoji': '🍎',
-                                'titulo': 'Residuos orgánicos',
-                                'descripcion':
-                                    'Cáscaras, restos de frutas y verduras (nitrógeno)'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '📋 Materiales necesarios',
+                                descripcion:
+                                    'No necesitas muchas cosas para empezar tu lombricomposta. ¡Seguro ya tienes varias en casa!',
+                                informacion:
+                                    'Los materiales básicos son económicos y fáciles de conseguir. '
+                                    'Lo más importante son las lombrices californianas, que son diferentes a las lombrices de jardín.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '📦',
+                                    'titulo': 'Contenedor',
+                                    'descripcion':
+                                        'De plástico o madera, con agujeros para ventilación'
+                                  },
+                                  {
+                                    'emoji': '🪱',
+                                    'titulo': 'Lombrices californianas',
+                                    'descripcion':
+                                        'Las mejores para composta, comen su peso en un día'
+                                  },
+                                  {
+                                    'emoji': '🥥',
+                                    'titulo': 'Fibra de coco',
+                                    'descripcion':
+                                        'Sirve como cama y retiene humedad'
+                                  },
+                                  {
+                                    'emoji': '🪨',
+                                    'titulo': 'Tierra',
+                                    'descripcion':
+                                        'Tierra de jardín o composta como base'
+                                  },
+                                  {
+                                    'emoji': '🍂',
+                                    'titulo': 'Material seco',
+                                    'descripcion':
+                                        'Hojas secas, cartón sin tinta, aserrín (carbono)'
+                                  },
+                                  {
+                                    'emoji': '🍎',
+                                    'titulo': 'Residuos orgánicos',
+                                    'descripcion':
+                                        'Cáscaras, restos de frutas y verduras (nitrógeno)'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                         ),
                         _buildOpcion(
                           'Balance 80/20',
                           'Nitrógeno y carbono',
                           '⚖️',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '⚖️ Balance 80/20',
-                            descripcion:
-                                'Para una composta saludable necesitas equilibrar materiales verdes (nitrógeno) y materiales secos (carbono).',
-                            informacion:
-                                'La regla es 80% material seco (carbono) y 20% material verde (nitrógeno).\n\n'
-                                'Demasiado nitrógeno = mal olor y moscas.\n'
-                                'Demasiado carbono = proceso muy lento.\n\n'
-                                'El equilibrio perfecto hace felices a las lombrices y produce el mejor humus.',
-                            puntosClave: [
-                              {
-                                'emoji': '🍂',
-                                'titulo': '80% CARBONO (seco)',
-                                'descripcion':
-                                    'Hojas secas, cartón, aserrín, papel sin tinta'
-                              },
-                              {
-                                'emoji': '🍎',
-                                'titulo': '20% NITRÓGENO (verde)',
-                                'descripcion':
-                                    'Cáscaras, restos de frutas, verduras, café'
-                              },
-                              {
-                                'emoji': '👃',
-                                'titulo': '¿Huele mal?',
-                                'descripcion':
-                                    'Agrega más material seco (carbono)'
-                              },
-                              {
-                                'emoji': '🐌',
-                                'titulo': '¿Muy lento?',
-                                'descripcion':
-                                    'Agrega más material verde (nitrógeno)'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '⚖️ Balance 80/20',
+                                descripcion:
+                                    'Para una composta saludable necesitas equilibrar materiales verdes (nitrógeno) y materiales secos (carbono).',
+                                informacion:
+                                    'La regla es 80% material seco (carbono) y 20% material verde (nitrógeno).\n\n'
+                                    'Demasiado nitrógeno = mal olor y moscas.\n'
+                                    'Demasiado carbono = proceso muy lento.\n\n'
+                                    'El equilibrio perfecto hace felices a las lombrices y produce el mejor humus.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '🍂',
+                                    'titulo': '80% CARBONO (seco)',
+                                    'descripcion':
+                                        'Hojas secas, cartón, aserrín, papel sin tinta'
+                                  },
+                                  {
+                                    'emoji': '🍎',
+                                    'titulo': '20% NITRÓGENO (verde)',
+                                    'descripcion':
+                                        'Cáscaras, restos de frutas, verduras, café'
+                                  },
+                                  {
+                                    'emoji': '👃',
+                                    'titulo': '¿Huele mal?',
+                                    'descripcion':
+                                        'Agrega más material seco (carbono)'
+                                  },
+                                  {
+                                    'emoji': '🐌',
+                                    'titulo': '¿Muy lento?',
+                                    'descripcion':
+                                        'Agrega más material verde (nitrógeno)'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                         ),
                         _buildOpcion(
                           'Humus',
                           'Abono nutritivo para tus plantas',
-                          '🌱', // ✅ CAMBIADO: ahora es una planta en lugar de una gota de agua
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '🌱 Humus', // ✅ También cambié el título
-                            descripcion:
-                                'El humus es un material orgánico rico en nutrientes que se produce durante la lombricomposta. ¡Es oro para tus plantas!',
-                            informacion:
-                                'El humus o lombricomposta es el abono orgánico que producen las lombrices después de digerir los residuos orgánicos. Es rico en nutrientes y ayuda a mejorar la calidad del suelo y el crecimiento de las plantas.\n\n',
-                            puntosClave: [
-                              {
-                                'emoji': '🌱',
-                                'titulo': '¿Qué es?',
-                                'descripcion':
-                                    'Es la tierra oscura y rica en nutrientes que resulta del proceso de transformación de los residuos por las lombrices. Es un excelente abono para la tierra y las plantas.'
-                              },
-                              {
-                                'emoji': '🧺',
-                                'titulo': 'Recolecta',
-                                'descripcion':
-                                    'Cuando quieras rescatar el humus, agrega residuos en una canasta y colócala sobre el humus. Las lombrices subirán hacia los residuos y dejarán libre el humus para que puedas recolectarlo.'
-                              },
-                              {
-                                'emoji': '🌻',
-                                'titulo': 'Usa en plantas',
-                                'descripcion':
-                                    'Coloca el humus sobre la tierra, alrededor de la planta, y riégala. Verás que ayuda a conservar la humedad y mejora la nutrición de la planta'
-                              },
-                            ],
-                          )),
+                          '🌱',
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '🌱 Humus',
+                                descripcion:
+                                    'El humus es un material orgánico rico en nutrientes que se produce durante la lombricomposta. ¡Es oro para tus plantas!',
+                                informacion:
+                                    'El humus o lombricomposta es el abono orgánico que producen las lombrices después de digerir los residuos orgánicos. Es rico en nutrientes y ayuda a mejorar la calidad del suelo y el crecimiento de las plantas.\n\n',
+                                puntosClave: [
+                                  {
+                                    'emoji': '🌱',
+                                    'titulo': '¿Qué es?',
+                                    'descripcion':
+                                        'Es la tierra oscura y rica en nutrientes que resulta del proceso de transformación de los residuos por las lombrices. Es un excelente abono para la tierra y las plantas.'
+                                  },
+                                  {
+                                    'emoji': '🧺',
+                                    'titulo': 'Recolecta',
+                                    'descripcion':
+                                        'Cuando quieras rescatar el humus, agrega residuos en una canasta y colócala sobre el humus. Las lombrices subirán hacia los residuos y dejarán libre el humus para que puedas recolectarlo.'
+                                  },
+                                  {
+                                    'emoji': '🌻',
+                                    'titulo': 'Usa en plantas',
+                                    'descripcion':
+                                        'Coloca el humus sobre la tierra, alrededor de la planta, y riégala. Verás que ayuda a conservar la humedad y mejora la nutrición de la planta'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                           color: const Color(0xFF43A047),
                         ),
                         _buildOpcion(
                           'Lixiviado',
                           'El oro líquido de la composta',
                           '💧',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '💧 Lixiviado',
-                            descripcion:
-                                'El lixiviado es un líquido oscuro que se produce durante la lombricomposta. ¡Es oro líquido para tus plantas!',
-                            informacion:
-                                ' Se recolecta el líquido en un atomizador, se agregan 10 partes de agua por cada parte de lixiviado y queda listo para aplicarlo directamente sobre las hojas de las plantas.',
-                            puntosClave: [
-                              {
-                                'emoji': '💧',
-                                'titulo': '¿Qué es?',
-                                'descripcion':
-                                    'Líquido rico en nutrientes que escurre de la composta'
-                              },
-                              {
-                                'emoji': '🪣',
-                                'titulo': 'Recolecta',
-                                'descripcion':
-                                    'Tu lombricompostero debe tener pequeños agujeros en la parte inferior para drenar el exceso de agua. Coloca un recipiente debajo para ir recolectando el lixiviado.'
-                              },
-                              {
-                                'emoji': '🧪',
-                                'titulo': 'Diluye',
-                                'descripcion':
-                                    '1 taza de lixiviado por 10 tazas de agua'
-                              },
-                              {
-                                'emoji': '🌻',
-                                'titulo': 'Usa en plantas',
-                                'descripcion':
-                                    'Riega tus macetas y jardín con esta mezcla'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '💧 Lixiviado',
+                                descripcion:
+                                    'El lixiviado es un líquido oscuro que se produce durante la lombricomposta. ¡Es oro líquido para tus plantas!',
+                                informacion:
+                                    'Se recolecta el líquido en un atomizador, se agregan 10 partes de agua por cada parte de lixiviado y queda listo para aplicarlo directamente sobre las hojas de las plantas.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '💧',
+                                    'titulo': '¿Qué es?',
+                                    'descripcion':
+                                        'Líquido rico en nutrientes que escurre de la composta'
+                                  },
+                                  {
+                                    'emoji': '🪣',
+                                    'titulo': 'Recolecta',
+                                    'descripcion':
+                                        'Tu lombricompostero debe tener pequeños agujeros en la parte inferior para drenar el exceso de agua. Coloca un recipiente debajo para ir recolectando el lixiviado.'
+                                  },
+                                  {
+                                    'emoji': '🧪',
+                                    'titulo': 'Diluye',
+                                    'descripcion':
+                                        '1 taza de lixiviado por 10 tazas de agua'
+                                  },
+                                  {
+                                    'emoji': '🌻',
+                                    'titulo': 'Usa en plantas',
+                                    'descripcion':
+                                        'Riega tus macetas y jardín con esta mezcla'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                         ),
                         _buildOpcion(
                           'Cuidados',
                           'Mantén felices a tus lombrices',
                           '💚',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '💚 Cuidados',
-                            descripcion:
-                                'Las lombrices son seres vivos que necesitan cuidados básicos. ¡No te preocupes, es muy sencillo!',
-                            informacion: 'Los 3 cuidados esenciales:\n\n'
-                                '1. HUMEDAD: La composta debe estar húmeda como una esponja exprimida.\n'
-                                '2. TEMPERATURA: Entre 15°C y 25°C, protegidas del sol directo.\n'
-                                '3. ALIMENTACIÓN: Una vez por semana, en pequeñas cantidades.',
-                            puntosClave: [
-                              {
-                                'emoji': '💧',
-                                'titulo': 'Humedad ideal',
-                                'descripcion':
-                                    'Como esponja exprimida. Rocía agua si está seco'
-                              },
-                              {
-                                'emoji': '🌡️',
-                                'titulo': 'Temperatura',
-                                'descripcion':
-                                    '15-25°C. No exponer al sol directo ni frío extremo'
-                              },
-                              {
-                                'emoji': '🍎',
-                                'titulo': 'Alimentación',
-                                'descripcion':
-                                    '1 vez por semana. Pica los residuos en trozos pequeños'
-                              },
-                              {
-                                'emoji': '🚫',
-                                'titulo': 'NO dar',
-                                'descripcion':
-                                    'Carne, lácteos, cítricos en exceso, cebolla, ajo, plástico'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '💚 Cuidados',
+                                descripcion:
+                                    'Las lombrices son seres vivos que necesitan cuidados básicos. ¡No te preocupes, es muy sencillo!',
+                                informacion: 'Los 3 cuidados esenciales:\n\n'
+                                    '1. HUMEDAD: La composta debe estar húmeda como una esponja exprimida.\n'
+                                    '2. TEMPERATURA: Entre 15°C y 25°C, protegidas del sol directo.\n'
+                                    '3. ALIMENTACIÓN: Una vez por semana, en pequeñas cantidades.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '💧',
+                                    'titulo': 'Humedad ideal',
+                                    'descripcion':
+                                        'Como esponja exprimida. Rocía agua si está seco'
+                                  },
+                                  {
+                                    'emoji': '🌡️',
+                                    'titulo': 'Temperatura',
+                                    'descripcion':
+                                        '15-25°C. No exponer al sol directo ni frío extremo'
+                                  },
+                                  {
+                                    'emoji': '🍎',
+                                    'titulo': 'Alimentación',
+                                    'descripcion':
+                                        '1 vez por semana. Pica los residuos en trozos pequeños'
+                                  },
+                                  {
+                                    'emoji': '🚫',
+                                    'titulo': 'NO dar',
+                                    'descripcion':
+                                        'Carne, lácteos, cítricos en exceso, cebolla, ajo, plástico'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                         ),
                         _buildOpcion(
                           'Emprendimiento',
                           'Gana dinero ayudando al planeta',
                           '💰',
-                          () => _irAPantalla(ModuloEducativoScreen(
-                            titulo: '💰 Emprendimiento',
-                            descripcion:
-                                '¿Sabías que puedes ganar dinero con tu lombricomposta? ¡Aprende a vender y ayudar al planeta!',
-                            informacion:
-                                'Cuando creas un negocio necesitas invertir, calcular costos, fijar precios, vender y obtener ganancias.\n\n'
-                                'Puedes vender:\n'
-                                '• Composta (humus): \$50-100 MXN por kilo\n'
-                                '• Lixiviado: \$30-50 MXN por litro\n'
-                                '• Lombrices: \$100-200 MXN por 100 lombrices\n\n'
-                                'Ideal para vender en tu escuela, colonia o redes sociales.',
-                            puntosClave: [
-                              {
-                                'emoji': '🛍️',
-                                'titulo': 'Vende composta',
-                                'descripcion':
-                                    'Empaca en bolsas de 1kg y vende a vecinos y jardineros'
-                              },
-                              {
-                                'emoji': '🧴',
-                                'titulo': 'Vende lixiviado',
-                                'descripcion':
-                                    'Embasa en botellas recicladas como fertilizante líquido'
-                              },
-                              {
-                                'emoji': '🪱',
-                                'titulo': 'Vende lombrices',
-                                'descripcion':
-                                    'Cuando tengas muchas, separa y vende paquetes'
-                              },
-                              {
-                                'emoji': '📱',
-                                'titulo': 'Promoción',
-                                'descripcion':
-                                    'Toma fotos bonitas y comparte en WhatsApp o Facebook'
-                              },
-                            ],
-                          )),
+                          () {
+                            mostrarBienvenidaCurso(
+                              context,
+                              onContinue: () =>
+                                  _irAPantalla(ModuloEducativoScreen(
+                                titulo: '💰 Emprendimiento',
+                                descripcion:
+                                    '¿Sabías que puedes ganar dinero con tu lombricomposta? ¡Aprende a vender y ayudar al planeta!',
+                                informacion:
+                                    'Cuando creas un negocio necesitas invertir, calcular costos, fijar precios, vender y obtener ganancias.\n\n'
+                                    'Puedes vender:\n'
+                                    '• Composta (humus): \$50-100 MXN por kilo\n'
+                                    '• Lixiviado: \$30-50 MXN por litro\n'
+                                    '• Lombrices: \$100-200 MXN por 100 lombrices\n\n'
+                                    'Ideal para vender en tu escuela, colonia o redes sociales.',
+                                puntosClave: [
+                                  {
+                                    'emoji': '🛍️',
+                                    'titulo': 'Vende composta',
+                                    'descripcion':
+                                        'Empaca en bolsas de 1kg y vende a vecinos y jardineros'
+                                  },
+                                  {
+                                    'emoji': '🧴',
+                                    'titulo': 'Vende lixiviado',
+                                    'descripcion':
+                                        'Embasa en botellas recicladas como fertilizante líquido'
+                                  },
+                                  {
+                                    'emoji': '🪱',
+                                    'titulo': 'Vende lombrices',
+                                    'descripcion':
+                                        'Cuando tengas muchas, separa y vende paquetes'
+                                  },
+                                  {
+                                    'emoji': '📱',
+                                    'titulo': 'Promoción',
+                                    'descripcion':
+                                        'Toma fotos bonitas y comparte en WhatsApp o Facebook'
+                                  },
+                                ],
+                              )),
+                            );
+                          },
                           color: const Color(0xFF43A047),
                         ),
                       ],
@@ -1209,7 +1215,6 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           () => _irAPantalla(const MemoramaScreen()),
                           color: const Color(0xFFFFA726),
                         ),
-                        // Puedes agregar más juegos aquí si quieres
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -1302,12 +1307,11 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(50),
-                  //Sombra sólida desplazada hacia abajo
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF388E3C), // verde oscuro
-                      offset: const Offset(0, 5), // desplazamiento hacia abajo
-                      blurRadius: 0, // sin difuminado = sombra sólida
+                      color: const Color(0xFF388E3C),
+                      offset: const Offset(0, 5),
+                      blurRadius: 0,
                     ),
                   ],
                 ),
@@ -1319,15 +1323,14 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                     );
                   },
                   backgroundColor: AppTheme.verde,
-                  elevation: 0, // ← quitamos la sombra original de Flutter
-                  hoverElevation: 0, // ← sin elevación al hacer hover
+                  elevation: 0,
+                  hoverElevation: 0,
                   focusElevation: 0,
-                  highlightElevation: 0, // ← sin elevación al presionar
+                  highlightElevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
-                    //Borde inferior grueso que refuerza la profundidad
                     side: const BorderSide(
-                      color: Color(0xFF388E3C), // verde oscuro
+                      color: Color(0xFF388E3C),
                       width: 0,
                     ),
                   ),
