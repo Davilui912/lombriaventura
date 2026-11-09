@@ -21,7 +21,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final GroqService _iaService = GroqService();
-  final TTSService _ttsService = TTSService(); // ✅ NUEVO: Google Cloud TTS
+  final TTSService _ttsService = TTSService(); //   NUEVO: Google Cloud TTS
   final SpeechToText _speechToText = SpeechToText();
   
   List<Map<String, String>> _mensajes = [];
@@ -122,7 +122,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
 
   // ==================== TTS CON GOOGLE CLOUD ====================
 
-  /// ✅ Limpia el texto de emojis y caracteres especiales
+  ///   Limpia el texto de emojis y caracteres especiales
   String _limpiarTextoParaTTS(String texto) {
     final regex = RegExp(
       r'[^A-Za-zÁÉÍÓÚáéíóúÑñÜü\s.,;:!?¡¿0-9]',
@@ -160,7 +160,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     final pregunta = preguntaTexto ?? _controller.text.trim();
     if (pregunta.isEmpty) return;
     
-    // ✅ Si está hablando, detener
+    //   Si está hablando, detener
     if (_isSpeaking) {
       await _detenerLectura();
     }
@@ -202,7 +202,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
       print('Error guardando: $e');
     });
     
-    // ✅ Esperar un momento antes de leer
+    //   Esperar un momento antes de leer
     if (_vozAutomatica && respuesta.isNotEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
       await _leerRespuesta(respuesta);
@@ -210,14 +210,14 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   }
   
   Future<void> _leerRespuesta(String texto) async {
-    // ✅ Si ya está hablando, detener primero
+    //   Si ya está hablando, detener primero
     if (_isSpeaking) {
       await _ttsService.stop();
       setState(() => _isSpeaking = false);
       await Future.delayed(const Duration(milliseconds: 200));
     }
     
-    // ✅ Limpiar el texto antes de leerlo
+    //   Limpiar el texto antes de leerlo
     final textoLimpio = _limpiarTextoParaTTS(texto);
     
     if (textoLimpio.isEmpty) {
@@ -231,7 +231,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
     setState(() => _isSpeaking = true);
     
     try {
-      // ✅ Usar Google Cloud TTS
+      //   Usar Google Cloud TTS
       final exito = await _ttsService.speak(textoLimpio);
       if (!exito) {
         setState(() => _isSpeaking = false);
@@ -314,7 +314,7 @@ class _ChatIAScreenState extends State<ChatIAScreen> {
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
-    _ttsService.dispose(); // ✅ Liberar recursos de TTS
+    _ttsService.dispose(); //   Liberar recursos de TTS
     _speechToText.stop();
     super.dispose();
   }

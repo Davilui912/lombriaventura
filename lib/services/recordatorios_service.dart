@@ -10,7 +10,7 @@ class RecordatoriosService {
 
   // Tipos de recordatorio
   final List<Map<String, dynamic>> _recordatoriosBase = [
-    // ✅ NOTIFICACIONES DIARIAS (NUEVAS)
+    //   NOTIFICACIONES DIARIAS (NUEVAS)
     {
       'id': 'alimentar_diario',
       'titulo': '🍎 Alimentar lombrices',
@@ -103,7 +103,7 @@ class RecordatoriosService {
     return obtenerPendientes().length;
   }
 
-  // ✅ Notificación diaria para registrar el diario
+  //   Notificación diaria para registrar el diario
   void programarRecordatorioDiario() {
     final hoy = DateTime.now().toString().substring(0, 10);
     final ultimoRecordatorio = _box.get('ultimo_recordatorio_diario', defaultValue: '');
@@ -123,23 +123,23 @@ class RecordatoriosService {
     }
   }
 
-  // ✅ Recordatorio mensual para lixiviado (CORREGIDO)
+  //   Recordatorio mensual para lixiviado (CORREGIDO)
   void programarRecordatorioLixiviado() {
     final hoy = DateTime.now();
     final dia = hoy.day;
     final mes = hoy.month;
-    final anio = hoy.year;  // ✅ Sin ñ
+    final anio = hoy.year;  //   Sin ñ
 
     if (dia == 1) {
       final pendientes = obtenerPendientes();
 
       final yaEnviado = pendientes.any((item) =>
-        item['id'] == 'lixiviado_${mes}_$anio'  // ✅ Interpolación correcta
+        item['id'] == 'lixiviado_${mes}_$anio'  //   Interpolación correcta
       );
 
       if (!yaEnviado) {
         pendientes.add({
-          'id': 'lixiviado_${mes}_$anio',  // ✅ Interpolación correcta
+          'id': 'lixiviado_${mes}_$anio',  //   Interpolación correcta
           'titulo': '💧 Registrar lixiviado',
           'mensaje': '¡Es momento de revisar y registrar tu lixiviado! Recuerda que solo se produce una vez al mes. Abre "Mi diario" y registra cuántas cucharadas obtuviste. 🌱',
           'icono': '💧',

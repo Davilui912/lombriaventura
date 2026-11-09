@@ -717,7 +717,7 @@ class _ProblemasMatematicosScreenState
           ),
         ],
       ),
-      // ✅ FONDO EN EL BODY
+      //   FONDO EN EL BODY
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -728,7 +728,7 @@ class _ProblemasMatematicosScreenState
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView( // ✅ ENVUELTO EN SCROLL
+          child: SingleChildScrollView( //   ENVUELTO EN SCROLL
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [

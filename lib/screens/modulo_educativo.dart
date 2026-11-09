@@ -149,7 +149,7 @@ class _ModuloEducativoScreenState extends State<ModuloEducativoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ DESCRIPCIÓN (cuadro amarillo con gorro de graduación)
+            //   DESCRIPCIÓN (cuadro amarillo con gorro de graduación)
             // Container(
             //   padding: const EdgeInsets.all(16),
             //   decoration: BoxDecoration(
@@ -158,7 +158,7 @@ class _ModuloEducativoScreenState extends State<ModuloEducativoScreen> {
             //   ),
             //   child: Row(
             //     children: [
-            //       const Text('🎓', style: TextStyle(fontSize: 30)), // ✅ Cambiado a gorro
+            //       const Text('🎓', style: TextStyle(fontSize: 30)), //   Cambiado a gorro
             //       const SizedBox(width: 12),
             //       Expanded(
             //         child: Text(
@@ -174,7 +174,7 @@ class _ModuloEducativoScreenState extends State<ModuloEducativoScreen> {
             // ),
             // const SizedBox(height: 24),
 
-            // ✅ INFORMACIÓN (con video dentro)
+            //   INFORMACIÓN (con video dentro)
             const Text(
               '📖 Información',
               style: TextStyle(
@@ -186,7 +186,7 @@ class _ModuloEducativoScreenState extends State<ModuloEducativoScreen> {
             ),
             const SizedBox(height: 12),
 
-            // ✅ VIDEO (dentro de la sección de información)
+            //   VIDEO (dentro de la sección de información)
             if (widget.videoAsset != null && _isVideoInitialized) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
@@ -246,14 +246,14 @@ class _ModuloEducativoScreenState extends State<ModuloEducativoScreen> {
               const SizedBox(height: 16),
             ],
 
-            // ✅ TEXTO DE INFORMACIÓN
+            //   TEXTO DE INFORMACIÓN
             Text(
               widget.informacion,
               style: const TextStyle(fontSize: 16, height: 1.5),
             ),
             const SizedBox(height: 24),
 
-            // ✅ Puntos clave
+            //   Puntos clave
             const Text(
               '✨ Puntos clave',
               style: TextStyle(

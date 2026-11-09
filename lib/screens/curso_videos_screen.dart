@@ -11,7 +11,7 @@ class CursoVideosScreen extends StatefulWidget {
 }
 
 class _CursoVideosScreenState extends State<CursoVideosScreen> {
-  // ✅ Lista de 6 videos
+  //   Lista de 6 videos
   final List<Map<String, String>> _videos = [
     {
       'id': 'video_1',
@@ -110,7 +110,7 @@ class _CursoVideosScreenState extends State<CursoVideosScreen> {
             ),
         ],
       ),
-      // ✅ FONDO EN EL BODY (cubre toda la pantalla)
+      //   FONDO EN EL BODY (cubre toda la pantalla)
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -140,7 +140,7 @@ class _CursoVideosScreenState extends State<CursoVideosScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ✅ Progreso
+                      //   Progreso
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -192,7 +192,7 @@ class _CursoVideosScreenState extends State<CursoVideosScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // ✅ Lista de videos
+                      //   Lista de videos
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -262,7 +262,7 @@ class _CursoVideosScreenState extends State<CursoVideosScreen> {
 
                       const SizedBox(height: 12),
 
-                      // ✅ Botón de certificado
+                      //   Botón de certificado
                       if (completados == total && total > 0)
                         SizedBox(
                           width: double.infinity,
@@ -371,7 +371,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       widget.onMarkComplete();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ ¡Video completado!'),
+          content: Text('  ¡Video completado!'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -406,7 +406,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             ),
         ],
       ),
-      // ✅ FONDO EN EL BODY DEL VIDEO PLAYER
+      //   FONDO EN EL BODY DEL VIDEO PLAYER
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -464,7 +464,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       const SizedBox(height: 16),
                       Text(
                         widget.yaVisto
-                            ? '✅ Ya completaste este video. ¡Míralo de nuevo si quieres!'
+                            ? '  Ya completaste este video. ¡Míralo de nuevo si quieres!'
                             : 'El video se marcará automáticamente cuando termine',
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -609,7 +609,7 @@ class CertificadoScreen extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    '✅ Cerrar',
+                    '  Cerrar',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,

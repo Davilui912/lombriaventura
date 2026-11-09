@@ -45,7 +45,7 @@ class _CapacitacionScreenState extends State<CapacitacionScreen> {
       final box = await Hive.openBox('capacitaciones');
       final rawList = box.get('capacitados', defaultValue: <Map<String, dynamic>>[]);
       
-      // ✅ CONVERTIR CORRECTAMENTE CADA MAP
+      //   CONVERTIR CORRECTAMENTE CADA MAP
       final List<Map<String, dynamic>> listaConvertida = [];
       for (var item in rawList) {
         if (item is Map) {
@@ -97,7 +97,7 @@ class _CapacitacionScreenState extends State<CapacitacionScreen> {
     }
 
     try {
-      // ✅ 1. Crear el objeto capacitado
+      //   1. Crear el objeto capacitado
       final nuevoCapacitado = <String, dynamic>{
         'nombre': _nombreController.text.trim(),
         'edad': _edadController.text.trim(),
@@ -108,10 +108,10 @@ class _CapacitacionScreenState extends State<CapacitacionScreen> {
         'fecha': DateTime.now().toIso8601String(),
       };
 
-      // ✅ 2. Guardar en Hive
+      //   2. Guardar en Hive
       final box = await Hive.openBox('capacitaciones');
       
-      // ✅ Obtener lista existente y convertir correctamente
+      //   Obtener lista existente y convertir correctamente
       final rawList = box.get('capacitados', defaultValue: <Map<String, dynamic>>[]);
       final List<Map<String, dynamic>> lista = [];
       for (var item in rawList) {
@@ -124,17 +124,17 @@ class _CapacitacionScreenState extends State<CapacitacionScreen> {
         }
       }
       
-      // ✅ Agregar nuevo
+      //   Agregar nuevo
       lista.add(nuevoCapacitado);
       
-      // ✅ Guardar lista actualizada
+      //   Guardar lista actualizada
       await box.put('capacitados', lista);
-      print('✅ Capacitado guardado: ${nuevoCapacitado['nombre']}');
+      print('  Capacitado guardado: ${nuevoCapacitado['nombre']}');
 
-      // ✅ 3. Dar monedas
+      //   3. Dar monedas
       await _monedasService.agregarMonedas(50);
       
-      // ✅ 4. Limpiar formulario
+      //   4. Limpiar formulario
       _nombreController.clear();
       _edadController.clear();
       _municipioController.clear();
@@ -142,7 +142,7 @@ class _CapacitacionScreenState extends State<CapacitacionScreen> {
       _paisController.clear();
       _invitadoPorController.clear();
 
-      // ✅ 5. Recargar datos
+      //   5. Recargar datos
       await _cargarCapacitados();
       
       setState(() {

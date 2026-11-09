@@ -88,7 +88,7 @@ class RetosService {
     return false;
   }
 
-  // ✅ Verificar si el Reto 1 está completado
+  //   Verificar si el Reto 1 está completado
   bool estaCompletadoReto1() {
     return estaCompletado('reto_1');
   }

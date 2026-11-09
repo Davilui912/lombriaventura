@@ -112,7 +112,7 @@ Future<void> _registrarUsuario() async {
     final uid = DateTime.now().millisecondsSinceEpoch.toString();
     final syncService = SyncService();
 
-    // ✅ 1. Guardar en Hive (configuración)
+    //   1. Guardar en Hive (configuración)
     final configBox = await Hive.openBox('configuracion');
     await configBox.put('usuario_uid', uid);
     await configBox.put('usuario_actual', _usuarioController.text.trim());
@@ -126,9 +126,9 @@ Future<void> _registrarUsuario() async {
     await configBox.put('privacidad_aceptada', true);
     await configBox.put('login_exitoso', true);
 
-    print('✅ Usuario guardado en configuracion Hive: ${_usuarioController.text.trim()}');
+    print('  Usuario guardado en configuracion Hive: ${_usuarioController.text.trim()}');
 
-    // ✅ 1.5 Guardar en la lista de usuarios de Hive (para búsqueda en recuperación)
+    //   1.5 Guardar en la lista de usuarios de Hive (para búsqueda en recuperación)
     final usuariosBox = await Hive.openBox('usuarios');
     final listaUsuarios = usuariosBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
 
@@ -172,10 +172,10 @@ Future<void> _registrarUsuario() async {
     }
 
     await usuariosBox.put('lista', listaUsuarios);
-    print('✅ Usuario guardado en lista de Hive: ${_usuarioController.text.trim()}');
+    print('  Usuario guardado en lista de Hive: ${_usuarioController.text.trim()}');
     print('📋 Lista de usuarios en Hive: ${listaUsuarios.length} usuarios');
 
-    // ✅ 2. Guardar en API (con pregunta y respuesta de seguridad)
+    //   2. Guardar en API (con pregunta y respuesta de seguridad)
     if (await syncService.tieneInternet()) {
       print('🌐 Guardando usuario en API...');
       final result = await ApiService().crearUsuario(
@@ -191,7 +191,7 @@ Future<void> _registrarUsuario() async {
       );
 
       if (result.ok) {
-        print('✅ Usuario guardado en API');
+        print('  Usuario guardado en API');
       } else {
         await syncService.guardarUsuarioPendiente({
           'uid': uid,

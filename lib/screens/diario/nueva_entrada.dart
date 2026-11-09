@@ -20,11 +20,11 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   int _temperaturaValor = 5;
   String _temperaturaSeleccionada = '🌤️ Buen clima';
 
-  // ✅ Nuevos campos para moscas y mal olor
+  //   Nuevos campos para moscas y mal olor
   bool? _tieneMoscas;
   bool? _tieneMalOlor;
 
-  // ✅ Tipo de residuo (múltiple selección)
+  //   Tipo de residuo (múltiple selección)
   final List<String> _tiposResiduo = [
     'Frutas',
     'Verduras',
@@ -35,7 +35,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   ];
   final List<bool> _tiposSeleccionados = [];
 
-  // ✅ Estado de ánimo
+  //   Estado de ánimo
   String _estadoSeleccionado = '😊';
   final List<Map<String, String>> _estados = [
     {'emoji': '😊', 'label': '¡Excelente!'},
@@ -45,7 +45,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
   bool _guardando = false;
 
-  // ✅ Control de días para alimentación, composta y lixiviado
+  //   Control de días para alimentación, composta y lixiviado
   int _diasDesdeUltimaAlimentacion = 0;
   int _diasDesdeUltimaCompostaLixiviado = 0;
 
@@ -74,19 +74,19 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   }
 
   Future<void> _guardarEntrada() async {
-    // ✅ Validar si tiene moscas y mostrar advertencia
+    //   Validar si tiene moscas y mostrar advertencia
     if (_tieneMoscas == true) {
       _mostrarDialogoMoscas();
       return;
     }
 
-    // ✅ Validar si tiene mal olor y mostrar advertencia
+    //   Validar si tiene mal olor y mostrar advertencia
     if (_tieneMalOlor == true) {
       _mostrarDialogoMalOlor();
       return;
     }
 
-    // ✅ Verificar que al menos un tipo de residuo esté seleccionado
+    //   Verificar que al menos un tipo de residuo esté seleccionado
     final tiposSeleccionados = _obtenerTiposSeleccionados();
     if (tiposSeleccionados.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +119,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ ¡Entrada guardada! +5 monedas 🪙'),
+          content: Text('  ¡Entrada guardada! +5 monedas 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -152,7 +152,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
               Navigator.pop(ctx);
               setState(() => _tieneMoscas = false);
             },
-            child: const Text('✅ Corregir'),
+            child: const Text('  Corregir'),
           ),
         ],
       ),
@@ -174,7 +174,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
               Navigator.pop(ctx);
               setState(() => _tieneMalOlor = false);
             },
-            child: const Text('✅ Corregir'),
+            child: const Text('  Corregir'),
           ),
         ],
       ),
@@ -191,7 +191,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
         title: const Text('📝 Mi diario'),
         backgroundColor: AppTheme.verde,
       ),
-      // ✅ FONDO EN EL BODY (cubre toda la pantalla)
+      //   FONDO EN EL BODY (cubre toda la pantalla)
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -221,7 +221,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ✅ Estado de ánimo
+                  //   Estado de ánimo
                   const Text('🌱 ¿Cómo va?',
                       style: TextStyle(
                           fontSize: 18,
@@ -266,7 +266,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ✅ Tipo de residuo (MÚLTIPLE SELECCIÓN)
+                  //   Tipo de residuo (MÚLTIPLE SELECCIÓN)
                   const Text('🍎 Tipo de residuo (puedes seleccionar varios)',
                       style: TextStyle(
                           fontSize: 16,
@@ -313,7 +313,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ✅ MOSCAS
+                  //   MOSCAS
                   const Text('🪰 ¿Hay moscas dentro del recipiente?',
                       style: TextStyle(
                           fontSize: 16,
@@ -427,7 +427,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ✅ MAL OLOR
+                  //   MAL OLOR
                   const Text('👃 ¿Tiene mal olor?',
                       style: TextStyle(
                           fontSize: 16,
@@ -541,7 +541,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ✅ Alimentación cada 7 días
+                  //   Alimentación cada 7 días
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -579,7 +579,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                               ),
                               Text(
                                 puedeAlimentar
-                                    ? '✅ ¡Puedes alimentar a tus lombrices hoy!'
+                                    ? '  ¡Puedes alimentar a tus lombrices hoy!'
                                     : '⏳ Próxima alimentación en ${7 - _diasDesdeUltimaAlimentacion} días',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -597,7 +597,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 16),
 
-                  // ✅ Composta y Lixiviado cada 2 meses
+                  //   Composta y Lixiviado cada 2 meses
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -637,7 +637,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
                               ),
                               Text(
                                 puedeCompostaLixiviado
-                                    ? '✅ ¡Ya puedes registrar tu composta y lixiviado!'
+                                    ? '  ¡Ya puedes registrar tu composta y lixiviado!'
                                     : '⏳ Próximo registro en ${60 - _diasDesdeUltimaCompostaLixiviado} días',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -655,7 +655,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ✅ Humedad
+                  //   Humedad
                   const Text('💧 Humedad',
                       style: TextStyle(
                           fontSize: 16,
@@ -697,7 +697,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
                   const SizedBox(height: 12),
 
-                  // ✅ Temperatura
+                  //   Temperatura
                   const Text('🌡️ Temperatura',
                       style: TextStyle(
                           fontSize: 16,

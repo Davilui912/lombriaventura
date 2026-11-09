@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // ✅ Logo grande
+                  //   Logo grande
                   Image.asset(
                     'assets/images/logo_lombriaventura.png',
                     width: 250,
@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // ✅ Indicador de carga
+                  //   Indicador de carga
                   const CircularProgressIndicator(
                     color: Colors.white,
                     strokeWidth: 3,

@@ -73,7 +73,7 @@ class _PrivacidadScreenState extends State<PrivacidadScreen> {
             ),
             const SizedBox(height: 16),
             
-            // ✅ Texto completo del aviso
+            //   Texto completo del aviso
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -158,7 +158,7 @@ class _PrivacidadScreenState extends State<PrivacidadScreen> {
             
             const SizedBox(height: 24),
             
-            // ✅ Checkbox de aceptación
+            //   Checkbox de aceptación
             Row(
               children: [
                 Checkbox(
@@ -181,7 +181,7 @@ class _PrivacidadScreenState extends State<PrivacidadScreen> {
             
             const SizedBox(height: 16),
             
-            // ✅ Botón continuar
+            //   Botón continuar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

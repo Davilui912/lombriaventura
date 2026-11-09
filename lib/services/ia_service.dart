@@ -33,7 +33,7 @@ class IaService {
   
   int get preguntasRestantesHoy => 15 - _preguntasHoy;
   
-  // ✅ Ahora solo usa respuestas offline (sin API)
+  //   Ahora solo usa respuestas offline (sin API)
   Future<String> preguntarALola(String pregunta) async {
     if (pregunta.trim().isEmpty) {
       return '¿Hola! Dime tu pregunta y te ayudaré. 🪱';
@@ -45,7 +45,7 @@ class IaService {
     
     _registrarPregunta();
     
-    // ✅ Respuesta basada en el manual
+    //   Respuesta basada en el manual
     return _respuestaOffline(pregunta);
   }
   

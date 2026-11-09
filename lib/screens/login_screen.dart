@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // ✅ Descarga silenciosa (sin mostrar mensajes)
+      //   Descarga silenciosa (sin mostrar mensajes)
       await _descargarDatosIniciales();
 
     } catch (e) {
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ✅ DESCARGA SILENCIOSA (sin indicadores visuales)
+  //   DESCARGA SILENCIOSA (sin indicadores visuales)
   Future<void> _descargarDatosIniciales() async {
     try {
       final syncService = SyncService();
@@ -60,15 +60,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print('🌐 Descargando datos iniciales (silencioso)...');
 
-      // ✅ 1. Descargar usuarios
+      //   1. Descargar usuarios
       final usuariosResult = await ApiService().obtenerTodosUsuarios();
       if (usuariosResult.ok && usuariosResult.data != null) {
         final usuariosBox = await Hive.openBox('usuarios');
         await usuariosBox.put('lista', usuariosResult.data!.map((u) => u.toJson()).toList());
-        print('✅ Usuarios descargados: ${usuariosResult.data!.length}');
+        print('  Usuarios descargados: ${usuariosResult.data!.length}');
       }
 
-      // ✅ 2. Descargar otros datos (diario, ventas, logros, etc.)
+      //   2. Descargar otros datos (diario, ventas, logros, etc.)
       final configBox = await Hive.openBox('configuracion');
       final usuarioActual = configBox.get('usuario_actual');
       if (usuarioActual != null) {
@@ -76,27 +76,27 @@ class _LoginScreenState extends State<LoginScreen> {
         if (diarioResult.ok && diarioResult.data != null) {
           final diarioBox = await Hive.openBox('diario');
           await diarioBox.put('lista', diarioResult.data!.map((e) => e.toJson()).toList());
-          print('✅ Diario descargado: ${diarioResult.data!.length}');
+          print('  Diario descargado: ${diarioResult.data!.length}');
         }
       }
 
-      // ✅ 3. Descargar ventas
+      //   3. Descargar ventas
       final ventasResult = await ApiService().obtenerTodasVentas();
       if (ventasResult.ok && ventasResult.data != null) {
         final ventasBox = await Hive.openBox('historial_ventas');
         await ventasBox.put('lista', ventasResult.data!.map((v) => v.toJson()).toList());
-        print('✅ Ventas descargadas: ${ventasResult.data!.length}');
+        print('  Ventas descargadas: ${ventasResult.data!.length}');
       }
 
-      // ✅ 4. Descargar logros
+      //   4. Descargar logros
       final logrosResult = await ApiService().obtenerTodosLogros();
       if (logrosResult.ok && logrosResult.data != null) {
         final logrosBox = await Hive.openBox('logros');
         await logrosBox.put('lista', logrosResult.data!.map((l) => l.toJson()).toList());
-        print('✅ Logros descargados: ${logrosResult.data!.length}');
+        print('  Logros descargados: ${logrosResult.data!.length}');
       }
 
-      print('✅ Descarga silenciosa completada');
+      print('  Descarga silenciosa completada');
     } catch (e) {
       print('❌ Error en descarga silenciosa: $e');
     }
@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print('🔍 Buscando usuario: $nombreUsuario');
 
-      // ✅ BUSCAR EN HIVE PRIMERO (datos descargados)
+      //   BUSCAR EN HIVE PRIMERO (datos descargados)
       final usuariosBox = await Hive.openBox('usuarios');
       final usuariosLista = usuariosBox.get('lista', defaultValue: []);
       
@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (usuarioEncontrado != null) {
         final passwordGuardada = box.get('usuario_password');
         if (passwordGuardada == passwordIngresada || usuarioEncontrado.password == passwordIngresada) {
-          print('✅ Login exitoso desde datos locales');
+          print('  Login exitoso desde datos locales');
           await box.put('usuario_uid', usuarioEncontrado.uid);
           await box.put('usuario_actual', usuarioEncontrado.nombreUsuario);
           await box.put('usuario_nombre', usuarioEncontrado.nombre);
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      // ✅ Si no está en Hive, buscar en API (online)
+      //   Si no está en Hive, buscar en API (online)
       final syncService = SyncService();
       if (await syncService.tieneInternet()) {
         print('🌐 Buscando usuario en API por nombre: $nombreUsuario');
@@ -169,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (result.ok && result.data != null) {
             final usuario = result.data!;
-            print('✅ Usuario encontrado en API: ${usuario.nombreUsuario}');
+            print('  Usuario encontrado en API: ${usuario.nombreUsuario}');
 
             await box.put('usuario_uid', usuario.uid);
             await box.put('usuario_actual', usuario.nombreUsuario);
@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
             await box.put('usuario_password', passwordIngresada);
             await box.put('login_exitoso', true);
 
-            // ✅ Actualizar lista de usuarios en Hive
+            //   Actualizar lista de usuarios en Hive
             final usuariosBox2 = await Hive.openBox('usuarios');
             final listaActual = usuariosBox2.get('lista', defaultValue: []);
             listaActual.add(usuario.toJson());

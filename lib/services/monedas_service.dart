@@ -93,7 +93,7 @@ class MonedasService {
 
     // Guardamos la nueva lista estructurada
     await _historialBox.put('lista', historial);
-    print('✅ Venta guardada y persistida en disco: $descripcion - $cantidad');
+    print('  Venta guardada y persistida en disco: $descripcion - $cantidad');
   }
   
   List<Map<String, dynamic>> obtenerHistorialVentas() {

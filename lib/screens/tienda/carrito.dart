@@ -59,7 +59,7 @@ class _CarritoScreenState extends State<CarritoScreen> {
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.verde),
-            child: const Text('Confirmar ✅', style: TextStyle(color: Colors.white)),
+            child: const Text('Confirmar  ', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

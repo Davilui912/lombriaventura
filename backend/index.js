@@ -23,7 +23,7 @@ db.connect((err) => {
         console.error('❌ Error conectando a MariaDB:', err);
         return;
     }
-    console.log('✅ Conectado a MariaDB');
+    console.log('  Conectado a MariaDB');
 });
 
 // ============================================
@@ -82,7 +82,7 @@ app.post('/api/login', (req, res) => {
             return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
         }
 
-        // ✅ Usuario autenticado
+        //   Usuario autenticado
         const usuario = results[0];
         res.json({
             nombreUsuario: usuario.nombreUsuario,

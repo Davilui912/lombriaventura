@@ -70,7 +70,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
   String _categoriaSeleccionada = 'Gorras';
   String _personaje = 'Lombriz';
 
-  // ✅ Variables para la prueba de accesorios
+  //   Variables para la prueba de accesorios
   Accesorio? _accesorioEnPrueba;
   bool _modoPrueba = false;
 
@@ -174,7 +174,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
     });
   }
 
-  // ✅ Método para probar un accesorio
+  //   Método para probar un accesorio
   void _probarAccesorio(Accesorio accesorio) {
     setState(() {
       _accesorioEnPrueba = accesorio;
@@ -189,7 +189,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
     );
   }
 
-  // ✅ Método para quitar la prueba
+  //   Método para quitar la prueba
   void _quitarPrueba() {
     setState(() {
       _accesorioEnPrueba = null;
@@ -207,7 +207,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
   Widget _buildPersonajeConAccesorios() {
     final equipados = _accesoriosService.obtenerEquipados(_personaje);
 
-    // ✅ Si estamos en modo prueba, mostrar el accesorio en prueba
+    //   Si estamos en modo prueba, mostrar el accesorio en prueba
     String? gorra = equipados['gorra'];
     String? lentes = equipados['lentes'];
     String? collar = equipados['collar'];
@@ -290,7 +290,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       return;
     }
 
-    // ✅ Verificar si tiene suficientes monedas ANTES de abrir el diálogo de compra
+    //   Verificar si tiene suficientes monedas ANTES de abrir el diálogo de compra
     if (_monedas < accesorio.precio) {
       showDialog(
         context: context,
@@ -360,7 +360,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
       return;
     }
 
-    // ✅ Si tiene suficientes monedas, mostrar el diálogo de compra
+    //   Si tiene suficientes monedas, mostrar el diálogo de compra
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -470,7 +470,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
 
     setState(() {
       accesorio.equipado = true;
-      // ✅ Si estábamos probando, quitamos el modo prueba
+      //   Si estábamos probando, quitamos el modo prueba
       if (_modoPrueba) {
         _modoPrueba = false;
         _accesorioEnPrueba = null;
@@ -561,7 +561,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
                 child: Column(
                   children: [
                     _buildPersonajeConAccesorios(),
-                    // ✅ Indicador de modo prueba
+                    //   Indicador de modo prueba
                     if (_modoPrueba && _accesorioEnPrueba != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
@@ -620,7 +620,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
                       onTap: () {
                         setState(() {
                           _categoriaSeleccionada = categoria;
-                          // ✅ Quitar prueba al cambiar de categoría
+                          //   Quitar prueba al cambiar de categoría
                           if (_modoPrueba) _quitarPrueba();
                           _cargarAccesorios();
                         });
@@ -732,7 +732,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
                 const SizedBox(height: 4),
                 Text(
                   accesorio.comprado
-                      ? (accesorio.equipado ? '✅ Equipado' : 'Disponible')
+                      ? (accesorio.equipado ? '  Equipado' : 'Disponible')
                       : '💰 ${accesorio.precio} monedas',
                   style: TextStyle(
                     fontSize: 13,
@@ -746,7 +746,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
               ],
             ),
           ),
-          // ✅ Botón de Probar (solo si NO está comprado)
+          //   Botón de Probar (solo si NO está comprado)
           if (!accesorio.comprado && !enPrueba)
             Padding(
               padding: const EdgeInsets.only(right: 6),
@@ -762,7 +762,7 @@ class _AccesoriosScreenState extends State<AccesoriosScreen> {
                 ),
               ),
             ),
-          // ✅ Botón de Quitar prueba
+          //   Botón de Quitar prueba
           if (enPrueba)
             Padding(
               padding: const EdgeInsets.only(right: 6),

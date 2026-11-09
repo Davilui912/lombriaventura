@@ -179,7 +179,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('✅ Foto de perfil actualizada'),
+        content: Text('  Foto de perfil actualizada'),
         backgroundColor: AppTheme.verde,
       ),
     );

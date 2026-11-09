@@ -57,7 +57,7 @@ class AvisosScreen extends StatelessWidget {
             color: Colors.red,
             contenido: 'Si tu composta huele a PIPÍ o a limpiador de pisos, ¡algo va mal!\n\n'
                 'Eso es AMONÍACO. Se produce cuando hay demasiados restos de comida (nitrógeno) y poco material seco (carbono).\n\n'
-                '✅ SOLUCIÓN FÁCIL:\n'
+                '  SOLUCIÓN FÁCIL:\n'
                 '1. Deja de darles comida por una semana.\n'
                 '2. Agrega cartón sin tinta, hojas secas o papel periódico picado.\n'
                 '3. Revuelve suavemente para que respire.\n\n'
@@ -70,7 +70,7 @@ class AvisosScreen extends StatelessWidget {
             titulo: 'Hongos en la composta',
             color: Colors.brown,
             contenido: '¡No todos los hongos son malos!\n\n'
-                '✅ HONGOS BUENOS (no hagas nada):\n'
+                '  HONGOS BUENOS (no hagas nada):\n'
                 '• Blancos y peludos: son normales, ayudan a descomponer.\n'
                 '• Pequeños y grises: son parte del proceso.\n\n'
                 '❌ HONGOS MALOS (actúa rápido):\n'
@@ -103,7 +103,7 @@ class AvisosScreen extends StatelessWidget {
                 '• Usar químicos, jabones o insecticidas cerca del bote.\n'
                 '• Dejarlas sin comida por más de 2 semanas.\n'
                 '• Mojarlas con agua con cloro.\n\n'
-                '✅ SIEMPRE:\n'
+                '  SIEMPRE:\n'
                 '• Mójate las manos antes de tocarlas.\n'
                 '• Regrésalas rápido a su cama.\n'
                 '• Mantén el bote tapado y en sombra.\n\n'

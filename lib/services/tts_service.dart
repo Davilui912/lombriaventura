@@ -13,7 +13,7 @@ class TTSService {
 
   static const String _apiKey = Secrets.googleTtsApiKey;
 
-  // ✅ CONFIGURACIÓN PARA ESPAÑOL (MÉXICO) Y VOZ ARCHENAR
+  //   CONFIGURACIÓN PARA ESPAÑOL (MÉXICO) Y VOZ ARCHENAR
   static const String _languageCode = 'es-US';
   
   // Nombre identificador según el catálogo de voces de Google
@@ -24,13 +24,13 @@ class TTSService {
       final textoLimpio = _limpiarTexto(texto);
       if (textoLimpio.isEmpty) return false;
 
-      // ✅ Si ya está hablando, detener y esperar
+      //   Si ya está hablando, detener y esperar
       if (_isSpeaking) {
         await stop();
         await Future.delayed(const Duration(milliseconds: 300));
       }
 
-      // ✅ Crear un nuevo AudioPlayer cada vez
+      //   Crear un nuevo AudioPlayer cada vez
       _player = AudioPlayer();    
       _isSpeaking = true;
 
@@ -65,10 +65,10 @@ class TTSService {
       final data = jsonDecode(response.body);
       final audioBytes = base64Decode(data['audioContent']);
 
-      // ✅ Reproducir el audio
+      //   Reproducir el audio
       await _player!.play(BytesSource(audioBytes));
 
-      // ✅ Escuchar cuando termine
+      //   Escuchar cuando termine
       _player!.onPlayerStateChanged.listen((state) {
         if (state == PlayerState.stopped || state == PlayerState.completed) {
           _isSpeaking = false;

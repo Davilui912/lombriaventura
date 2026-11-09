@@ -33,7 +33,7 @@ ConfigNivel obtenerConfiguracion(Dificultad dificultad) {
   switch (dificultad) {
     case Dificultad.facil:
       return const ConfigNivel(
-        velocidadComida: 3.5, // ✅ AHORA ES MEDIA (antes 2.0)
+        velocidadComida: 3.5, //   AHORA ES MEDIA (antes 2.0)
         puntosParaGanar: 50,
         tiempoVisibleComida: 4.0,
         puntosAcertar: 10,
@@ -46,7 +46,7 @@ ConfigNivel obtenerConfiguracion(Dificultad dificultad) {
       );
     case Dificultad.medio:
       return const ConfigNivel(
-        velocidadComida: 5.0, // ✅ AHORA ES MEDIA-ALTA (antes 3.5)
+        velocidadComida: 5.0, //   AHORA ES MEDIA-ALTA (antes 3.5)
         puntosParaGanar: 100,
         tiempoVisibleComida: 2.5,
         puntosAcertar: 15,
@@ -59,7 +59,7 @@ ConfigNivel obtenerConfiguracion(Dificultad dificultad) {
       );
     case Dificultad.dificil:
       return const ConfigNivel(
-        velocidadComida: 7.0, // ✅ AHORA ES RÁPIDA (antes 5.0)
+        velocidadComida: 7.0, //   AHORA ES RÁPIDA (antes 5.0)
         puntosParaGanar: 150,
         tiempoVisibleComida: 1.5,
         puntosAcertar: 20,

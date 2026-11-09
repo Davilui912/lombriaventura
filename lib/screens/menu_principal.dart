@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lombriaventura/screens/curso_videos_screen.dart';
-import 'package:lombriaventura/screens/juegos/alimenta_lombriz_cayendo.dart';
 import 'package:lombriaventura/screens/juegos/selector_nivel_alimenta.dart';
 import 'package:lombriaventura/screens/login_screen.dart';
 import '../config/theme.dart';
 import '../services/actividad_service.dart';
 import 'chat_ia_screen.dart';
+import 'juegos/rompecabezas.dart';
 import 'diario/nueva_entrada.dart';
 import 'juegos/selector_nivel_cayendo.dart';
 import 'juegos/clasifica_residuos.dart';
-import 'juegos/alimenta_la_lombriz.dart';
 import 'tienda/ventas_lombrices.dart';
 import 'tienda/ventas_atomizador.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'tienda/ventas_historial.dart';
 import 'tienda/ventas_humus.dart';
 import 'tienda/capacitacion.dart';
 import '../../services/monedas_service.dart';
 import 'juegos/memorama.dart';
-import 'logros.dart';
 import 'modulo_educativo.dart';
 import '../services/retos_service.dart';
 import 'recordatorios.dart';
 import 'tienda/accesorios_screen.dart';
-import 'avisos.dart';
 import 'tienda/problemas_matematicos.dart';
 import 'perfil_screen.dart';
 import 'progress_screen.dart';
@@ -40,6 +38,8 @@ class MenuPrincipal extends StatefulWidget {
 
 class _MenuPrincipalState extends State<MenuPrincipal> {
   final ActividadService _actividadService = ActividadService();
+  final AudioPlayer _audioMenu = AudioPlayer(); 
+  bool _musicaMenuActivada = true; 
 
   int _categoriaAbierta = -1;
   int _contadorToques = 0;
@@ -48,6 +48,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   @override
   void initState() {
     super.initState();
+    _iniciarMusicaMenu();
     _verificarSesion();
     _actividadService.registrarActividad();
 
@@ -57,6 +58,36 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     });
 
     _inicializarRecordatorios();
+  }
+
+  @override
+  void dispose() {
+    _audioMenu.stop();
+    _audioMenu.dispose();
+    super.dispose();
+  }
+
+  Future<void> _iniciarMusicaMenu() async {
+    try {
+      await _audioMenu.setReleaseMode(ReleaseMode.loop);
+      await _audioMenu.play(AssetSource('audio/fondo_menu.mp3'));
+      await _audioMenu.setVolume(0.2); // Un poco más bajo que en juegos
+    } catch (e) {
+      print('Error al cargar la música del menú: $e');
+    }
+  }
+
+  void _toggleMusicaMenu() {
+    setState(() {
+      _musicaMenuActivada = !_musicaMenuActivada;
+      if (_musicaMenuActivada) {
+        _audioMenu.setVolume(0.2);
+        _audioMenu.resume();
+      } else {
+        _audioMenu.setVolume(0);
+        _audioMenu.pause();
+      }
+    });
   }
 
   Future<void> _inicializarRecordatorios() async {
@@ -108,7 +139,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               RecordatoriosService().marcarVisto(rec['id']);
               Navigator.pop(ctx);
             },
-            child: const Text('✅ ¡Hecho!'),
+            child: const Text('  ¡Hecho!'),
           ),
           TextButton(
             onPressed: () {
@@ -125,11 +156,15 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     );
   }
 
-  void _irAPantalla(Widget pantalla) {
-    Navigator.push(
+  Future<void> _irAPantalla(Widget pantalla) async {
+    await _audioMenu.pause(); 
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => pantalla),
     );
+  if (mounted && _musicaMenuActivada) {
+      await _audioMenu.resume();
+    }
   }
 
   Future<void> _verificarSesion() async {
@@ -158,7 +193,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
     });
   }
 
-  // ✅ Diálogo de bienvenida reutilizable
+  //   Diálogo de bienvenida reutilizable
   void mostrarBienvenidaCurso(BuildContext context,
       {VoidCallback? onContinue}) {
     showDialog(
@@ -578,7 +613,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
       appBar: AppBar(
         title: _buildTituloAdmin(),
         actions: [
-          // ✅ Contador de monedas reactivo (se actualiza en tiempo real)
+          //   Contador de monedas reactivo (se actualiza en tiempo real)
           ValueListenableBuilder(
             valueListenable: Hive.box('monedas').listenable(),
             builder: (context, Box box, _) {
@@ -644,7 +679,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
           // Botón de progreso
           GestureDetector(
             onTap: () async {
-              // ✅ Cargar racha y récord reales antes de abrir la pantalla
+              //   Cargar racha y récord reales antes de abrir la pantalla
               final datos = await _actividadService.obtenerRachaYRecord();
               if (!mounted) return;
 
@@ -1164,7 +1199,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           color: const Color(0xFFFFA726),
                         ),
 
-                        // ✅ SUBMENÚ DE VENTAS
+                        //   SUBMENÚ DE VENTAS
                         _buildSubmenuVentas(),
 
                         _buildOpcion(
@@ -1215,6 +1250,13 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           () => _irAPantalla(const MemoramaScreen()),
                           color: const Color(0xFFFFA726),
                         ),
+                        _buildOpcion(
+                          'Rompecabezas',
+                          'Arma la imagen de la lombriz',
+                          '🧩',
+                          () => _irAPantalla(const RompecabezasScreen()),
+                          color: const Color(0xFFFFA726),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -1223,7 +1265,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               ),
             ),
 
-            // ✅ Banner promocional fijo al final
+            //   Banner promocional fijo al final
             if (_mostrarBanner)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

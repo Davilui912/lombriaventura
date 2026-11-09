@@ -27,9 +27,9 @@ class ComparaCompostaScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // ✅ COMPOSTA SANA
+            //   COMPOSTA SANA
             _buildTarjetaComparativa(
-              titulo: '✅ Composta Sana',
+              titulo: '  Composta Sana',
               descripcion: '• Color oscuro y uniforme\n'
                   '• Olor a tierra húmeda\n'
                   '• Textura esponjosa\n'
@@ -41,7 +41,7 @@ class ComparaCompostaScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ✅ COMPOSTA NO SANA
+            //   COMPOSTA NO SANA
             _buildTarjetaComparativa(
               titulo: '⚠️ Composta No Sana',
               descripcion: '• Color grisáceo o verdoso\n'
@@ -55,7 +55,7 @@ class ComparaCompostaScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ✅ CONSEJOS
+            //   CONSEJOS
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -118,7 +118,7 @@ class ComparaCompostaScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // ✅ Imagen
+          //   Imagen
           Container(
             width: double.infinity,
             height: 150,

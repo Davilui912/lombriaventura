@@ -89,7 +89,7 @@ class _RetosScreenState extends State<RetosScreen> {
     if (_retosService.estaCompletado('reto_1')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ ¡Ya completaste este reto!'),
+          content: Text('  ¡Ya completaste este reto!'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -689,7 +689,7 @@ class _RetosScreenState extends State<RetosScreen> {
 
                       const SizedBox(height: 16),
 
-                      // ✅ MENSAJE INFORMATIVO ENTRE PROGRESO Y LISTA DE RETOS
+                      //   MENSAJE INFORMATIVO ENTRE PROGRESO Y LISTA DE RETOS
                       // Container(
                       //   padding: const EdgeInsets.all(14),
                       //   decoration: BoxDecoration(
@@ -743,7 +743,7 @@ class _RetosScreenState extends State<RetosScreen> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    completado ? '✅' : reto.emoji,
+                                    completado ? ' ' : reto.emoji,
                                     style: const TextStyle(fontSize: 28),
                                   ),
                                 ),

@@ -75,7 +75,7 @@ class AnuncioService {
                   mainAxisSize: MainAxisSize.min, 
                   children: [
                     
-                    // ✅ CAMBIO 1: Bloqueamos el espacio del video a 16:9 desde el inicio
+                    //   CAMBIO 1: Bloqueamos el espacio del video a 16:9 desde el inicio
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: AspectRatio(
@@ -92,7 +92,7 @@ class AnuncioService {
                     ),
                     const SizedBox(height: 12),
                     
-                    // ✅ CAMBIO 2: Protegemos los controles forzando una altura estricta
+                    //   CAMBIO 2: Protegemos los controles forzando una altura estricta
                     if (_controller != null && _controller!.value.isInitialized)
                       SizedBox(
                         height: 48, // Altura fija para evitar el error 'hasSize: is not true'

@@ -31,7 +31,7 @@ class SyncService {
       await _descargarLogros();
       await _descargarRetos();
       await _descargarRecordatorios();
-      print('✅ Sincronización al iniciar completada');
+      print('  Sincronización al iniciar completada');
     } catch (e) {
       print('❌ Error en sincronización al iniciar: $e');
     }
@@ -45,7 +45,7 @@ class SyncService {
       if (result.ok && result.data != null) {
         final box = await Hive.openBox('usuarios');
         await box.put('lista', result.data!.map((u) => u.toJson()).toList());
-        print('✅ Usuarios descargados: ${result.data!.length}');
+        print('  Usuarios descargados: ${result.data!.length}');
       }
     } catch (e) {
       print('❌ Error descargando usuarios: $e');
@@ -61,7 +61,7 @@ class SyncService {
         if (result.ok && result.data != null) {
           final diarioBox = await Hive.openBox('diario');
           await diarioBox.put('lista', result.data!.map((e) => e.toJson()).toList());
-          print('✅ Diario descargado: ${result.data!.length} entradas');
+          print('  Diario descargado: ${result.data!.length} entradas');
         }
       }
     } catch (e) {
@@ -75,7 +75,7 @@ class SyncService {
       if (result.ok && result.data != null) {
         final box = await Hive.openBox('historial_ventas');
         await box.put('lista', result.data!.map((v) => v.toJson()).toList());
-        print('✅ Ventas descargadas: ${result.data!.length}');
+        print('  Ventas descargadas: ${result.data!.length}');
       }
     } catch (e) {
       print('❌ Error descargando ventas: $e');
@@ -88,7 +88,7 @@ class SyncService {
       if (result.ok && result.data != null) {
         final box = await Hive.openBox('logros');
         await box.put('lista', result.data!.map((l) => l.toJson()).toList());
-        print('✅ Logros descargados: ${result.data!.length}');
+        print('  Logros descargados: ${result.data!.length}');
       }
     } catch (e) {
       print('❌ Error descargando logros: $e');
@@ -101,7 +101,7 @@ class SyncService {
       if (result.ok && result.data != null) {
         final box = await Hive.openBox('retos');
         await box.put('lista', result.data!.map((r) => r.toJson()).toList());
-        print('✅ Retos descargados: ${result.data!.length}');
+        print('  Retos descargados: ${result.data!.length}');
       }
     } catch (e) {
       print('❌ Error descargando retos: $e');
@@ -114,7 +114,7 @@ class SyncService {
       if (result.ok && result.data != null) {
         final box = await Hive.openBox('recordatorios');
         await box.put('lista', result.data!.map((r) => r.toJson()).toList());
-        print('✅ Recordatorios descargados: ${result.data!.length}');
+        print('  Recordatorios descargados: ${result.data!.length}');
       }
     } catch (e) {
       print('❌ Error descargando recordatorios: $e');
@@ -136,10 +136,10 @@ class SyncService {
     await _sincronizarLogros();
     await _sincronizarRetos();
     await _sincronizarRecordatorios();
-    print('✅ Sincronización completada');
+    print('  Sincronización completada');
   }
 
-  // ✅ CORREGIDO: incluye preguntaSeguridad y respuestaSeguridad
+  //   CORREGIDO: incluye preguntaSeguridad y respuestaSeguridad
   Future<void> _sincronizarUsuarios() async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('usuarios', defaultValue: <Map<String, dynamic>>[]);
@@ -160,7 +160,7 @@ class SyncService {
         if (result.ok) {
           pendientes.remove(usuario);
           await box.put('usuarios', pendientes);
-          print('✅ Usuario ${usuario['nombreUsuario']} sincronizado');
+          print('  Usuario ${usuario['nombreUsuario']} sincronizado');
         }
       } catch (e) {
         print('❌ Error sincronizando usuario: $e');
@@ -186,7 +186,7 @@ class SyncService {
         if (result.ok) {
           pendientes.remove(entrada);
           await box.put('diario', pendientes);
-          print('✅ Entrada de diario sincronizada');
+          print('  Entrada de diario sincronizada');
         }
       } catch (e) {
         print('❌ Error sincronizando diario: $e');
@@ -211,7 +211,7 @@ class SyncService {
         if (result.ok) {
           pendientes.remove(venta);
           await box.put('ventas', pendientes);
-          print('✅ Venta sincronizada');
+          print('  Venta sincronizada');
         }
       } catch (e) {
         print('❌ Error sincronizando venta: $e');
@@ -236,7 +236,7 @@ class SyncService {
         print('💾 Cambio de contraseña para ${cambio['uid']} (solo Hive)');
         pendientes.remove(cambio);
         await box.put('cambios_password', pendientes);
-        print('✅ Cambio de contraseña procesado');
+        print('  Cambio de contraseña procesado');
       } catch (e) {
         print('❌ Error sincronizando cambio de contraseña: $e');
       }
@@ -266,7 +266,7 @@ class SyncService {
         if (result.ok) {
           pendientes.remove(logro);
           await box.put('logros', pendientes);
-          print('✅ Logro sincronizado');
+          print('  Logro sincronizado');
         }
       } catch (e) {
         print('❌ Error sincronizando logro: $e');
@@ -297,7 +297,7 @@ class SyncService {
         if (result.ok) {
           pendientes.remove(reto);
           await box.put('retos', pendientes);
-          print('✅ Reto sincronizado');
+          print('  Reto sincronizado');
         }
       } catch (e) {
         print('❌ Error sincronizando reto: $e');
@@ -327,7 +327,7 @@ class SyncService {
         if (result.ok) {
           pendientes.remove(recordatorio);
           await box.put('recordatorios', pendientes);
-          print('✅ Recordatorio sincronizado');
+          print('  Recordatorio sincronizado');
         }
       } catch (e) {
         print('❌ Error sincronizando recordatorio: $e');
@@ -335,7 +335,7 @@ class SyncService {
     }
   }
 
-  // ✅ CORREGIDO: incluye preguntaSeguridad y respuestaSeguridad
+  //   CORREGIDO: incluye preguntaSeguridad y respuestaSeguridad
   Future<void> guardarUsuarioPendiente(Map<String, dynamic> usuario) async {
     final box = await Hive.openBox('sync_pendientes');
     final pendientes = box.get('usuarios', defaultValue: <Map<String, dynamic>>[]);

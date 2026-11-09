@@ -24,21 +24,21 @@ class ProgressScreen extends StatefulWidget {
 class _ProgressScreenState extends State<ProgressScreen> {
   late final Future<int> _coinsFuture;
   late Future<int> _streakFuture;
-  late Future<int> _recordFuture; // ✅ NUEVO
+  late Future<int> _recordFuture; 
 
   @override
   void initState() {
     super.initState();
     _coinsFuture = _loadCurrentCoins();
     _streakFuture = _loadCurrentStreak();
-    _recordFuture = _loadCurrentRecord(); // ✅ NUEVO
+    _recordFuture = _loadCurrentRecord(); 
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _streakFuture = _loadCurrentStreak();
-    _recordFuture = _loadCurrentRecord(); // ✅ NUEVO
+    _recordFuture = _loadCurrentRecord(); 
   }
 
   Future<int> _loadCurrentCoins() async {
@@ -50,7 +50,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return ActividadService().obtenerRacha();
   }
 
-  // ✅ NUEVO: Cargar el récord real (y actualizarlo si hace falta)
+  //   NUEVO: Cargar el récord real (y actualizarlo si hace falta)
   Future<int> _loadCurrentRecord() async {
     await ActividadService().actualizarRecordSiEsNecesario();
     return ActividadService().obtenerRecord();
@@ -92,7 +92,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        // ✅ Récord real con FutureBuilder
+                        
                         FutureBuilder<int>(
                           future: _recordFuture,
                           builder: (context, snapshot) {

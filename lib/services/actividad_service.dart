@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 class ActividadService {
   static const String _boxName = 'actividad';
 
-  // ✅ Clave donde se guarda el récord de días
+  //   Clave donde se guarda el récord de días
   static const String _recordKey = 'record_dias';
 
   Future<void> _guardarEntrada() async {
@@ -20,7 +20,7 @@ class ActividadService {
   // Obtener total de días activos
   int obtenerDiasActivos() {
     final box = Hive.box(_boxName);
-    // ✅ Excluimos la clave del récord para que no cuente como día activo
+    //   Excluimos la clave del récord para que no cuente como día activo
     return box.keys.where((k) => k != _recordKey).length;
   }
 
@@ -42,13 +42,13 @@ class ActividadService {
     return racha;
   }
 
-  // ✅ NUEVO: Obtener el récord guardado
+  //   NUEVO: Obtener el récord guardado
   int obtenerRecord() {
     final box = Hive.box(_boxName);
     return box.get(_recordKey, defaultValue: 0);
   }
 
-  // ✅ NUEVO: Actualizar el récord si la racha actual es mayor
+  //   NUEVO: Actualizar el récord si la racha actual es mayor
   Future<void> actualizarRecordSiEsNecesario() async {
     final box = Hive.box(_boxName);
     final rachaActual = obtenerRacha();
@@ -60,7 +60,7 @@ class ActividadService {
     }
   }
 
-  // ✅ NUEVO: Obtener racha y récord en un solo paso (actualiza el récord si hace falta)
+  //   NUEVO: Obtener racha y récord en un solo paso (actualiza el récord si hace falta)
   Future<Map<String, int>> obtenerRachaYRecord() async {
     await actualizarRecordSiEsNecesario();
     return {

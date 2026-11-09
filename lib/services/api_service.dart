@@ -90,7 +90,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Obtener usuario por nombre de usuario
+  ///   Obtener usuario por nombre de usuario
   Future<ApiResult<Usuario>> obtenerUsuario(String nombreUsuario) async {
     try {
       final res = await http
@@ -113,7 +113,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Obtener todos los usuarios (para descarga inicial)
+  ///   Obtener todos los usuarios (para descarga inicial)
   Future<ApiResult<List<Usuario>>> obtenerTodosUsuarios() async {
     try {
       final res = await http
@@ -126,7 +126,7 @@ class ApiService {
     }
   }
 
-  /// ✅ LOGIN - Valida solo en Hive
+  ///   LOGIN - Valida solo en Hive
   Future<ApiResult<Usuario>> loginUsuario({
     required String nombreUsuario,
     required String password,
@@ -204,7 +204,7 @@ class ApiService {
 
   // ─── RECUPERACIÓN DE CONTRASEÑA ───
 
-  /// ✅ Verificar respuesta de seguridad
+  ///   Verificar respuesta de seguridad
   Future<ApiResult<bool>> verificarSeguridad({
     required String uid,
     required String respuestaSeguridad,
@@ -237,7 +237,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Obtener usuario por UID
+  ///   Obtener usuario por UID
   Future<ApiResult<Usuario>> obtenerUsuarioPorUid(String uid) async {
     try {
       final res = await http
@@ -260,7 +260,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Actualizar contraseña
+  ///   Actualizar contraseña
   Future<ApiResult<bool>> actualizarPassword({
     required String uid,
     required String nuevaPassword,
@@ -286,7 +286,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Buscar usuario por nombre
+  ///   Buscar usuario por nombre
   Future<ApiResult<Usuario>> buscarUsuarioPorNombre(String nombreUsuario) async {
     try {
       final res = await http
@@ -398,7 +398,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Obtener todas las ventas
+  ///   Obtener todas las ventas
   Future<ApiResult<List<Venta>>> obtenerTodasVentas() async {
     try {
       final res = await http

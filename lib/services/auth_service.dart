@@ -66,7 +66,7 @@ class AuthService {
       final box = await Hive.openBox('configuracion');
       final uid = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // ✅ Guardar en Hive
+      //   Guardar en Hive
       await box.put('usuario_uid', uid);
       await box.put('usuario_actual', nombreUsuario);
       await box.put('usuario_nombre', nombre);
@@ -93,7 +93,7 @@ class AuthService {
       _currentUser = usuario;
       _currentUid = uid;
 
-      // ✅ Guardar en API
+      //   Guardar en API
       if (await _syncService.tieneInternet()) {
         final result = await _api.crearUsuario(
           uid: uid,

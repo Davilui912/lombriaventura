@@ -6,10 +6,10 @@ class ConversacionService {
   late Box<Conversacion> _box;
   bool _isInitialized = false;
   
-  // ✅ Constructor privado (agregar esto)
+  //   Constructor privado (agregar esto)
   ConversacionService._internal();
   
-  // ✅ Método para obtener la instancia única
+  //   Método para obtener la instancia única
   static Future<ConversacionService> getInstance() async {
     if (_instance == null) {
       _instance = ConversacionService._internal();  // Usar constructor privado
@@ -22,7 +22,7 @@ class ConversacionService {
   Future<void> _init() async {
     _box = await Hive.openBox<Conversacion>('conversaciones');
     _isInitialized = true;
-    print('✅ ConversacionService inicializado correctamente');
+    print('  ConversacionService inicializado correctamente');
   }
   
   // Asegurar que el box esté listo
@@ -46,7 +46,7 @@ class ConversacionService {
     print('Guardando conversación: ${conversacion.id}');
     print('Mensajes: ${conversacion.mensajes.length}');
     await _box.put(conversacion.id, conversacion);
-    print('✅ Guardado exitoso');
+    print('  Guardado exitoso');
   }
   
   // Eliminar conversación

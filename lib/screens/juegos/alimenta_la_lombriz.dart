@@ -215,7 +215,7 @@ final List<Map<String, dynamic>> _comidasMalas = [
     });
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(comida['tipo'] == 'buena' ? '✅ ¡${comida['nombre']}! +$puntos pts' : '❌ ¡${comida['nombre']} no es buena! $puntos pts'),
+      content: Text(comida['tipo'] == 'buena' ? '  ¡${comida['nombre']}! +$puntos pts' : '❌ ¡${comida['nombre']} no es buena! $puntos pts'),
       backgroundColor: comida['tipo'] == 'buena' ? AppTheme.verde : Colors.red,
       duration: const Duration(milliseconds: 400),
     ));

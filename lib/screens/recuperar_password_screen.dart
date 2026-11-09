@@ -53,7 +53,7 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
       String? uidEncontrado;
       String? preguntaSeguridad;
       
-      // ✅ 1. Buscar en la lista de usuarios de Hive
+      //   1. Buscar en la lista de usuarios de Hive
       final usuariosBox = await Hive.openBox('usuarios');
       final listaUsuarios = usuariosBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
       
@@ -64,12 +64,12 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
           usuarioEncontrado = item;
           uidEncontrado = item['uid'];
           preguntaSeguridad = item['pregunta_seguridad'];
-          print('✅ Encontrado en Hive: pregunta=$preguntaSeguridad');
+          print('  Encontrado en Hive: pregunta=$preguntaSeguridad');
           break;
         }
       }
 
-      // ✅ 2. Si NO está en Hive, buscar en API
+      //   2. Si NO está en Hive, buscar en API
       if (usuarioEncontrado == null) {
         if (await _syncService.tieneInternet()) {
           print('🌐 Buscando usuario en API: $usuario');
@@ -79,8 +79,8 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
             
             if (result.ok && result.data != null) {
               final user = result.data!;
-              print('✅ Usuario encontrado en API: ${user.nombreUsuario}');
-              print('✅ Pregunta de seguridad en API: ${user.preguntaSeguridad}');
+              print('  Usuario encontrado en API: ${user.nombreUsuario}');
+              print('  Pregunta de seguridad en API: ${user.preguntaSeguridad}');
               
               usuarioEncontrado = {
                 'uid': user.uid,
@@ -98,11 +98,11 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
               uidEncontrado = user.uid;
               preguntaSeguridad = user.preguntaSeguridad;
               
-              // ✅ Guardar en Hive para futuras consultas
+              //   Guardar en Hive para futuras consultas
               final listaActualizada = List<Map<String, dynamic>>.from(listaUsuarios);
               listaActualizada.add(usuarioEncontrado!);
               await usuariosBox.put('lista', listaActualizada);
-              print('✅ Usuario sincronizado de API a Hive');
+              print('  Usuario sincronizado de API a Hive');
             } else {
               setState(() {
                 _errorMessage = 'No existe una cuenta con este usuario';
@@ -127,15 +127,15 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
         }
       }
 
-      // ✅ 3. Si encontramos el usuario, mostrar la pregunta de seguridad
+      //   3. Si encontramos el usuario, mostrar la pregunta de seguridad
       if (usuarioEncontrado != null && uidEncontrado != null) {
         _uidUsuario = uidEncontrado;
         _preguntaSeguridad = preguntaSeguridad;
         
-        print('✅ UID: $_uidUsuario');
-        print('✅ Pregunta de seguridad: $_preguntaSeguridad');
+        print('  UID: $_uidUsuario');
+        print('  Pregunta de seguridad: $_preguntaSeguridad');
         
-        // ✅ Verificar si tiene pregunta de seguridad
+        //   Verificar si tiene pregunta de seguridad
         if (_preguntaSeguridad == null || _preguntaSeguridad!.isEmpty) {
           setState(() {
             _errorMessage = '⚠️ Este usuario no tiene pregunta de seguridad.\n'
@@ -183,7 +183,7 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
     });
 
     try {
-      // ✅ 1. Verificar en Hive primero (rápido)
+      //   1. Verificar en Hive primero (rápido)
       final usuariosBox = await Hive.openBox('usuarios');
       final listaUsuarios = usuariosBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
       
@@ -204,7 +204,7 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
         print('📝 Comparando: $respuesta == $respuestaGuardada -> $respuestaCorrecta');
       }
       
-      // ✅ 2. Si no está en Hive o la respuesta es incorrecta, verificar en API
+      //   2. Si no está en Hive o la respuesta es incorrecta, verificar en API
       if (!respuestaCorrecta && await _syncService.tieneInternet()) {
         print('🌐 Verificando respuesta en API...');
         
@@ -216,7 +216,7 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
           
           if (result.ok) {
             respuestaCorrecta = true;
-            print('✅ Respuesta verificada en API');
+            print('  Respuesta verificada en API');
           } else {
             print('❌ Respuesta incorrecta en API: ${result.error}');
           }
@@ -259,11 +259,11 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
     });
 
     try {
-      // ✅ Actualizar en Hive (configuración)
+      //   Actualizar en Hive (configuración)
       final configBox = await Hive.openBox('configuracion');
       await configBox.put('usuario_password', nuevaPassword);
       
-      // ✅ Actualizar en la lista de usuarios de Hive
+      //   Actualizar en la lista de usuarios de Hive
       final usuariosBox = await Hive.openBox('usuarios');
       final listaUsuarios = usuariosBox.get('lista', defaultValue: <Map<String, dynamic>>[]);
       
@@ -278,13 +278,13 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
       
       if (encontrado) {
         await usuariosBox.put('lista', listaUsuarios);
-        print('✅ Contraseña actualizada en Hive');
+        print('  Contraseña actualizada en Hive');
       }
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ ¡Contraseña cambiada exitosamente!'),
+            content: Text('  ¡Contraseña cambiada exitosamente!'),
             backgroundColor: AppTheme.verde,
           ),
         );
@@ -381,7 +381,7 @@ class _RecuperarPasswordScreenState extends State<RecuperarPasswordScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ✅ Indicador de pasos
+                    //   Indicador de pasos
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

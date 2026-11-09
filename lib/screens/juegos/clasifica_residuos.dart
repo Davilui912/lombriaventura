@@ -13,9 +13,9 @@ class ClasificaResiduosScreen extends StatefulWidget {
 }
 
 class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
-  // ✅ Meta de aciertos para ganar
+  //   Meta de aciertos para ganar
   static const int _metaAciertos = 15;
-  // ✅ Tiempo límite en segundos
+  //   Tiempo límite en segundos
   static const int _tiempoLimite = 60;
 
   int _aciertos = 0;
@@ -117,13 +117,13 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
     _monedasOtorgadas = true;
     final monedasService = MonedasService();
     await monedasService.init();
-    await monedasService.agregarMonedas(15);
+    await monedasService.agregarMonedas(3);
     await SoundService.instance.monedasGanadas();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Ganaste 15 monedas! 🪙'),
+          content: Text('¡Ganaste 3 monedas! 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -141,13 +141,13 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
           LogrosService().desbloquearInsignia('clasificador');
         }
         _mensaje =
-            '✅ ¡Correcto! ${residuo['emoji']} va ${contenedorComposta ? "en la composta" : "en la basura"}';
+            '  ¡Correcto! ${residuo['emoji']} va ${contenedorComposta ? "en la composta" : "en la basura"}';
         _residuosPendientes.remove(residuo);
       });
 
       SoundService.instance.retoCompletado();
 
-      // ✅ Verificar si llegó a la meta
+      //   Verificar si llegó a la meta
       if (_aciertos >= _metaAciertos) {
         _terminarJuego(true);
         return;
@@ -190,7 +190,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
           ),
         ],
       ),
-      // ✅ FONDO EN EL BODY
+      //   FONDO EN EL BODY
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -220,7 +220,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
                     ),
                     child: Column(
                       children: [
-                        // ✅ Barra de tiempo y progreso
+                        //   Barra de tiempo y progreso
                         Row(
                           children: [
                             // Tiempo
@@ -307,7 +307,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
 
                         const SizedBox(height: 12),
 
-                        // ✅ Contenedores
+                        //   Contenedores
                         Row(
                           children: [
                             Expanded(
@@ -324,7 +324,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
 
                         const SizedBox(height: 12),
 
-                        // ✅ Residuos para arrastrar
+                        //   Residuos para arrastrar
                         if (_residuosPendientes.isEmpty)
                           const Padding(
                             padding: EdgeInsets.all(20),
@@ -477,7 +477,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              _buildEstadistica('✅ Aciertos', _aciertos, AppTheme.verde),
+              _buildEstadistica('  Aciertos', _aciertos, AppTheme.verde),
               _buildEstadistica('❌ Errores', _errores, Colors.red),
               _buildEstadistica(
                   '⏱️ Tiempo', _tiempoLimite - _segundosRestantes, Colors.blue),

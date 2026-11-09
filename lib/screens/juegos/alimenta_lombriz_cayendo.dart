@@ -175,7 +175,7 @@ class _AlimentaLombrizCayendoScreenState extends State<AlimentaLombrizCayendoScr
         _puntuacion += puntos;
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(puntos > 0 ? '✅ ¡${comida.data['nombre']}! +$puntos' : '❌ ¡Cuidado! $puntos'),
+          content: Text(puntos > 0 ? '  ¡${comida.data['nombre']}! +$puntos' : '❌ ¡Cuidado! $puntos'),
           backgroundColor: puntos > 0 ? AppTheme.verde : Colors.red,
           duration: const Duration(milliseconds: 300),
         ));

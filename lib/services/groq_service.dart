@@ -6,10 +6,10 @@ import 'config.dart';
 class GroqService {
   static const String _apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
   
-  // ✅ Usar la clave desde config.dart
+  //   Usar la clave desde config.dart
   static const String _apiKey = AppConfig.groqApiKey;
   
-  // ✅ Modelo activo actual
+  //   Modelo activo actual
   static const String _modeloActual = 'openai/gpt-oss-20b';
   
   static int _preguntasHoy = 0;

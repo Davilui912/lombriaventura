@@ -144,7 +144,7 @@ class _SelectorPersonajeState extends State<SelectorPersonaje> {
         ),
         child: Column(
           children: [
-            // ✅ Imagen del personaje (en lugar del emoji)
+            //   Imagen del personaje (en lugar del emoji)
             Image.asset(
               'assets/images/personajes/$imagen',
               width: 80,

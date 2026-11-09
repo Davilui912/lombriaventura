@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 
-// ✅ COORDENADAS PARA IMAGEN DE 180x180
+//   COORDENADAS PARA IMAGEN DE 180x180
 class ConfigAccesorio {
   final double top;
   final double right;
@@ -57,9 +57,9 @@ class LombrizConAccesorio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Coordenadas base para 180x180
+    //   Coordenadas base para 180x180
     final baseSize = 180.0;
-    final scale = size / baseSize; // ✅ Factor de escalado
+    final scale = size / baseSize; //   Factor de escalado
 
     final coordenadas = accesorioId != null ? coordenadasAccesorios[accesorioId] : null;
 
@@ -69,7 +69,7 @@ class LombrizConAccesorio extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // ✅ Imagen base de la lombriz (centrada)
+          //   Imagen base de la lombriz (centrada)
           Positioned.fill(
             child: Image.asset(
               'assets/images/personaje/lombriz_base.png',
@@ -94,7 +94,7 @@ class LombrizConAccesorio extends StatelessWidget {
             ),
           ),
           
-          // ✅ Accesorio con coordenadas escaladas
+          //   Accesorio con coordenadas escaladas
           if (accesorioId != null && accesorioId!.isNotEmpty && coordenadas != null)
             Positioned(
               top: coordenadas.top * scale,

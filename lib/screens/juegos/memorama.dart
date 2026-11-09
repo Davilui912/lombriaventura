@@ -13,10 +13,10 @@ class MemoramaScreen extends StatefulWidget {
 }
 
 class _MemoramaScreenState extends State<MemoramaScreen> {
-  // ✅ Ahora son vidas (solo se restan al fallar)
+  //   Ahora son vidas (solo se restan al fallar)
   static const int _vidasIniciales = 10;
 
-  // ✅ IMÁGENES para las parejas
+  //   IMÁGENES para las parejas
   final List<Map<String, String>> _parejasBase = [
     {'imagen': 'assets/images/memorama/Lombrices.png', 'nombre': 'Lombrices'},
     {'imagen': 'assets/images/memorama/Compostaje.png', 'nombre': 'Compostaje'},
@@ -98,13 +98,13 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
     _monedasOtorgadas = true;
     final monedasService = MonedasService();
     await monedasService.init();
-    await monedasService.agregarMonedas(25);
+    await monedasService.agregarMonedas(3);
     await SoundService.instance.monedasGanadas();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Completaste el memorama! Ganaste 25 monedas 🪙'),
+          content: Text('¡Completaste el memorama! Ganaste 3 monedas 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -145,7 +145,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
       setState(() {
         if (sonPareja) {
-          // ✅ ACIERTO: No se resta vida
+          //   ACIERTO: No se resta vida
           _cartas[_primeraCarta!]['encontrada'] = true;
           _cartas[_segundaCarta!]['encontrada'] = true;
           _paresEncontrados++;
@@ -167,7 +167,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           _fallos++;
           _vidasRestantes--;
 
-          // ✅ Si se quedó sin vidas, pierde
+          //   Si se quedó sin vidas, pierde
           if (_vidasRestantes <= 0 && !_juegoTerminado) {
             _juegoTerminado = true;
             _juegoGanado = false;
@@ -228,7 +228,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   Widget _buildJuego() {
     return Column(
       children: [
-        // ✅ Cabecera con vidas y pares
+        //   Cabecera con vidas y pares
         Container(
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(10),
@@ -248,7 +248,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // ✅ Vidas (corazones)
+                  //   Vidas (corazones)
                   Row(
                     children: [
                       Icon(
@@ -292,7 +292,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
                 ],
               ),
               const SizedBox(height: 6),
-              // ✅ Barra de vidas (se vacía conforme pierdes)
+              //   Barra de vidas (se vacía conforme pierdes)
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
@@ -308,7 +308,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           ),
         ),
 
-        // ✅ Tablero de cartas
+        //   Tablero de cartas
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -339,7 +339,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           ),
         ),
 
-        // ✅ Botón reiniciar
+        //   Botón reiniciar
         Padding(
           padding: const EdgeInsets.all(12),
           child: ElevatedButton.icon(
@@ -534,7 +534,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
               const SizedBox(height: 24),
 
-              // ✅ Botones: Reiniciar y Volver
+              //   Botones: Reiniciar y Volver
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
