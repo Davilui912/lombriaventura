@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart'; // ✅ Import de audio
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
 import '../../services/monedas_service.dart';
@@ -13,10 +14,14 @@ class MemoramaScreen extends StatefulWidget {
 }
 
 class _MemoramaScreenState extends State<MemoramaScreen> {
-  //   Ahora son vidas (solo se restan al fallar)
+  // ✅ Reproductor de música de fondo
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _musicaActivada = true;
+
+  // Ahora son vidas (solo se restan al fallar)
   static const int _vidasIniciales = 10;
 
-  //   IMÁGENES para las parejas
+  // IMÁGENES para las parejas
   final List<Map<String, String>> _parejasBase = [
     {'imagen': 'assets/images/memorama/Lombrices.png', 'nombre': 'Lombrices'},
     {'imagen': 'assets/images/memorama/Compostaje.png', 'nombre': 'Compostaje'},
@@ -55,6 +60,39 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   void initState() {
     super.initState();
     _iniciarJuego();
+    _iniciarMusicaFondo(); // ✅ Iniciar música
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.stop(); // ✅ Detener música
+    _audioPlayer.dispose(); // ✅ Liberar recursos
+    super.dispose();
+  }
+
+  // ✅ Método para iniciar la música
+  Future<void> _iniciarMusicaFondo() async {
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.play(AssetSource('audio/fondo_memorama.mp3')); // ✅ Ruta
+      await _audioPlayer.setVolume(0.3);
+    } catch (e) {
+      print('Error al cargar la música del memorama: $e');
+    }
+  }
+
+  // ✅ Botón de silenciar/activar
+  void _toggleMusica() {
+    setState(() {
+      _musicaActivada = !_musicaActivada;
+      if (_musicaActivada) {
+        _audioPlayer.setVolume(0.3);
+        _audioPlayer.resume();
+      } else {
+        _audioPlayer.setVolume(0);
+        _audioPlayer.pause();
+      }
+    });
   }
 
   void _iniciarJuego() {
@@ -145,7 +183,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
       setState(() {
         if (sonPareja) {
-          //   ACIERTO: No se resta vida
           _cartas[_primeraCarta!]['encontrada'] = true;
           _cartas[_segundaCarta!]['encontrada'] = true;
           _paresEncontrados++;
@@ -161,13 +198,11 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
             _otorgarMonedas();
           }
         } else {
-          // ❌ FALLO: Se resta una vida
           _cartas[_primeraCarta!]['volteada'] = false;
           _cartas[_segundaCarta!]['volteada'] = false;
           _fallos++;
           _vidasRestantes--;
 
-          //   Si se quedó sin vidas, pierde
           if (_vidasRestantes <= 0 && !_juegoTerminado) {
             _juegoTerminado = true;
             _juegoGanado = false;
@@ -192,6 +227,15 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
         title: const Text('🧠 Memorama'),
         backgroundColor: AppTheme.verde,
         actions: [
+          // ✅ Botón de música
+          IconButton(
+            icon: Icon(
+              _musicaActivada ? Icons.volume_up : Icons.volume_off,
+              color: Colors.white,
+            ),
+            onPressed: _toggleMusica,
+            tooltip: _musicaActivada ? 'Silenciar música' : 'Activar música',
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.only(right: 16),
@@ -228,7 +272,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   Widget _buildJuego() {
     return Column(
       children: [
-        //   Cabecera con vidas y pares
         Container(
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(10),
@@ -248,7 +291,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  //   Vidas (corazones)
                   Row(
                     children: [
                       Icon(
@@ -272,7 +314,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
                       ),
                     ],
                   ),
-                  // Pares encontrados
                   Row(
                     children: [
                       const Icon(Icons.check_circle,
@@ -292,7 +333,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
                 ],
               ),
               const SizedBox(height: 6),
-              //   Barra de vidas (se vacía conforme pierdes)
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
@@ -308,7 +348,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           ),
         ),
 
-        //   Tablero de cartas
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -339,7 +378,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           ),
         ),
 
-        //   Botón reiniciar
         Padding(
           padding: const EdgeInsets.all(12),
           child: ElevatedButton.icon(
@@ -482,14 +520,12 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icono según resultado
               Text(
                 _juegoGanado ? '🎉' : '💔',
                 style: const TextStyle(fontSize: 70),
               ),
               const SizedBox(height: 16),
 
-              // Título
               Text(
                 _juegoGanado ? '¡Ganaste!' : '¡Perdiste!',
                 style: TextStyle(
@@ -502,7 +538,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Mensaje
               Text(
                 _juegoGanado
                     ? '¡Encontraste todas las parejas!'
@@ -512,13 +547,11 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Estrellas (solo si ganó)
               if (_juegoGanado)
                 Text('⭐' * estrellas, style: const TextStyle(fontSize: 36)),
 
               const SizedBox(height: 16),
 
-              // Estadísticas
               _buildEstadistica(
                 '🧠 Pares encontrados',
                 '$_paresEncontrados/${_parejasBase.length}',
@@ -534,7 +567,6 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
 
               const SizedBox(height: 24),
 
-              //   Botones: Reiniciar y Volver
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

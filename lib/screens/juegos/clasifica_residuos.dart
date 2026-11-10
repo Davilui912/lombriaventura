@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart'; //Import de audio
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
 import '../../services/monedas_service.dart';
@@ -13,9 +14,13 @@ class ClasificaResiduosScreen extends StatefulWidget {
 }
 
 class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
-  //   Meta de aciertos para ganar
+  // Reproductor de música de fondo
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _musicaActivada = true;
+
+  // Meta de aciertos para ganar
   static const int _metaAciertos = 15;
-  //   Tiempo límite en segundos
+  // Tiempo límite en segundos
   static const int _tiempoLimite = 60;
 
   int _aciertos = 0;
@@ -50,12 +55,40 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
   void initState() {
     super.initState();
     _iniciarJuego();
+    _iniciarMusicaFondo(); //  Iniciar música
   }
 
   @override
   void dispose() {
     _timerActivo = false;
+    _audioPlayer.stop(); //  Detener música
+    _audioPlayer.dispose(); //  Liberar recursos
     super.dispose();
+  }
+
+  //  Método para iniciar la música
+  Future<void> _iniciarMusicaFondo() async {
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.play(AssetSource('audio/fondo_clasifica.mp3')); // ✅ Ruta
+      await _audioPlayer.setVolume(0.3);
+    } catch (e) {
+      print('Error al cargar la música de clasifica: $e');
+    }
+  }
+
+  // Botón de silenciar/activar
+  void _toggleMusica() {
+    setState(() {
+      _musicaActivada = !_musicaActivada;
+      if (_musicaActivada) {
+        _audioPlayer.setVolume(0.3);
+        _audioPlayer.resume();
+      } else {
+        _audioPlayer.setVolume(0);
+        _audioPlayer.pause();
+      }
+    });
   }
 
   void _iniciarJuego() {
@@ -141,13 +174,13 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
           LogrosService().desbloquearInsignia('clasificador');
         }
         _mensaje =
-            '  ¡Correcto! ${residuo['emoji']} va ${contenedorComposta ? "en la composta" : "en la basura"}';
+            '✅ ¡Correcto! ${residuo['emoji']} va ${contenedorComposta ? "en la composta" : "en la basura"}';
         _residuosPendientes.remove(residuo);
       });
 
       SoundService.instance.retoCompletado();
 
-      //   Verificar si llegó a la meta
+      // Verificar si llegó a la meta
       if (_aciertos >= _metaAciertos) {
         _terminarJuego(true);
         return;
@@ -175,6 +208,15 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
         title: const Text('♻️ Clasifica residuos'),
         backgroundColor: AppTheme.verde,
         actions: [
+          // ✅ Botón de música
+          IconButton(
+            icon: Icon(
+              _musicaActivada ? Icons.volume_up : Icons.volume_off,
+              color: Colors.white,
+            ),
+            onPressed: _toggleMusica,
+            tooltip: _musicaActivada ? 'Silenciar música' : 'Activar música',
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.only(right: 16),
@@ -190,7 +232,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
           ),
         ],
       ),
-      //   FONDO EN EL BODY
+      // FONDO EN EL BODY
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -220,7 +262,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
                     ),
                     child: Column(
                       children: [
-                        //   Barra de tiempo y progreso
+                        // Barra de tiempo y progreso
                         Row(
                           children: [
                             // Tiempo
@@ -307,7 +349,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
 
                         const SizedBox(height: 12),
 
-                        //   Contenedores
+                        // Contenedores
                         Row(
                           children: [
                             Expanded(
@@ -324,7 +366,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
 
                         const SizedBox(height: 12),
 
-                        //   Residuos para arrastrar
+                        // Residuos para arrastrar
                         if (_residuosPendientes.isEmpty)
                           const Padding(
                             padding: EdgeInsets.all(20),
@@ -477,7 +519,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              _buildEstadistica('  Aciertos', _aciertos, AppTheme.verde),
+              _buildEstadistica('✅ Aciertos', _aciertos, AppTheme.verde),
               _buildEstadistica('❌ Errores', _errores, Colors.red),
               _buildEstadistica(
                   '⏱️ Tiempo', _tiempoLimite - _segundosRestantes, Colors.blue),

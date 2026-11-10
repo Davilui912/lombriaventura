@@ -63,7 +63,7 @@ class _RompecabezasScreenState extends State<RompecabezasScreen> {
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       // ✅ Ruta de la canción
-      await _audioPlayer.play(AssetSource('assets/audio/fondo_rompecabezas.mp3'));
+      await _audioPlayer.play(AssetSource('audio/fondo_rompecabezas.mp3'));
       await _audioPlayer.setVolume(0.3); // Volumen bajo para no ensordecer
     } catch (e) {
       print('Error al cargar la música del rompecabezas: $e');
