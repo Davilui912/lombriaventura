@@ -15,6 +15,7 @@ import 'tienda/ventas_atomizador.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'tienda/ventas_historial.dart';
 import 'tienda/ventas_humus.dart';
+import 'juegos/lombricomposta_digital.dart';
 import 'tienda/capacitacion.dart';
 import '../../services/monedas_service.dart';
 import 'juegos/memorama.dart';
@@ -38,8 +39,8 @@ class MenuPrincipal extends StatefulWidget {
 
 class _MenuPrincipalState extends State<MenuPrincipal> {
   final ActividadService _actividadService = ActividadService();
-  final AudioPlayer _audioMenu = AudioPlayer(); 
-  bool _musicaMenuActivada = true; 
+  final AudioPlayer _audioMenu = AudioPlayer();
+  bool _musicaMenuActivada = true;
 
   int _categoriaAbierta = -1;
   int _contadorToques = 0;
@@ -157,12 +158,12 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   }
 
   Future<void> _irAPantalla(Widget pantalla) async {
-    await _audioMenu.pause(); 
+    await _audioMenu.pause();
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => pantalla),
     );
-  if (mounted && _musicaMenuActivada) {
+    if (mounted && _musicaMenuActivada) {
       await _audioMenu.resume();
     }
   }
@@ -455,10 +456,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   }
 
   Widget _buildOpcion(
-      String titulo,
-      String subtitulo,
-      String emoji,
-      VoidCallback onTap,
+      String titulo, String subtitulo, String emoji, VoidCallback onTap,
       {Color color = Colors.grey}) {
     return GestureDetector(
       onTap: onTap,
@@ -1248,6 +1246,14 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                           'Encuentra las parejas',
                           '🃏',
                           () => _irAPantalla(const MemoramaScreen()),
+                          color: const Color(0xFFFFA726),
+                        ),
+                        _buildOpcion(
+                          'Lombricomposta Digital',
+                          'Cuida tu composta virtual',
+                          '🌱',
+                          () =>
+                              _irAPantalla(const LombricompostaDigitalScreen()),
                           color: const Color(0xFFFFA726),
                         ),
                         _buildOpcion(

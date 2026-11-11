@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart'; // ✅ Import de audio
+import 'package:audioplayers/audioplayers.dart'; //  Import de audio
 import '../../config/theme.dart';
 import '../../services/logros_service.dart';
 import '../../services/monedas_service.dart';
@@ -14,7 +14,7 @@ class MemoramaScreen extends StatefulWidget {
 }
 
 class _MemoramaScreenState extends State<MemoramaScreen> {
-  // ✅ Reproductor de música de fondo
+  //  Reproductor de música de fondo
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _musicaActivada = true;
 
@@ -60,28 +60,28 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
   void initState() {
     super.initState();
     _iniciarJuego();
-    _iniciarMusicaFondo(); // ✅ Iniciar música
+    _iniciarMusicaFondo(); //  Iniciar música
   }
 
   @override
   void dispose() {
-    _audioPlayer.stop(); // ✅ Detener música
-    _audioPlayer.dispose(); // ✅ Liberar recursos
+    _audioPlayer.stop(); //  Detener música
+    _audioPlayer.dispose(); //  Liberar recursos
     super.dispose();
   }
 
-  // ✅ Método para iniciar la música
+  //  Método para iniciar la música
   Future<void> _iniciarMusicaFondo() async {
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer.play(AssetSource('audio/fondo_memorama.mp3')); // ✅ Ruta
+      await _audioPlayer.play(AssetSource('audio/fondo_memorama.mp3')); //  Ruta
       await _audioPlayer.setVolume(0.3);
     } catch (e) {
       print('Error al cargar la música del memorama: $e');
     }
   }
 
-  // ✅ Botón de silenciar/activar
+  //  Botón de silenciar/activar
   void _toggleMusica() {
     setState(() {
       _musicaActivada = !_musicaActivada;
@@ -227,7 +227,7 @@ class _MemoramaScreenState extends State<MemoramaScreen> {
         title: const Text('🧠 Memorama'),
         backgroundColor: AppTheme.verde,
         actions: [
-          // ✅ Botón de música
+          //  Botón de música
           IconButton(
             icon: Icon(
               _musicaActivada ? Icons.volume_up : Icons.volume_off,

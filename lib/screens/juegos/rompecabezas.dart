@@ -62,7 +62,7 @@ class _RompecabezasScreenState extends State<RompecabezasScreen> {
   Future<void> _iniciarMusicaFondo() async {
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      // ✅ Ruta de la canción
+      // Ruta de la canción
       await _audioPlayer.play(AssetSource('audio/fondo_rompecabezas.mp3'));
       await _audioPlayer.setVolume(0.3); // Volumen bajo para no ensordecer
     } catch (e) {

@@ -33,5 +33,7 @@ class SoundService {
 
   Future<void> logroDesbloqueado() => _reproducir('Logro_desbloqueado.mp3');
 
+  Future<void> lombrisComiendo() => _reproducir('lombris_comiendo.mp3');
+
   void dispose() => _player.dispose();
 }

@@ -70,7 +70,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
   Future<void> _iniciarMusicaFondo() async {
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer.play(AssetSource('audio/fondo_clasifica.mp3')); // ✅ Ruta
+      await _audioPlayer.play(AssetSource('audio/fondo_clasifica.mp3')); //  Ruta
       await _audioPlayer.setVolume(0.3);
     } catch (e) {
       print('Error al cargar la música de clasifica: $e');
@@ -156,7 +156,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Ganaste 3 monedas! 🪙'),
+          content: Text('¡Ganaste 3 monedas¡ 🪙'),
           backgroundColor: AppTheme.verde,
         ),
       );
@@ -208,7 +208,7 @@ class _ClasificaResiduosScreenState extends State<ClasificaResiduosScreen> {
         title: const Text('♻️ Clasifica residuos'),
         backgroundColor: AppTheme.verde,
         actions: [
-          // ✅ Botón de música
+          // Botón de música
           IconButton(
             icon: Icon(
               _musicaActivada ? Icons.volume_up : Icons.volume_off,
