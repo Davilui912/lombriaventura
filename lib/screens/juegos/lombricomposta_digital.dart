@@ -9,7 +9,7 @@ import '../../services/sound_service.dart';
 class Lombriz {
   double x;
   double y;
-  bool estaComiendo; // ✅ Para evitar que cambie de objetivo mientras come
+  bool estaComiendo; //Para evitar que cambie de objetivo mientras come
   
   Lombriz({
     required this.x, 
@@ -113,7 +113,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     });
 
     _gameLoop?.cancel();
-    // ✅ El bucle ahora es un poco más rápido para que el movimiento se vea fluido
+    // El bucle ahora es un poco más rápido para que el movimiento se vea fluido
     _gameLoop = Timer.periodic(const Duration(milliseconds: 150), (timer) {
       if (!mounted || _juegoTerminado) return;
       _actualizarJuego();
@@ -132,7 +132,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
   }
 
   void _actualizarJuego() {
-    // ✅ Calculamos los movimientos fuera del setState para no redibujar si no es necesario
+    // Calculamos los movimientos fuera del setState para no redibujar si no es necesario
     bool huboCambio = false;
 
     for (var lombriz in _lombrices) {
@@ -152,13 +152,13 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
           }
         }
 
-        // ✅ Movimiento más suave (0.02 por ciclo)
+        // Movimiento más suave (0.02 por ciclo)
         if (distanciaMin > 20) {
           lombriz.x += (objetivo.x - lombriz.x) * 0.02;
           lombriz.y += (objetivo.y - lombriz.y) * 0.02;
           huboCambio = true;
         } else {
-          // ✅ Llegó a la comida
+          // Llegó a la comida
           lombriz.estaComiendo = true;
           objetivo.comiendo = true;
           huboCambio = true;
@@ -169,7 +169,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                 _comidas.removeWhere((c) => c == objetivo);
                 _humus = (_humus + 2).clamp(0, 100);
                 _residuosTotales++;
-                SoundService.instance.monedasGanadas();
+                SoundService.instance.lombrisComiendo();
                 
                 lombriz.estaComiendo = false; // Se libera
 
@@ -280,7 +280,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     setState(() {
       _moscas.removeAt(index);
       _moscasAtrapadas++;
-      SoundService.instance.monedasGanadas();
+      SoundService.instance.moscaAplastada();
 
       if (_moscasAtrapadas >= _metaMoscas || _moscas.isEmpty) {
         _moscas.clear();
@@ -394,7 +394,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             ),
                           ),
 
-                        // ✅ Lombrices (Positioned normal para evitar saltos)
+                        // Lombrices (Positioned normal para evitar saltos)
                         for (var lombriz in _lombrices)
                           Positioned(
                             left: lombriz.x,

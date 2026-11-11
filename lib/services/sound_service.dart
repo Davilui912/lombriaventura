@@ -35,5 +35,7 @@ class SoundService {
 
   Future<void> lombrisComiendo() => _reproducir('lombris_comiendo.mp3');
 
+  Future<void> moscaAplastada() => _reproducir('mosca_aplastada.mp3');
+
   void dispose() => _player.dispose();
 }
