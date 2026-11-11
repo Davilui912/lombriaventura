@@ -9,7 +9,13 @@ import '../../services/sound_service.dart';
 class Lombriz {
   double x;
   double y;
-  Lombriz({required this.x, required this.y});
+  bool estaComiendo; // ✅ Para evitar que cambie de objetivo mientras come
+  
+  Lombriz({
+    required this.x, 
+    required this.y, 
+    this.estaComiendo = false
+  });
 }
 
 class Comida {
@@ -18,6 +24,12 @@ class Comida {
   String emoji;
   bool comiendo;
   Comida({required this.x, required this.y, required this.emoji, this.comiendo = false});
+}
+
+class Mosca {
+  double x;
+  double y;
+  Mosca({required this.x, required this.y});
 }
 
 class LombricompostaDigitalScreen extends StatefulWidget {
@@ -32,21 +44,24 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
   bool _musicaActivada = true;
   final Random _random = Random();
 
-  // ✅ Estado del juego
   int _humus = 0;
   int _humedad = 50;
-  int _materialSeco = 0; // ✅ Cantidad de hojas secas
+  int _materialSeco = 0;
   int _residuosTotales = 0;
   int _contadorCiclos = 0;
+  
+  bool _juegoTerminado = false;
+  int _moscasAtrapadas = 0;
+  static const int _metaMoscas = 5;
 
-  // ✅ Entidades
   List<Lombriz> _lombrices = [];
   List<Comida> _comidas = [];
-  List<Offset> _moscas = [];
-  List<Offset> _gotasAgua = []; // Para las gotas al regar
-  List<Offset> _hojasSecas = []; // ✅ Para las hojas que caen
+  List<Mosca> _moscas = [];
+  List<Offset> _gotasAgua = [];
+  List<Offset> _hojasSecas = [];
 
   Timer? _gameLoop;
+  Timer? _moscaTimer;
 
   @override
   void initState() {
@@ -60,6 +75,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     _audioPlayer.stop();
     _audioPlayer.dispose();
     _gameLoop?.cancel();
+    _moscaTimer?.cancel();
     super.dispose();
   }
 
@@ -92,93 +108,195 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
       _materialSeco = 0;
       _residuosTotales = 0;
       _contadorCiclos = 0;
+      _juegoTerminado = false;
+      _moscasAtrapadas = 0;
     });
 
-    _gameLoop = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (!mounted) return;
+    _gameLoop?.cancel();
+    // ✅ El bucle ahora es un poco más rápido para que el movimiento se vea fluido
+    _gameLoop = Timer.periodic(const Duration(milliseconds: 150), (timer) {
+      if (!mounted || _juegoTerminado) return;
       _actualizarJuego();
+    });
+
+    _moscaTimer?.cancel();
+    _moscaTimer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
+      if (!mounted || _juegoTerminado) return;
+      setState(() {
+        for (var mosca in _moscas) {
+          mosca.x = _random.nextDouble() * 280 + 20;
+          mosca.y = _random.nextDouble() * 250 + 20;
+        }
+      });
     });
   }
 
   void _actualizarJuego() {
-    setState(() {
-      _contadorCiclos++;
+    // ✅ Calculamos los movimientos fuera del setState para no redibujar si no es necesario
+    bool huboCambio = false;
 
-      // 1. Mover lombrices hacia la comida
-      for (var lombriz in _lombrices) {
-        final comidasDisponibles = _comidas.where((c) => !c.comiendo).toList();
+    for (var lombriz in _lombrices) {
+      if (lombriz.estaComiendo) continue; // Si está comiendo, no se mueve
+
+      final comidasDisponibles = _comidas.where((c) => !c.comiendo).toList();
+      
+      if (comidasDisponibles.isNotEmpty) {
+        Comida objetivo = comidasDisponibles[0];
+        double distanciaMin = double.infinity;
         
-        if (comidasDisponibles.isNotEmpty) {
-          Comida objetivo = comidasDisponibles[0];
-          double distanciaMin = double.infinity;
+        for (var comida in comidasDisponibles) {
+          double dist = sqrt(pow(lombriz.x - comida.x, 2) + pow(lombriz.y - comida.y, 2));
+          if (dist < distanciaMin) {
+            distanciaMin = dist;
+            objetivo = comida;
+          }
+        }
+
+        // ✅ Movimiento más suave (0.02 por ciclo)
+        if (distanciaMin > 20) {
+          lombriz.x += (objetivo.x - lombriz.x) * 0.02;
+          lombriz.y += (objetivo.y - lombriz.y) * 0.02;
+          huboCambio = true;
+        } else {
+          // ✅ Llegó a la comida
+          lombriz.estaComiendo = true;
+          objetivo.comiendo = true;
+          huboCambio = true;
           
-          for (var comida in comidasDisponibles) {
-            double dist = sqrt(pow(lombriz.x - comida.x, 2) + pow(lombriz.y - comida.y, 2));
-            if (dist < distanciaMin) {
-              distanciaMin = dist;
-              objetivo = comida;
+          Future.delayed(const Duration(milliseconds: 800), () {
+            if (mounted && !_juegoTerminado) {
+              setState(() {
+                _comidas.removeWhere((c) => c == objetivo);
+                _humus = (_humus + 2).clamp(0, 100);
+                _residuosTotales++;
+                SoundService.instance.monedasGanadas();
+                
+                lombriz.estaComiendo = false; // Se libera
+
+                if (_humus >= 30 && _humedad > 40 && _humedad < 80 && _lombrices.length < 5) {
+                  _lombrices.add(Lombriz(x: lombriz.x + 20, y: lombriz.y + 20));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('🐛 ¡Nació una lombriz bebé!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              });
             }
-          }
-
-          if (distanciaMin > 25) {
-            lombriz.x += (objetivo.x - lombriz.x) * 0.01;
-            lombriz.y += (objetivo.y - lombriz.y) * 0.01;
-          } else {
-            objetivo.comiendo = true;
-            
-            Future.delayed(const Duration(seconds: 1), () {
-              if (mounted) {
-                setState(() {
-                  _comidas.remove(objetivo);
-                  _humus = (_humus + 2).clamp(0, 100);
-                  _residuosTotales++;
-                  SoundService.instance.monedasGanadas();
-
-                  if (_humus >= 30 && _humedad > 40 && _humedad < 80 && _lombrices.length < 5) {
-                    _lombrices.add(Lombriz(x: lombriz.x + 20, y: lombriz.y + 20));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🐛 ¡Nació una lombriz bebé!'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                });
-              }
-            });
-          }
+          });
         }
       }
+    }
 
-      // 2. Moscas si hay mal olor (mucho residuo y poco material seco)
-      if (_residuosTotales > 5 && _materialSeco < 3) {
-        if (_moscas.length < 5) {
-          _moscas.add(Offset(
-            _random.nextDouble() * 300,
-            _random.nextDouble() * 300,
-          ));
+    // Si hubo movimiento o toca revisar la humedad, actualizamos
+    if (huboCambio || _contadorCiclos % 10 == 0) {
+      setState(() {
+        _contadorCiclos++;
+
+        // Moscas
+        if (_comidas.length >= 8 || (_residuosTotales > 10 && _materialSeco < 5)) {
+          if (_moscas.length < 5) {
+            _moscas.add(Mosca(
+              x: _random.nextDouble() * 280 + 20,
+              y: _random.nextDouble() * 250 + 20,
+            ));
+          }
+        } else {
+          _moscas.clear();
+          _moscasAtrapadas = 0;
         }
-      } else {
+
+        // Humedad
+        if (_contadorCiclos % 20 == 0 && _humedad > 0) {
+          _humedad--;
+        }
+
+        // Condiciones de derrota
+        if (_humedad >= 100) {
+          _terminarJuego('💧 ¡Inundaste el hábitat!', 'Las lombrices se ahogaron.', Icons.water_damage, Colors.blue);
+        } else if (_humedad <= 0) {
+          _terminarJuego('☀️ ¡Secaste el hábitat!', 'Las lombrices se deshidrataron.', Icons.wb_sunny, Colors.orange);
+        }
+
+        // Limpiar animaciones
+        if (_gotasAgua.isNotEmpty && _contadorCiclos % 5 == 0) _gotasAgua.removeAt(0);
+        if (_hojasSecas.isNotEmpty && _contadorCiclos % 5 == 0) _hojasSecas.removeAt(0);
+      });
+    }
+  }
+
+  void _terminarJuego(String titulo, String mensaje, IconData icono, Color color) {
+    _gameLoop?.cancel();
+    _moscaTimer?.cancel();
+    setState(() {
+      _juegoTerminado = true;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(titulo, textAlign: TextAlign.center, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icono, size: 60, color: color),
+            const SizedBox(height: 10),
+            Text(mensaje, textAlign: TextAlign.center),
+            const SizedBox(height: 10),
+            Text('Humus alcanzado: $_humus%', style: const TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _iniciarJuego();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.verde),
+              child: const Text('🔄 Intentar de nuevo', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context);
+              },
+              child: const Text('Salir al menú'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _atraparMosca(int index) {
+    setState(() {
+      _moscas.removeAt(index);
+      _moscasAtrapadas++;
+      SoundService.instance.monedasGanadas();
+
+      if (_moscasAtrapadas >= _metaMoscas || _moscas.isEmpty) {
         _moscas.clear();
-      }
-
-      // 3. Humedad baja lentamente
-      if (_contadorCiclos % 20 == 0 && _humedad > 0) {
-        _humedad--;
-      }
-
-      // 4. Limpiar animaciones
-      if (_gotasAgua.isNotEmpty && _contadorCiclos % 5 == 0) {
-        _gotasAgua.removeAt(0);
-      }
-      if (_hojasSecas.isNotEmpty && _contadorCiclos % 5 == 0) {
-        _hojasSecas.removeAt(0);
+        _moscasAtrapadas = 0;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🪰 ¡Atrapaste todas las moscas!'),
+            backgroundColor: AppTheme.verde,
+          ),
+        );
       }
     });
   }
 
-  void _anadirrResiduo(String emoji) {
+  void _anadirResiduo(String emoji) {
+    if (_juegoTerminado) return;
     setState(() {
       _comidas.add(Comida(
         x: _random.nextDouble() * 250 + 20,
@@ -188,55 +306,35 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     });
   }
 
-  void _anadirrMaterialSeco() {
+  void _anadirMaterialSeco() {
+    if (_juegoTerminado) return;
     setState(() {
       _materialSeco++;
-      // ✅ El material seco ABSORBE la humedad (la baja)
-      _humedad = (_humedad - 10).clamp(0, 100); 
-      
-      // ✅ Animación de hoja seca cayendo
-      _hojasSecas.add(Offset(
-        _random.nextDouble() * 300,
-        0, // Empieza arriba
-      ));
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🍂 anadirste material seco. ¡La humedad bajó!'),
-          backgroundColor: Colors.brown,
-          duration: Duration(seconds: 1),
-        ),
-      );
+      _humedad = (_humedad - 5).clamp(0, 100); 
+      _hojasSecas.add(Offset(_random.nextDouble() * 300, 0));
     });
   }
 
   void _regar() {
+    if (_juegoTerminado) return;
     setState(() {
       _humedad = (_humedad + 15).clamp(0, 100);
-      _gotasAgua.add(Offset(
-        _random.nextDouble() * 300,
-        _random.nextDouble() * 100,
-      ));
+      _gotasAgua.add(Offset(_random.nextDouble() * 300, _random.nextDouble() * 100));
     });
   }
 
   void _cosecharHumus() {
+    if (_juegoTerminado) return;
     if (_humus >= 20) {
       setState(() => _humus = 0);
       MonedasService().agregarMonedas(5);
       SoundService.instance.monedasGanadas();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🌱 ¡Cosechaste humus! +5 monedas 🪙'),
-          backgroundColor: AppTheme.verde,
-        ),
+        const SnackBar(content: Text('🌱 ¡Cosechaste humus! +5 monedas 🪙'), backgroundColor: AppTheme.verde),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('⏳ El humus aún no está listo (necesitas 20%).'),
-          backgroundColor: Colors.blue,
-        ),
+        const SnackBar(content: Text('⏳ El humus aún no está listo (necesitas 20%).'), backgroundColor: Colors.blue),
       );
     }
   }
@@ -258,10 +356,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/fondo.png'),
-            fit: BoxFit.cover,
-          ),
+          image: DecorationImage(image: AssetImage('assets/images/fondo.png'), fit: BoxFit.cover),
         ),
         child: SafeArea(
           child: Column(
@@ -273,9 +368,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                     color: Colors.brown.shade200,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.brown.shade900, width: 6),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 5)),
-                    ],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 5))],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
@@ -301,24 +394,25 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             ),
                           ),
 
-                        // Lombrices
+                        // ✅ Lombrices (Positioned normal para evitar saltos)
                         for (var lombriz in _lombrices)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeInOut,
+                          Positioned(
                             left: lombriz.x,
                             top: lombriz.y,
                             child: const Text('🪱', style: TextStyle(fontSize: 36)),
                           ),
 
                         // Moscas
-                        for (var mosca in _moscas)
+                        for (int i = 0; i < _moscas.length; i++)
                           AnimatedPositioned(
-                            duration: const Duration(milliseconds: 1200),
+                            duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
-                            left: mosca.dx,
-                            top: mosca.dy,
-                            child: const Text('🪰', style: TextStyle(fontSize: 24)),
+                            left: _moscas[i].x,
+                            top: _moscas[i].y,
+                            child: GestureDetector(
+                              onTap: () => _atraparMosca(i),
+                              child: const Text('🪰', style: TextStyle(fontSize: 30)),
+                            ),
                           ),
 
                         // Gotas de agua
@@ -330,7 +424,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             child: const Text('💧', style: TextStyle(fontSize: 24)),
                           ),
 
-                        // ✅ Hojas secas
+                        // Hojas secas
                         for (var hoja in _hojasSecas)
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 700),
@@ -369,6 +463,14 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (_moscas.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '🪰 Atrapa las moscas: $_moscasAtrapadas / $_metaMoscas',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                        ),
+                      ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -383,9 +485,9 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                       runSpacing: 10,
                       alignment: WrapAlignment.center,
                       children: [
-                        _buildBoton('🍎 Fruta', () => _anadirrResiduo('🍎')),
-                        _buildBoton('🍌 Cáscara', () => _anadirrResiduo('🍌')),
-                        _buildBoton('🍂 Seco', _anadirrMaterialSeco),
+                        _buildBoton('🍎 Fruta', () => _anadirResiduo('🍎')),
+                        _buildBoton('🍌 Cáscara', () => _anadirResiduo('🍌')),
+                        _buildBoton('🍂 Seco', _anadirMaterialSeco),
                         _buildBoton('💧 Regar', _regar),
                         _buildBoton('🌱 Cosechar', _cosecharHumus),
                       ],
