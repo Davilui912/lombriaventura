@@ -9,21 +9,27 @@ import '../../services/sound_service.dart';
 class Lombriz {
   double x;
   double y;
-  bool estaComiendo; //Para evitar que cambie de objetivo mientras come
+  bool estaComiendo;
+  double? targetX;
+  double? targetY;
   
-  Lombriz({
-    required this.x, 
-    required this.y, 
-    this.estaComiendo = false
-  });
+  Lombriz({required this.x, required this.y, this.estaComiendo = false});
 }
 
 class Comida {
+  final int id; 
   double x;
   double y;
   String emoji;
   bool comiendo;
-  Comida({required this.x, required this.y, required this.emoji, this.comiendo = false});
+  
+  Comida({
+    required this.id, 
+    required this.x, 
+    required this.y, 
+    required this.emoji, 
+    this.comiendo = false,
+  });
 }
 
 class Mosca {
@@ -43,6 +49,9 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _musicaActivada = true;
   final Random _random = Random();
+  
+  int _nextComidaId = 0; 
+  bool _puedeAnadir = true;
 
   int _humus = 0;
   int _humedad = 50;
@@ -98,7 +107,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
 
   void _iniciarJuego() {
     setState(() {
-      _lombrices = [Lombriz(x: 150, y: 150)];
+      _lombrices = [Lombriz(x: 150, y: 150), Lombriz(x: 250, y: 150), ];
       _comidas = [];
       _moscas = [];
       _gotasAgua = [];
@@ -110,10 +119,10 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
       _contadorCiclos = 0;
       _juegoTerminado = false;
       _moscasAtrapadas = 0;
+      _nextComidaId = 0;
     });
 
     _gameLoop?.cancel();
-    // El bucle ahora es un poco más rápido para que el movimiento se vea fluido
     _gameLoop = Timer.periodic(const Duration(milliseconds: 150), (timer) {
       if (!mounted || _juegoTerminado) return;
       _actualizarJuego();
@@ -132,15 +141,19 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
   }
 
   void _actualizarJuego() {
-    // Calculamos los movimientos fuera del setState para no redibujar si no es necesario
     bool huboCambio = false;
 
     for (var lombriz in _lombrices) {
-      if (lombriz.estaComiendo) continue; // Si está comiendo, no se mueve
+      if (lombriz.estaComiendo) continue;
 
       final comidasDisponibles = _comidas.where((c) => !c.comiendo).toList();
       
+      double? destinoX;
+      double? destinoY;
+      bool esComida = false;
+
       if (comidasDisponibles.isNotEmpty) {
+        //Hay comida: busca la más cercana
         Comida objetivo = comidasDisponibles[0];
         double distanciaMin = double.infinity;
         
@@ -151,51 +164,78 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
             objetivo = comida;
           }
         }
+        destinoX = objetivo.x;
+        destinoY = objetivo.y;
+        esComida = true;
+      } else {
+        //No hay comida: camina a un punto aleatorio
+        if (lombriz.targetX == null || lombriz.targetY == null) {
+          lombriz.targetX = _random.nextDouble() * 280 + 20;
+          lombriz.targetY = _random.nextDouble() * 250 + 20;
+        }
+        destinoX = lombriz.targetX;
+        destinoY = lombriz.targetY;
+      }
 
-        // Movimiento más suave (0.02 por ciclo)
-        if (distanciaMin > 20) {
-          lombriz.x += (objetivo.x - lombriz.x) * 0.02;
-          lombriz.y += (objetivo.y - lombriz.y) * 0.02;
+      // Mover hacia el destino
+      if (destinoX != null && destinoY != null) {
+        double distancia = sqrt(pow(lombriz.x - destinoX, 2) + pow(lombriz.y - destinoY, 2));
+        
+        // Velocidad: Si es comida, más rápido (0.02). Si es paseo, más lento (0.01)
+        double velocidad = esComida ? 0.02 : 0.01; 
+
+        if (distancia > 15) {
+          lombriz.x += (destinoX - lombriz.x) * velocidad;
+          lombriz.y += (destinoY - lombriz.y) * velocidad;
           huboCambio = true;
         } else {
-          // Llegó a la comida
-          lombriz.estaComiendo = true;
-          objetivo.comiendo = true;
-          huboCambio = true;
-          
-          Future.delayed(const Duration(milliseconds: 800), () {
-            if (mounted && !_juegoTerminado) {
-              setState(() {
-                _comidas.removeWhere((c) => c == objetivo);
-                _humus = (_humus + 2).clamp(0, 100);
-                _residuosTotales++;
-                SoundService.instance.lombrisComiendo();
-                
-                lombriz.estaComiendo = false; // Se libera
+          // Llegó a su destino
+          if (esComida) {
+            //Llegó a la comida, ¡se la come!
+            lombriz.estaComiendo = true;
+            Comida objetivo = comidasDisponibles.firstWhere((c) => c.x == destinoX && c.y == destinoY);
+            objetivo.comiendo = true;
+            huboCambio = true;
+            
+            final idObjetivo = objetivo.id;
+            
+            Future.delayed(const Duration(milliseconds: 800), () {
+              if (mounted && !_juegoTerminado) {
+                setState(() {
+                  _comidas.removeWhere((c) => c.id == idObjetivo);
+                  _humus = (_humus + 2).clamp(0, 100);
+                  _residuosTotales++;
+                  SoundService.instance.monedasGanadas();
+                  
+                  lombriz.estaComiendo = false;
 
-                if (_humus >= 30 && _humedad > 40 && _humedad < 80 && _lombrices.length < 5) {
-                  _lombrices.add(Lombriz(x: lombriz.x + 20, y: lombriz.y + 20));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('🐛 ¡Nació una lombriz bebé!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              });
-            }
-          });
+                  if (_humus >= 30 && _humedad > 40 && _humedad < 80 && _lombrices.length < 5) {
+                    _lombrices.add(Lombriz(x: lombriz.x + 20, y: lombriz.y + 20));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🐛 ¡Nació una lombriz bebé!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                });
+              }
+            });
+          } else {
+            //Llegó a su punto de paseo: elige un nuevo destino
+            lombriz.targetX = _random.nextDouble() * 280 + 20;
+            lombriz.targetY = _random.nextDouble() * 250 + 20;
+            huboCambio = true;
+          }
         }
       }
     }
 
-    // Si hubo movimiento o toca revisar la humedad, actualizamos
     if (huboCambio || _contadorCiclos % 10 == 0) {
       setState(() {
         _contadorCiclos++;
 
-        // Moscas
-        if (_comidas.length >= 8 || (_residuosTotales > 10 && _materialSeco < 5)) {
+        if (_comidas.length >= 8) {
           if (_moscas.length < 5) {
             _moscas.add(Mosca(
               x: _random.nextDouble() * 280 + 20,
@@ -207,19 +247,16 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
           _moscasAtrapadas = 0;
         }
 
-        // Humedad
         if (_contadorCiclos % 20 == 0 && _humedad > 0) {
           _humedad--;
         }
 
-        // Condiciones de derrota
         if (_humedad >= 100) {
           _terminarJuego('💧 ¡Inundaste el hábitat!', 'Las lombrices se ahogaron.', Icons.water_damage, Colors.blue);
         } else if (_humedad <= 0) {
           _terminarJuego('☀️ ¡Secaste el hábitat!', 'Las lombrices se deshidrataron.', Icons.wb_sunny, Colors.orange);
         }
 
-        // Limpiar animaciones
         if (_gotasAgua.isNotEmpty && _contadorCiclos % 5 == 0) _gotasAgua.removeAt(0);
         if (_hojasSecas.isNotEmpty && _contadorCiclos % 5 == 0) _hojasSecas.removeAt(0);
       });
@@ -295,10 +332,18 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     });
   }
 
+  // Aquí es donde se agrega el ID
   void _anadirResiduo(String emoji) {
-    if (_juegoTerminado) return;
+    if (_juegoTerminado || !_puedeAnadir) return;
+    
+    _puedeAnadir = false;
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) _puedeAnadir = true;
+    });
+
     setState(() {
       _comidas.add(Comida(
+        id: _nextComidaId++, // ✅ ¡Aquí está la línea que faltaba!
         x: _random.nextDouble() * 250 + 20,
         y: _random.nextDouble() * 200 + 20,
         emoji: emoji,
@@ -376,11 +421,10 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                       children: [
                         Container(color: Colors.brown.shade400.withValues(alpha: 0.3)),
 
-                        // Comidas
+                        //Comida estática (sin saltos)
                         for (var comida in _comidas)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOut,
+                          Positioned(
+                            key: ValueKey(comida.id),
                             left: comida.x,
                             top: comida.y,
                             child: AnimatedOpacity(
@@ -394,7 +438,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             ),
                           ),
 
-                        // Lombrices (Positioned normal para evitar saltos)
                         for (var lombriz in _lombrices)
                           Positioned(
                             left: lombriz.x,
@@ -402,7 +445,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             child: const Text('🪱', style: TextStyle(fontSize: 36)),
                           ),
 
-                        // Moscas
                         for (int i = 0; i < _moscas.length; i++)
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 300),
@@ -415,7 +457,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             ),
                           ),
 
-                        // Gotas de agua
                         for (var gota in _gotasAgua)
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 500),
@@ -424,7 +465,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             child: const Text('💧', style: TextStyle(fontSize: 24)),
                           ),
 
-                        // Hojas secas
                         for (var hoja in _hojasSecas)
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 700),
@@ -434,7 +474,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                             child: const Text('🍂', style: TextStyle(fontSize: 24)),
                           ),
 
-                        // Humus visual
                         Positioned(
                           bottom: 0,
                           left: 0,
