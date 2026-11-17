@@ -12,22 +12,22 @@ class Lombriz {
   bool estaComiendo;
   double? targetX;
   double? targetY;
-  
+
   Lombriz({required this.x, required this.y, this.estaComiendo = false});
 }
 
 class Comida {
-  final int id; 
+  final int id;
   double x;
   double y;
   String emoji;
   bool comiendo;
-  
+
   Comida({
-    required this.id, 
-    required this.x, 
-    required this.y, 
-    required this.emoji, 
+    required this.id,
+    required this.x,
+    required this.y,
+    required this.emoji,
     this.comiendo = false,
   });
 }
@@ -49,11 +49,11 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _musicaActivada = true;
   final Random _random = Random();
-  
+
   double _tableroAncho = 300;
   double _tableroAlto = 300;
-  
-  int _nextComidaId = 0; 
+
+  int _nextComidaId = 0;
   bool _puedeAnadir = true;
 
   int _humus = 0;
@@ -62,19 +62,17 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
   int _materialSeco = 0;
   int _residuosTotales = 0;
   int _contadorCiclos = 0;
-  
+
   int _humusTotal = 0;
   int _lixiviadoTotal = 0;
-  
+
   bool _juegoTerminado = false;
   int _moscasAtrapadas = 0;
-  static const int _metaMoscas = 15; // Ahora son 15 moscas para el brote
+  static const int _metaMoscas = 15;
 
-  //NUEVO: Control de moscas generadas
   int _moscasGeneradas = 0;
   static const int _maxMoscas = 15;
 
-  // Temporizador de peligro por moscas
   Timer? _peligroTimer;
   int _segundosPeligro = 30;
   bool _enPeligro = false;
@@ -151,7 +149,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
       _lixiviadoTotal = 0;
       _juegoTerminado = false;
       _moscasAtrapadas = 0;
-      _moscasGeneradas = 0; //Reiniciar contador
+      _moscasGeneradas = 0;
       _nextComidaId = 0;
       _enPeligro = false;
       _segundosPeligro = 30;
@@ -207,7 +205,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
             timer.cancel();
             return;
           }
-
           _segundosPeligro = 30;
         }
       });
@@ -230,7 +227,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
       if (lombriz.estaComiendo) continue;
 
       final comidasDisponibles = _comidas.where((c) => !c.comiendo).toList();
-      
+
       double? destinoX;
       double? destinoY;
       bool esComida = false;
@@ -238,7 +235,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
       if (comidasDisponibles.isNotEmpty) {
         Comida objetivo = comidasDisponibles[0];
         double distanciaMin = double.infinity;
-        
+
         for (var comida in comidasDisponibles) {
           double dist = sqrt(pow(lombriz.x - comida.x, 2) + pow(lombriz.y - comida.y, 2));
           if (dist < distanciaMin) {
@@ -261,7 +258,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
 
       if (destinoX != null && destinoY != null) {
         double distancia = sqrt(pow(lombriz.x - destinoX, 2) + pow(lombriz.y - destinoY, 2));
-        double velocidad = esComida ? 0.02 : 0.01; 
+        double velocidad = esComida ? 0.02 : 0.01;
 
         if (distancia > 15) {
           lombriz.x += (destinoX - lombriz.x) * velocidad;
@@ -273,16 +270,16 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
             Comida objetivo = comidasDisponibles.firstWhere((c) => c.x == destinoX && c.y == destinoY);
             objetivo.comiendo = true;
             huboCambio = true;
-            
+
             final idObjetivo = objetivo.id;
-            
+
             Future.delayed(const Duration(milliseconds: 800), () {
               if (mounted && !_juegoTerminado) {
                 setState(() {
                   _comidas.removeWhere((c) => c.id == idObjetivo);
                   _humus = (_humus + 2).clamp(0, 100);
                   _residuosTotales++;
-                  
+
                   if (_humus % 5 == 0) {
                     int cantidadHojas = 8 + _random.nextInt(5);
                     for (int i = 0; i < cantidadHojas; i++) {
@@ -290,7 +287,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                       _hojasEnHumus.add(Offset(pos.dx, _random.nextDouble() * 180 + 10));
                     }
                   }
-                  
+
                   lombriz.estaComiendo = false;
 
                   if (_humus >= 30 && _humedad > 40 && _humedad < 80 && _lombrices.length < 5) {
@@ -317,26 +314,22 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
           _lixiviado = (_lixiviado + 1).clamp(0, 100);
         }
 
-        // LÓGICA DE MOSCAS MEJORADA
-        // Solo generamos moscas si hay mucha comida Y no hemos llegado al límite de 15
-        if (_comidas.length >= 8) {
+        if (_comidas.length >= 6) {
           if (_moscasGeneradas < _maxMoscas && _moscas.length < 5) {
             final pos = _posicionAleatoria();
             _moscas.add(Mosca(x: pos.dx, y: pos.dy));
-            _moscasGeneradas++; // Aumentar contador de generadas
+            _moscasGeneradas++;
           }
         } else {
-          // Si se limpia la comida, las moscas se van y el contador se reinicia
           _moscas.clear();
           _moscasAtrapadas = 0;
-          _moscasGeneradas = 0; 
+          _moscasGeneradas = 0;
         }
 
-        //GESTIÓN DEL PELIGRO
         if (_moscas.isNotEmpty) {
-          _iniciarPeligro(); 
+          _iniciarPeligro();
         } else {
-          _detenerPeligro(); 
+          _detenerPeligro();
         }
 
         if (_contadorCiclos % 20 == 0 && _humedad > 0) {
@@ -410,14 +403,12 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     );
   }
 
-  // Atrapar mosca (sin mensajes, solo contador)
   void _atraparMosca(int index) {
     setState(() {
       _moscas.removeAt(index);
       _moscasAtrapadas++;
       SoundService.instance.moscaAplastada();
 
-      // Si ya atrapaste 15 o no quedan moscas, se detiene el peligro
       if (_moscasAtrapadas >= _maxMoscas || _moscas.isEmpty) {
         _moscas.clear();
         _moscasAtrapadas = 0;
@@ -428,14 +419,14 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
 
   void _anadirResiduo(String emoji) {
     if (_juegoTerminado || !_puedeAnadir) return;
-    
+
     _puedeAnadir = false;
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) _puedeAnadir = true;
     });
 
     final pos = _posicionAleatoria();
-    
+
     setState(() {
       _comidas.add(Comida(
         id: _nextComidaId++,
@@ -450,7 +441,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
     if (_juegoTerminado) return;
     setState(() {
       _materialSeco++;
-      _humedad = (_humedad - 5).clamp(0, 100); 
+      _humedad = (_humedad - 5).clamp(0, 100);
       _hojasSecas.add(Offset(_random.nextDouble() * _tableroAncho, 0));
     });
   }
@@ -491,7 +482,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
         _lixiviadoTotal += _lixiviado;
         _lixiviado = 0;
       });
-      MonedasService().agregarMonedas(3); 
+      MonedasService().agregarMonedas(3);
       SoundService.instance.monedasGanadas();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('🟤 ¡Juntaste lixiviado! +3 monedas 🪙'), backgroundColor: Colors.brown),
@@ -510,7 +501,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🪱 Lombricomposta'),
+        title: const Text('🪱 Lombricomposta Realista'),
         backgroundColor: AppTheme.verde,
         actions: [
           IconButton(
@@ -528,7 +519,6 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
         child: SafeArea(
           child: Column(
             children: [
-              // ALERTA DE PELIGRO POR MOSCAS
               if (_enPeligro)
                 Container(
                   width: double.infinity,
@@ -561,48 +551,59 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                         _tableroAlto = constraints.maxHeight;
 
                         final double alturaTotal = constraints.maxHeight;
-                        final double alturaLixiviado = alturaTotal * 0.25; 
-                        final double alturaHumus = alturaTotal * 0.75;     
+                        final double alturaLixiviado = alturaTotal * 0.25;
+                        final double alturaHumus = alturaTotal * 0.75;
+
+                        // ✅ Calculamos las alturas reales asegurando que no sean negativas
+                        final double alturaRealLixiviado = max(0.0, (alturaLixiviado * (_lixiviado / 100)).clamp(0.0, alturaLixiviado));
+                        final double alturaRealHumus = max(0.0, (alturaHumus * (_humus / 100)).clamp(0.0, alturaHumus));
 
                         return Stack(
                           children: [
-                            Container(color: Colors.brown.shade400.withValues(alpha: 0.3)),
+                            Container(color: Colors.brown.shade400.withValues(alpha: 0.2)),
 
+                            // LIXIVIADO
                             Positioned(
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              child: AnimatedContainer(
+                              child: _lixiviado > 0
+                                  ? AnimatedContainer(
                                 duration: const Duration(milliseconds: 1500),
-                                height: (alturaLixiviado * (_lixiviado / 100)).clamp(0, alturaLixiviado),
+                                height: alturaRealLixiviado,
                                 decoration: BoxDecoration(
-                                  color: Colors.brown.shade900.withValues(alpha: 0.95),
+                                  color: const Color(0xFF4E342E).withValues(alpha: 0.98),
                                   borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
                                 ),
-                              ),
+                              )
+                                  : const SizedBox.shrink(),
                             ),
 
+                            // HUMUS
                             Positioned(
                               bottom: alturaLixiviado,
                               left: 0,
                               right: 0,
-                              child: AnimatedContainer(
+                              child: _humus > 0
+                                  ? AnimatedContainer(
                                 duration: const Duration(milliseconds: 1000),
-                                height: (alturaHumus * (_humus / 100)).clamp(0, alturaHumus),
+                                height: alturaRealHumus,
                                 decoration: BoxDecoration(
-                                  color: Colors.brown.shade800.withValues(alpha: 0.85),
+                                  color: const Color(0xFF6D4C41).withValues(alpha: 0.6),
                                 ),
                                 child: Stack(
                                   children: [
                                     for (var hoja in _hojasEnHumus)
                                       Positioned(
-                                        left: hoja.dx.clamp(0, constraints.maxWidth - 25),
-                                        top: hoja.dy.clamp(0, (alturaHumus * (_humus / 100)).clamp(0, alturaHumus) - 25),
+                                        // ✅ Usamos max para evitar límites negativos
+                                        left: hoja.dx.clamp(0, max(0.0, constraints.maxWidth - 25)),
+                                        top: hoja.dy.clamp(0, max(0.0, alturaRealHumus - 25)),
                                         child: const Text('🍂', style: TextStyle(fontSize: 22)),
                                       ),
                                   ],
                                 ),
-                              ),
+                              )
+                                  : const SizedBox.shrink(),
                             ),
 
                             for (var comida in _comidas)
@@ -679,7 +680,7 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                         _buildStat('🪱', '${_lombrices.length}', isSmallScreen),
                         _buildStat('💧', '$_humedad%', isSmallScreen),
                         _buildStat('🌱', '$_humus%', isSmallScreen),
-                        _buildStat('🟤', '$_lixiviado%', isSmallScreen), 
+                        _buildStat('🟤', '$_lixiviado%', isSmallScreen),
                       ],
                     ),
                     Padding(
@@ -708,8 +709,8 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
                         _buildBoton('🍌 Cáscara', () => _anadirResiduo('🍌'), isSmallScreen),
                         _buildBoton('🍂 Seco', _anadirMaterialSeco, isSmallScreen),
                         _buildBoton('💧 Regar', _regar, isSmallScreen),
-                        _buildBoton('🌱 Humus', _cosecharHumus, isSmallScreen), 
-                        _buildBoton('🟤 Lixiviado', _juntarLixiviado, isSmallScreen), 
+                        _buildBoton('🌱 Humus', _cosecharHumus, isSmallScreen),
+                        _buildBoton('🟤 Lixiviado', _juntarLixiviado, isSmallScreen),
                       ],
                     ),
                   ],
@@ -729,14 +730,14 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
         backgroundColor: AppTheme.verde,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 8 : 10, 
+          horizontal: isSmallScreen ? 8 : 10,
           vertical: isSmallScreen ? 6 : 8,
         ),
       ),
       child: Text(
-        label, 
+        label,
         style: TextStyle(
-          fontSize: isSmallScreen ? 10 : 12, 
+          fontSize: isSmallScreen ? 10 : 12,
           color: Colors.white,
         ),
       ),
@@ -748,9 +749,9 @@ class _LombricompostaDigitalScreenState extends State<LombricompostaDigitalScree
       children: [
         Text(emoji, style: TextStyle(fontSize: isSmallScreen ? 20 : 24)),
         Text(
-          valor, 
+          valor,
           style: TextStyle(
-            fontWeight: FontWeight.bold, 
+            fontWeight: FontWeight.bold,
             fontSize: isSmallScreen ? 12 : 14,
           ),
         ),
