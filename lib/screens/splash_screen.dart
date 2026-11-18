@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-// Si no lo tienes, usa un CircularProgressIndicator
 import '../config/theme.dart';
 import 'login_screen.dart';
+import '../services/actualizacion_service.dart'; 
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,6 +33,13 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
+
+    // ✅ Verificar actualización después de 1.5 segundos (sin interrumpir la animación)
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        ActualizacionService().verificarActualizacion(context);
+      }
+    });
 
     // Navegar al login después de 2.5 segundos
     Future.delayed(const Duration(milliseconds: 2500), () {
@@ -70,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  //   Logo grande
+                  // ✅ Logo grande
                   Image.asset(
                     'assets/images/logo_lombriaventura.png',
                     width: 250,
@@ -79,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
                       return Container(
                         width: 250,
                         height: 250,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
@@ -103,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  //   Indicador de carga
+                  // ✅ Indicador de carga
                   const CircularProgressIndicator(
                     color: Colors.white,
                     strokeWidth: 3,

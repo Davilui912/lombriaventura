@@ -29,6 +29,7 @@ import 'progress_screen.dart';
 import 'admin_screen.dart';
 import 'retos_screen.dart';
 import '../services/recordatorios_service.dart';
+import '../services/actualizacion_service.dart';
 
 class MenuPrincipal extends StatefulWidget {
   const MenuPrincipal({super.key});
@@ -46,12 +47,19 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
   int _contadorToques = 0;
   bool _mostrarBanner = true;
 
-  @override
+ @override
   void initState() {
     super.initState();
     _iniciarMusicaMenu();
     _verificarSesion();
     _actividadService.registrarActividad();
+
+    //Verificar si hay actualización disponible en Play Store
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ActualizacionService().verificarActualizacion(context);
+      }
+    });
 
     // Esperar 3 segundos antes de verificar recordatorios
     Future.delayed(const Duration(seconds: 3), () {
